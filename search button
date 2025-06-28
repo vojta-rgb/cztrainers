@@ -1,0 +1,77 @@
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+  authDomain: "cztrainers-dat1.firebaseapp.com",
+  databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cztrainers-dat1",
+  storageBucket: "cztrainers-dat1.firebasestorage.app",
+  messagingSenderId: "369200533487",
+  appId: "1:369200533487:web:eb31707c0de4bda2b8f01a",
+  measurementId: "G-2TYCKW527F"
+};
+
+
+
+
+import { useState, useEffect } from "react";
+import { db } from "./firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+
+function SearchUsers() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState([]);
+
+  const handleSearch = async () => {
+    if (searchTerm.trim() === "") {
+      setResults([]);
+      return;
+    }
+
+    // Query Firestore for users where 'name' equals searchTerm (case sensitive)
+    const q = query(
+      collection(db, "users"),
+      where("name", ">=", searchTerm),
+      where("name", "<=", searchTerm + "\uf8ff")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const users = [];
+    querySnapshot.forEach((doc) => {
+      users.push({ id: doc.id, ...doc.data() });
+    });
+
+    setResults(users);
+  };
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      handleSearch();
+    }, 500); // počkej 500ms po napsání pro méně dotazů
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Vyhledej uživatele..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="border p-2 rounded"
+      />
+
+      <ul>
+        {results.map((user) => (
+          <li key={user.id}>
+            {user.name} - {user.email}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default SearchUsers;
