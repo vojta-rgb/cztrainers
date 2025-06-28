@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registration Form</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <form id="registerForm">
@@ -13,40 +13,43 @@
     <button type="submit">Submit</button>
   </form>
 
-  <!-- Firebase Scripts -->
+  <!-- Firebase + Submit Script -->
   <script type="module">
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics } from "firebase/analytics";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
       authDomain: "cztrainers-dat1.firebaseapp.com",
       databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.app",
+      storageBucket: "cztrainers-dat1.appspot.com",
       messagingSenderId: "369200533487",
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a",
       measurementId: "G-2TYCKW527F"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
 
-    // Handle form submit
+    // Submit event
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
-
+      
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
 
-      // Write to Firebase
-      set(ref(database, 'users/' + Date.now()), {
+      // Save to DB
+      set(ref(db, 'users/' + Date.now()), {
         name: name,
         email: email
+      }).then(() => {
+        alert("Data submitted!");
+        this.reset();
+      }).catch((error) => {
+        alert("Failed to submit: " + error);
+        console.error(error);
       });
-
-      alert("Data submitted!");
-      this.reset();
     });
   </script>
 </body>
