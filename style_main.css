@@ -48,11 +48,6 @@ h1 {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-.card.no-hover:hover {
-  transform: none;
-  box-shadow: none;
-}
-
 /* Prevent underline and color overrides inside cards */
 .card * {
   text-decoration: none !important;
