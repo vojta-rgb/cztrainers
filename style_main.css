@@ -78,7 +78,14 @@ h1 {
   text-align: center;
 }
 
-.card.disable-hover:hover {
-  transform: none !important;
-  box-shadow: none !important;
+.profilecard{
+    background: white;
+  border-radius: 10px;
+  padding: 15px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-decoration: none !important;
+  color: inherit !important;
+  display: block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 0;
 }
