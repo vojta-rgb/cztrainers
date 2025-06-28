@@ -93,3 +93,7 @@ h1 {
   margin-bottom: 10px;
   color: #333;
 }
+
+p {
+  margin: 20; /* adds 20px space all around the paragraph */
+}
