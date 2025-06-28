@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seznam uživatelů</title>
+  <link rel="stylesheet" href="main.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Uživatelé</h1>
+    <input type="text" id="search" placeholder="Hledat jméno..." />
+
+    <div id="userList" class="cards"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const userList = document.getElementById("userList");
+
+    const usersRef = ref(db, 'users/');
+    onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      userList.innerHTML = "";
+
+      if (data) {
+        Object.values(data).forEach(user => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${user.name || "Neznámý"} ${user.prijmeni || ""}</h3>
+            <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
+            <p><strong>Datum:</strong> ${user.datum || "-"}</p>
+            <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
+          `;
+          userList.appendChild(card);
+        });
+      } else {
+        userList.innerHTML = "<p>Žádní uživatelé.</p>";
+      }
+    });
+  </script>
+</body>
+</html>
