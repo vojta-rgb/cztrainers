@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profil uživatele</title>
+  <link rel="stylesheet" href="style_main.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>Profil uživatele</h1>
+    <div id="profileCard" class="card"></div>
+    <button onclick="window.location.href='cards.html'">Zpět na seznam</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Get ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+
+    const profileCard = document.getElementById("profileCard");
+
+    if (userId) {
+      const userRef = ref(db, 'users/' + userId);
+      get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const user = snapshot.val();
+          profileCard.innerHTML = `
+            <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+            <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
+            <p><strong>Datum narození:</strong> ${user.datum || "-"}</p>
+            <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
+          `;
+        } else {
+          profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
+        }
+      }).catch(error => {
+        profileCard.innerHTML = `<p>Chyba načítání: ${error.message}</p>`;
+      });
+    } else {
+      profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
+    }
+  </script>
+</body>
+</html>
