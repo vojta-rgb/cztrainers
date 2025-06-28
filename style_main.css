@@ -44,7 +44,7 @@ h1 {
 
 /* Hover effect */
 .card:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
@@ -78,10 +78,3 @@ h1 {
   text-align: center;
 }
 
-a.card, 
-a.card * {
-  all: unset;
-  display: block;
-  text-decoration: none !important;
-  color: inherit !important;
-}
