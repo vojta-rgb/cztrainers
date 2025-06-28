@@ -59,7 +59,7 @@ h1 {
   text-align: center;
 }
 
-.card a {
+.card{
   text-decoration: none;
   color: inherit;
 }
