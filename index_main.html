@@ -14,7 +14,6 @@
     <div id="userList" class="cards"></div>
 
     <button onclick="window.location.href='https://vojta-rgb.github.io/cztrainers/'">Go to Page</button>
-    
   </div>
 
   <script type="module">
@@ -42,9 +41,10 @@
       userList.innerHTML = "";
 
       if (data) {
-        Object.values(data).forEach(user => {
-          const card = document.createElement("div");
+        Object.entries(data).forEach(([id, user]) => {
+          const card = document.createElement("a");
           card.className = "card";
+          card.href = `profile.html?id=${id}`;
           card.innerHTML = `
             <h3>${user.name || "Neznámý"} ${user.prijmeni || ""}</h3>
             <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
