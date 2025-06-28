@@ -88,4 +88,8 @@ h1 {
   display: block;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   margin: 0;
+  margin: 4px 0;
+  color: #555;
+  margin-bottom: 10px;
+  color: #333;
 }
