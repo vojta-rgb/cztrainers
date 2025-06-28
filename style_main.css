@@ -59,13 +59,19 @@ h1 {
   text-align: center;
 }
 
-.card h3,
-.card p,
-.card a {
-  text-decoration: none;
-}
-
-.card a {
+.card {
   text-decoration: none !important;
   color: inherit;
+  display: block; /* Makes the <a> behave like a block/card */
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 10px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
