@@ -30,7 +30,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Get ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('id');
 
@@ -43,9 +42,16 @@
           const user = snapshot.val();
           profileCard.innerHTML = `
             <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+            ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Profilová fotka" style="max-width:150px; border-radius: 8px;"/>` : ""}
             <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
             <p><strong>Datum narození:</strong> ${user.datum || "-"}</p>
             <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
+            <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
+            <p><strong>O mně:</strong> ${user.bio || "-"}</p>
+            <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
+            <p><strong>Cena:</strong> ${user.pricing || "-"}</p>
+            <p><strong>Roky zkušeností:</strong> ${user.experience || "-"}</p>
+            <p><strong>Jazyky:</strong> ${user.languages || "-"}</p>
           `;
         } else {
           profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
