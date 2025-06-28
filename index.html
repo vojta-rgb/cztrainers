@@ -5,8 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registration Form</title>
   <link rel="stylesheet" href="style.css"/>
+  <title>Logo in Upper Left Corner</title>
+  <style>
+    /* Styles to position the logo */
+    .logo-link {
+      position: fixed;
+      top: 1px;
+      left: 100px;
+      display: inline-block;
+      z-index: 1000;
+    }
+
+    .logo-link img {
+      height: 300px; /* Adjust size as needed */
+      width: auto;
+      cursor: pointer;
+      display: block;
+    }
+  </style>
 </head>
 <body>
+  <a href="https://vojta-rgb.github.io/cztrainers/" class="logo-link">
+    <img src="https://raw.githubusercontent.com/vojta-rgb/cztrainers/refs/heads/main/CZTRAINERS%20LOGO.png" alt="Logo" />
+  </a>
+
+  
   <form id="registerForm">
     <input type="text" id="name" placeholder="Jmeno" required />
     <input type="text" id="prijmeni" placeholder="Prijmeni" required />
