@@ -17,7 +17,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+  
     const firebaseConfig = {
       apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -28,18 +28,16 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a",
       measurementId: "G-2TYCKW527F"
     };
-
+  
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-
-    // Submit event
+  
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
-      
+  
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
-
-      // Save to DB
+  
       set(ref(db, 'users/' + Date.now()), {
         name: name,
         email: email
@@ -47,10 +45,9 @@
         alert("Data submitted!");
         this.reset();
       }).catch((error) => {
-        alert("Failed to submit: " + error);
-        console.error(error);
+        alert("Error: " + error.message);
       });
     });
-  </script>
+  </script>  
 </body>
 </html>
