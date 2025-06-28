@@ -64,3 +64,8 @@ h1 {
 .card a {
   text-decoration: none;
 }
+
+.card a {
+  text-decoration: none !important;
+  color: inherit;
+}
