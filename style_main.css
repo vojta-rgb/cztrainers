@@ -47,9 +47,14 @@ h1 {
   color: #555;
 }
 
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+.button {
+  display: block;
+  width: fit-content;
+  margin: 40vh auto 0;
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  text-align: center;
 }
