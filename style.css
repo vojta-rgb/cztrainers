@@ -1,48 +1,61 @@
-body {
+/* Basic reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
   font-family: Arial, sans-serif;
-  background: #f7f9fc;
+}
+
+body {
+  background-color: #f9f9f9;
+  padding: 30px;
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+  align-items: flex-start;
+  min-height: 100vh;
 }
 
-.form-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  width: 300px;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-input {
+/* Form container */
+form#registerForm {
+  background-color: white;
+  padding: 25px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Inputs & Select */
+form#registerForm input,
+form#registerForm select {
+  padding: 10px 14px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
 }
 
-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #3b82f6;
+form#registerForm input:focus,
+form#registerForm select:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* Button */
+form#registerForm button {
+  background-color: #4CAF50;
   color: white;
+  padding: 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: #2563eb;
+form#registerForm button:hover {
+  background-color: #45a049;
 }
