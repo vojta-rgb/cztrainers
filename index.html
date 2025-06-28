@@ -8,8 +8,16 @@
 </head>
 <body>
   <form id="registerForm">
-    <input type="text" id="name" placeholder="Name" required />
+    <input type="text" id="name" placeholder="Jmeno" required />
+    <input type="text" id="prijmeni" placeholder="Prijmeni" required />
     <input type="email" id="email" placeholder="Email" required />
+    <input type="date" id="datum" required />
+    <select id="gender" required>
+      <option value="">Vyber pohlaví</option>
+      <option value="muz">Muž</option>
+      <option value="zena">Žena</option>
+      <option value="jine">Jiné</option>
+    </select>
     <button type="submit">Submit</button>
   </form>
 
@@ -35,11 +43,17 @@
       e.preventDefault();
   
       const name = document.getElementById("name").value;
+      const prijmeni = document.getElementById("prijmeni").value;
       const email = document.getElementById("email").value;
+      const datum = document.getElementById("datum").value;
+      const gender = document.getElementById("gender").value;
   
       set(ref(db, 'users/' + Date.now()), {
         name: name,
-        email: email
+        prijmeni: prijmeni,
+        email: email,
+        datum: datum,
+        gender: gender
       }).then(() => {
         alert("Data submitted!");
         this.reset();
