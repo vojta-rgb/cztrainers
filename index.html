@@ -5,23 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registration Form</title>
   <link rel="stylesheet" href="style.css"/>
-  <title>Logo in Upper Left Corner</title>
   <style>
-    /* Styles to position the logo */
-   .logo-link {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-}
-
-.logo-link img {
-  height: 40px;
-  width: auto;
-  cursor: pointer;
-  display: block;
-}
+    .logo-link {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+    .logo-link img {
+      height: 40px;
+      width: auto;
+      cursor: pointer;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -29,18 +26,27 @@
     <img src="https://raw.githubusercontent.com/vojta-rgb/cztrainers/refs/heads/main/CZTRAINERS%20LOGO.png" alt="Logo" />
   </a>
 
-  
   <form id="registerForm">
-    <input type="text" id="name" placeholder="Jmeno" required />
-    <input type="text" id="prijmeni" placeholder="Prijmeni" required />
+    <input type="text" id="name" placeholder="Jméno" required />
+    <input type="text" id="prijmeni" placeholder="Příjmení" required />
     <input type="email" id="email" placeholder="Email" required />
     <input type="date" id="datum" required />
+    
     <select id="gender" required>
       <option value="">Vyber pohlaví</option>
       <option value="muz">Muž</option>
       <option value="zena">Žena</option>
       <option value="jine">Jiné</option>
     </select>
+
+    <input type="text" id="location" placeholder="Město / Lokalita" required />
+    <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
+    <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
+    <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
+    <input type="number" id="experience" placeholder="Roky zkušeností" />
+    <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
+    <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
+
     <button type="submit">Submit</button>
     <a href="index_main.html" class="btn">Go to Second Page</a>
   </form>
@@ -48,7 +54,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  
+
     const firebaseConfig = {
       apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -56,34 +62,38 @@
       projectId: "cztrainers-dat1",
       storageBucket: "cztrainers-dat1.appspot.com",
       messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a",
-      measurementId: "G-2TYCKW527F"
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
-  
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-  
+
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
-  
-      const name = document.getElementById("name").value;
-      const prijmeni = document.getElementById("prijmeni").value;
-      const email = document.getElementById("email").value;
-      const datum = document.getElementById("datum").value;
-      const gender = document.getElementById("gender").value;
-  
-      set(ref(db, 'users/' + Date.now()), {
-        name: name,
-        prijmeni: prijmeni,
-        email: email,
-        datum: datum,
-        gender: gender
-      }).then(() => {
-        alert("Data submitted!");
-        this.reset();
-      }).catch((error) => {
-        alert("Error: " + error.message);
-      });
+
+      const userData = {
+        name: document.getElementById("name").value,
+        prijmeni: document.getElementById("prijmeni").value,
+        email: document.getElementById("email").value,
+        datum: document.getElementById("datum").value,
+        gender: document.getElementById("gender").value,
+        location: document.getElementById("location").value,
+        bio: document.getElementById("bio").value,
+        specializations: document.getElementById("specializations").value,
+        pricing: document.getElementById("pricing").value,
+        experience: document.getElementById("experience").value,
+        languages: document.getElementById("languages").value,
+        profilePicture: document.getElementById("profilePicture").value
+      };
+
+      set(ref(db, 'users/' + Date.now()), userData)
+        .then(() => {
+          alert("Data submitted!");
+          this.reset();
+        })
+        .catch((error) => {
+          alert("Error: " + error.message);
+        });
     });
   </script>  
 </body>
