@@ -15,8 +15,8 @@
 
   <!-- Firebase Scripts -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
@@ -26,11 +26,11 @@
       storageBucket: "cztrainers-dat1.firebasestorage.app",
       messagingSenderId: "369200533487",
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a",
-      measurementId: "G-2TYCKW527F" 
+      measurementId: "G-2TYCKW527F"
     };
 
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    const analytics = getAnalytics(app);
 
     // Handle form submit
     document.getElementById("registerForm").addEventListener("submit", function (e) {
