@@ -95,3 +95,7 @@ h1 {
   max-width: 100%;
   box-sizing: border-box;
 }
+
+.profilecard h1{
+  text-align: center;
+}
