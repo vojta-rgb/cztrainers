@@ -59,7 +59,8 @@ h1 {
   text-align: center;
 }
 
-.card{
+.card h3,
+.card p,
+.card a {
   text-decoration: none;
-  color: inherit;
 }
