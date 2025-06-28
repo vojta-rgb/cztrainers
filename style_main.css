@@ -77,3 +77,8 @@ h1 {
   border-radius: 6px;
   text-align: center;
 }
+
+.card.disable-hover:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
