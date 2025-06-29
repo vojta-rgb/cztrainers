@@ -79,4 +79,12 @@ form#registerForm .btn-red {
   max-width: 400px;      /* limit the form width */
   margin: 40px auto;     /* center horizontally and add vertical margin */
   padding: auto;
+  background-color: white; /* white background for the form */
+  border-radius: 10px;    /* rounded corners */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* subtle shadow for depth */
+  display: flex;
+  flex-direction: column; /* stack children vertically */
+  gap: 15px;             /* space between form elements */
+  padding: 25px 30px;    /* padding inside the form */
+  width: 100%;           /* full width of the container */
 }
