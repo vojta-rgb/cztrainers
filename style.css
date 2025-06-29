@@ -63,9 +63,9 @@ form#registerForm button:hover {
 form#registerForm .btn-red {
   background-color: #af4c4c;
   color: white;
-  padding: 12px;
+  padding: 22px;
   border: none;
-  border-radius: 6px;
+  border-radius: 16px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
