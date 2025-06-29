@@ -78,4 +78,5 @@ form#registerForm .btn-red {
 .form-container {
   max-width: 400px;      /* limit the form width */
   margin: 40px auto;     /* center horizontally and add vertical margin */
+  padding: auto;
 }
