@@ -60,6 +60,10 @@ form#registerForm button:hover {
   background-color: #45a049;
 }
 
+form#registerForm .btn-red:hover {
+  background-color: #45a049;
+}
+
 form#registerForm .btn-red {
   background-color: #af4c4c;
   color: white;
