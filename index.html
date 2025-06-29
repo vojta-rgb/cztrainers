@@ -31,31 +31,31 @@
   <a href="https://vojta-rgb.github.io/cztrainers/" class="logo-link">
     <img src="https://raw.githubusercontent.com/vojta-rgb/cztrainers/refs/heads/main/CZTRAINERS%20LOGO.png" alt="Logo" />
   </a>
+  <div class="form-container">
+    <form id="registerForm">
+      <input type="text" id="name" placeholder="Jméno" required />
+      <input type="text" id="prijmeni" placeholder="Příjmení" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="date" id="datum" required />
+      
+      <select id="gender" required>
+        <option value="">Vyber pohlaví</option>
+        <option value="muz">Muž</option>
+        <option value="zena">Žena</option>
+        <option value="jine">Jiné</option>
+      </select>
 
-  <form id="registerForm">
-    <input type="text" id="name" placeholder="Jméno" required />
-    <input type="text" id="prijmeni" placeholder="Příjmení" required />
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="date" id="datum" required />
-    
-    <select id="gender" required>
-      <option value="">Vyber pohlaví</option>
-      <option value="muz">Muž</option>
-      <option value="zena">Žena</option>
-      <option value="jine">Jiné</option>
-    </select>
-
-    <input type="text" id="location" placeholder="Město / Lokalita" required />
-    <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
-    <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
-    <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
-    <input type="number" id="experience" placeholder="Roky zkušeností" />
-    <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
-    <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
-    <button type="submit">Submit</button>
-    <button class="btn-red" onclick="window.location.href='index_main.html'">EXIT PAGE</button>
-  </form>
-
+      <input type="text" id="location" placeholder="Město / Lokalita" required />
+      <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
+      <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
+      <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
+      <input type="number" id="experience" placeholder="Roky zkušeností" />
+      <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
+      <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
+      <button type="submit">Submit</button>
+      <button class="btn-red" onclick="window.location.href='index_main.html'">EXIT PAGE</button>
+    </form>
+  </div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";

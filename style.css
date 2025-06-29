@@ -74,3 +74,12 @@ form#registerForm .btn-red {
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
+
+.form-container {
+  max-width: 400px;      /* limit the form width */
+  margin: 40px auto;     /* center horizontally and add vertical margin */
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
