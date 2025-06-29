@@ -15,6 +15,26 @@ body {
   min-height: 100vh;
 }
 
+/* Outer container for logo + form */
+.container {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* Logo styles */
+.logo-link {
+  display: block;
+  text-align: center;
+}
+
+.logo-link img {
+  max-height: 60px;
+  height: auto;
+  width: auto;
+  display: block;
+}
+
 /* Form container */
 form#registerForm {
   background-color: white;
@@ -73,13 +93,4 @@ form#registerForm .btn-red {
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
-
-.form-container {
-  max-width: 400px;      /* limit the form width */
-  margin: 40px auto;     /* center horizontally and add vertical margin */
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
