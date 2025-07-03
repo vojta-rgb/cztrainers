@@ -2,7 +2,8 @@
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background-image: url('https://images.unsplash.com/photo-1599058917212-d750089bc06c?auto=format&fit=crop&w=1920&q=80');
+  /*background-image: url('https://images.unsplash.com/photo-1599058917212-d750089bc06c?auto=format&fit=crop&w=1920&q=80');*/
+  background-image: url('o-nas-img.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
