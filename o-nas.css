@@ -1,0 +1,80 @@
+/* Full-page background */
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-image: url('https://images.unsplash.com/photo-1599058917212-d750089bc06c?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  color: white;
+}
+
+/* Dark overlay for readability */
+.overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.header p {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+/* Main content */
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 30px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.about h2,
+.contact h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #4CAF50;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.about p,
+.contact p {
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Social links */
+.socials {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.socials a {
+  color: #4CAF50;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.socials a:hover {
+  color: white;
+}
