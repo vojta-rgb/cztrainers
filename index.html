@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registration Form</title>
+  <title>Registrace – CZTRAINERS</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+
   <nav class="navbar">
     <div class="nav-logo">CZTRAINERS</div>
     <div class="nav-links">
@@ -16,31 +17,35 @@
     </div>
   </nav>
 
-  <div class="form-container">
-    <form id="registerForm">
-      <input type="text" id="name" placeholder="Jméno" required />
-      <input type="text" id="prijmeni" placeholder="Příjmení" required />
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="date" id="datum" required />
-      
-      <select id="gender" required>
-        <option value="">Vyber pohlaví</option>
-        <option value="muz">Muž</option>
-        <option value="zena">Žena</option>
-        <option value="jine">Jiné</option>
-      </select>
+  <div class="page-wrapper">
+    <div class="form-container">
+      <form id="registerForm">
+        <input type="text" id="name" placeholder="Jméno" required />
+        <input type="text" id="prijmeni" placeholder="Příjmení" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="date" id="datum" required />
 
-      <input type="text" id="location" placeholder="Město / Lokalita" required />
-      <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
-      <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
-      <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
-      <input type="number" id="experience" placeholder="Roky zkušeností" />
-      <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
-      <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
-      <button type="submit">Submit</button>
-      <button class="btn-red" onclick="window.location.href='index_main.html'">EXIT PAGE</button>
-    </form>
+        <select id="gender" required>
+          <option value="">Vyber pohlaví</option>
+          <option value="muz">Muž</option>
+          <option value="zena">Žena</option>
+          <option value="jine">Jiné</option>
+        </select>
+
+        <input type="text" id="location" placeholder="Město / Lokalita" required />
+        <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
+        <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
+        <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
+        <input type="number" id="experience" placeholder="Roky zkušeností" />
+        <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
+        <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
+        
+        <button type="submit">Odeslat</button>
+        <button type="button" class="btn-red" onclick="window.location.href='index_main.html'">Zpět</button>
+      </form>
+    </div>
   </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -78,13 +83,14 @@
 
       set(ref(db, 'users/' + Date.now()), userData)
         .then(() => {
-          alert("Data submitted!");
+          alert("Registrace byla úspěšně odeslána!");
           this.reset();
         })
         .catch((error) => {
-          alert("Error: " + error.message);
+          alert("Chyba: " + error.message);
         });
     });
-  </script>  
+  </script>
+
 </body>
 </html>

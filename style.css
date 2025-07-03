@@ -1,90 +1,20 @@
-/* Basic reset */
+/* Reset */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  box-sizing: border-box;
 }
 
+/* Base body styling */
 body {
+  font-family: Arial, sans-serif;
   background-color: #f9f9f9;
-  padding: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
   min-height: 100vh;
-}
-
-/* Outer container for logo + form */
-.container {
-  display: flex;
-  gap: 40px;
-  align-items: center; /* Center logo vertically with form */
-  justify-content: center;
-  flex-wrap: wrap; /* Optional: makes it responsive on small screens */
-}
-
-/* Form container */
-form#registerForm {
-  background-color: white;
-  padding: 25px 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  width: 550px; /* Increased from 400px */
   display: flex;
   flex-direction: column;
-  gap: 15px;
 }
 
-/* Inputs & Select */
-form#registerForm input,
-form#registerForm select {
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-
-form#registerForm input:focus,
-form#registerForm select:focus {
-  border-color: #4CAF50;
-  outline: none;
-}
-
-/* Button */
-form#registerForm button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-form#registerForm button:hover {
-  background-color: #45a049;
-}
-
-form#registerForm .btn-red:hover {
-  background-color: #883a3a;
-}
-
-form#registerForm .btn-red {
-  background-color: #af4c4c;
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-/* Navbar styles */
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -92,7 +22,7 @@ form#registerForm .btn-red {
   background-color: #4CAF50;
   padding: 12px 24px;
   color: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .nav-logo {
@@ -120,4 +50,72 @@ form#registerForm .btn-red {
 .nav-button:hover {
   background-color: white;
   color: #4CAF50;
+}
+
+/* Wrapper for page content */
+.page-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  flex-grow: 1;
+}
+
+/* Form container */
+.form-container {
+  max-width: 600px;
+  width: 100%;
+}
+
+form#registerForm {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Input and Select fields */
+form#registerForm input,
+form#registerForm select,
+form#registerForm textarea {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 100%;
+  resize: vertical;
+}
+
+/* Focus states */
+form#registerForm input:focus,
+form#registerForm select:focus,
+form#registerForm textarea:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* Buttons */
+form#registerForm button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form#registerForm button:hover {
+  background-color: #45a049;
+}
+
+form#registerForm .btn-red {
+  background-color: #af4c4c;
+}
+
+form#registerForm .btn-red:hover {
+  background-color: #883a3a;
 }
