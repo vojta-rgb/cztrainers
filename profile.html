@@ -53,7 +53,7 @@
           const user = snapshot.val();
           profileCard.innerHTML = `
             <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-            ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Profilová fotka" style="max-width:150px; border-radius: 8px;"/>` : ""}
+            ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Profilová fotka" class="profile-image" />` : "<p><i>Profilový obrázek nebyl nahrán.</i></p>"}
             <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
             <p><strong>Datum narození:</strong> ${user.datum || "-"}</p>
             <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
