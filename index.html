@@ -23,6 +23,7 @@
   <div class="page-wrapper">
     <div class="form-container">
       <form id="registerForm">
+        <input type="file" id="profileImage" accept="image/*" />
         <input type="text" id="name" placeholder="Jméno" required />
         <input type="text" id="prijmeni" placeholder="Příjmení" required />
         <input type="email" id="email" placeholder="Email" required />
@@ -41,7 +42,6 @@
         <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
         <input type="number" id="experience" placeholder="Roky zkušeností" />
         <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
-        <input type="url" id="profilePicture" placeholder="Odkaz na profilovou fotku (URL)" />
         
         <button type="submit">Odeslat</button>
         <button type="button" class="btn-red" onclick="window.location.href='index_main.html'">Zpět</button>
@@ -49,51 +49,80 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  const firebaseConfig = {
+    apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+    authDomain: "cztrainers-dat1.firebaseapp.com",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cztrainers-dat1",
+    storageBucket: "cztrainers-dat1.appspot.com",
+    messagingSenderId: "369200533487",
+    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const CLOUD_NAME = "dkt3pdcbe"; // Replace with your cloud name
+  const UPLOAD_PRESET = "cztrainers_unsigned";
+
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    return data.secure_url; // Returns the image URL
+  }
+
+  document.getElementById("registerForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById("profileImage");
+    let imageUrl = "";
+
+    if (fileInput.files.length > 0) {
+      try {
+        imageUrl = await uploadImage(fileInput.files[0]);
+      } catch (err) {
+        alert("Nepodařilo se nahrát profilový obrázek.");
+        return;
+      }
+    }
+
+    const userData = {
+      name: document.getElementById("name").value,
+      prijmeni: document.getElementById("prijmeni").value,
+      email: document.getElementById("email").value,
+      datum: document.getElementById("datum").value,
+      gender: document.getElementById("gender").value,
+      location: document.getElementById("location").value,
+      bio: document.getElementById("bio").value,
+      specializations: document.getElementById("specializations").value,
+      pricing: document.getElementById("pricing").value,
+      experience: document.getElementById("experience").value,
+      languages: document.getElementById("languages").value,
+      profilePicture: imageUrl
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    document.getElementById("registerForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const userData = {
-        name: document.getElementById("name").value,
-        prijmeni: document.getElementById("prijmeni").value,
-        email: document.getElementById("email").value,
-        datum: document.getElementById("datum").value,
-        gender: document.getElementById("gender").value,
-        location: document.getElementById("location").value,
-        bio: document.getElementById("bio").value,
-        specializations: document.getElementById("specializations").value,
-        pricing: document.getElementById("pricing").value,
-        experience: document.getElementById("experience").value,
-        languages: document.getElementById("languages").value,
-        profilePicture: document.getElementById("profilePicture").value
-      };
-
-      set(ref(db, 'users/' + Date.now()), userData)
-        .then(() => {
-          alert("Registrace byla úspěšně odeslána!");
-          this.reset();
-        })
-        .catch((error) => {
-          alert("Chyba: " + error.message);
-        });
-    });
-  </script>
+    set(ref(db, 'users/' + Date.now()), userData)
+      .then(() => {
+        alert("Registrace byla úspěšně odeslána!");
+        this.reset();
+      })
+      .catch((error) => {
+        alert("Chyba: " + error.message);
+      });
+  });
+</script>
 
   <script>
   document.getElementById("hamburger").addEventListener("click", function () {

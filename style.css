@@ -160,3 +160,11 @@ form#registerForm .btn-red {
 form#registerForm .btn-red:hover {
   background-color: #883a3a;
 }
+
+#profileImage {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: white;
+}
