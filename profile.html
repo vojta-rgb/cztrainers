@@ -9,7 +9,10 @@
 <body>
   <nav class="navbar">
     <div class="nav-logo">CZTRAINERS</div>
-    <div class="nav-links">
+
+    <button class="hamburger" id="hamburger">&#9776;</button>
+
+    <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
       <a href="index.html" class="nav-button">Registrace</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
@@ -71,7 +74,7 @@
       profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
     }
   </script>
-  
+
   <script>
   document.getElementById("hamburger").addEventListener("click", function () {
     document.getElementById("navLinks").classList.toggle("active");
