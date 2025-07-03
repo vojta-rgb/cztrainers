@@ -24,17 +24,6 @@ body {
   flex-wrap: wrap; /* Optional: makes it responsive on small screens */
 }
 
-/* Logo styles */
-.logo-link {
-  display: block;
-  text-align: center;
-}
-
-.logo-link img {
-  max-height: 80px;
-  width: auto;
-  display: block;
-}
 /* Form container */
 form#registerForm {
   background-color: white;
