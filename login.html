@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Přihlášení – CZTRAINERS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>Přihlášení</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Heslo" required />
+    <button id="loginBtn">Přihlásit se</button>
+    <div class="message" id="messageBox"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      get,
+      set,
+      remove
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const messageBox = document.getElementById("messageBox");
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        messageBox.textContent = "Zadejte prosím email a heslo.";
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          if (!user.emailVerified) {
+            messageBox.textContent = "Nejprve prosím ověřte svůj e-mail.";
+            signOut(auth);
+            return;
+          }
+
+          const uid = user.uid;
+          const unverifiedRef = ref(db, 'unverified-users/' + uid);
+          const verifiedRef = ref(db, 'users/' + uid);
+
+          // Move user data if not already in 'users'
+          get(verifiedRef).then(snapshot => {
+            if (!snapshot.exists()) {
+              // Move from unverified to verified
+              get(unverifiedRef).then(dataSnap => {
+                if (dataSnap.exists()) {
+                  const userData = dataSnap.val();
+
+                  set(verifiedRef, userData).then(() => {
+                    remove(unverifiedRef);
+                    messageBox.style.color = 'green';
+                    messageBox.textContent = "Přihlášení úspěšné. Profil byl aktivován.";
+                    setTimeout(() => {
+                      window.location.href = "index_main.html";
+                    }, 2000);
+                  });
+                } else {
+                  messageBox.textContent = "Data nebyla nalezena.";
+                }
+              });
+            } else {
+              messageBox.style.color = 'green';
+              messageBox.textContent = "Přihlášení úspěšné.";
+              setTimeout(() => {
+                window.location.href = "index_main.html";
+              }, 2000);
+            }
+          });
+
+        })
+        .catch((error) => {
+          messageBox.textContent = "Chyba přihlášení: " + error.message;
+        });
+    });
+  </script>
+</body>
+</html>
