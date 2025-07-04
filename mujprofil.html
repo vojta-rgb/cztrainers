@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Můj profil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style_main.css" />
+  <style>
+    form {
+      max-width: 600px;
+      margin: auto;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Můj profil</h2>
+    <form id="profileForm">
+      <input type="text" id="name" placeholder="Jméno" />
+      <input type="text" id="prijmeni" placeholder="Příjmení" />
+      <input type="date" id="datum" />
+      <input type="text" id="gender" placeholder="Pohlaví" />
+      <input type="text" id="location" placeholder="Lokalita" />
+      <textarea id="bio" placeholder="O mně"></textarea>
+      <input type="text" id="specializations" placeholder="Specializace" />
+      <input type="text" id="pricing" placeholder="Cena" />
+      <input type="text" id="experience" placeholder="Roky zkušeností" />
+      <input type="text" id="languages" placeholder="Jazyky" />
+      <button type="submit">Uložit změny</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const form = document.getElementById("profileForm");
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user || !user.emailVerified) {
+        alert("Nejste přihlášen nebo nemáte ověřený email.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userRef = ref(db, "users/" + user.uid);
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          form.name.value = data.name || "";
+          form.prijmeni.value = data.prijmeni || "";
+          form.datum.value = data.datum || "";
+          form.gender.value = data.gender || "";
+          form.location.value = data.location || "";
+          form.bio.value = data.bio || "";
+          form.specializations.value = data.specializations || "";
+          form.pricing.value = data.pricing || "";
+          form.experience.value = data.experience || "";
+          form.languages.value = data.languages || "";
+        }
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const updatedData = {
+          name: form.name.value,
+          prijmeni: form.prijmeni.value,
+          datum: form.datum.value,
+          gender: form.gender.value,
+          location: form.location.value,
+          bio: form.bio.value,
+          specializations: form.specializations.value,
+          pricing: form.pricing.value,
+          experience: form.experience.value,
+          languages: form.languages.value
+        };
+
+        set(userRef, updatedData).then(() => {
+          alert("Profil byl aktualizován.");
+        }).catch((error) => {
+          alert("Chyba při ukládání: " + error.message);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
