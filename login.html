@@ -31,7 +31,7 @@
     <h2>Přihlášení</h2>
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Heslo" required />
-    <button id="loginBtn">Přihlásit se</button>
+    <button id="loginFormBtn">Přihlásit se</button>
     <div class="message" id="messageBox"></div>
   </div>
 
@@ -65,7 +65,7 @@
     const db = getDatabase(app);
     const messageBox = document.getElementById("messageBox");
 
-    document.getElementById("loginBtn").addEventListener("click", () => {
+    document.getElementById("loginFormBtn").addEventListener("click", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
