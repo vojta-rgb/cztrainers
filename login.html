@@ -8,18 +8,21 @@
     <link rel="stylesheet" href="login.css" />
 </head>
 <body>
-    <nav class="navbar">
-      <div class="nav-logo">CZTRAINERS</div>
+<nav class="navbar">
+  <div class="nav-logo">CZTRAINERS</div>
 
-      <button class="hamburger" id="hamburger">&#9776;</button>
+  <button class="hamburger" id="hamburger">&#9776;</button>
 
-      <div class="nav-links" id="navLinks">
-        <a href="index_main.html" class="nav-button">Domů</a>
-        <a href="index.html" class="nav-button">Registrace</a>
-        <a href="login.html" class="nav-button">Přihlásit se</a>
-        <a href="o-nas.html" class="nav-button">O nás</a>
-      </div>
-    </nav>
+  <div class="nav-links" id="navLinks">
+    <a href="index_main.html" class="nav-button">Domů</a>
+    <div id="authButtons">
+      <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+    </div>
+    <a href="profile.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
+    <a href="o-nas.html" class="nav-button">O nás</a>
+  </div>
+</nav>
 
   <div class="login-container">
     <h2>Přihlášení</h2>

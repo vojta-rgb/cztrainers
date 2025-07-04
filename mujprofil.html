@@ -5,29 +5,24 @@
   <title>Můj profil</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="style_main.css" />
-  <style>
-    form {
-      max-width: 600px;
-      margin: auto;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #007BFF;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin-top: 10px;
-      border-radius: 5px;
-    }
-  </style>
 </head>
 <body>
+<nav class="navbar">
+  <div class="nav-logo">CZTRAINERS</div>
+
+  <button class="hamburger" id="hamburger">&#9776;</button>
+
+  <div class="nav-links" id="navLinks">
+    <a href="index_main.html" class="nav-button">Domů</a>
+    <div id="authButtons">
+      <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+    </div>
+    <a href="profile.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
+    <a href="o-nas.html" class="nav-button">O nás</a>
+  </div>
+</nav>
+
   <div class="container">
     <h2>Můj profil</h2>
     <form id="profileForm">
