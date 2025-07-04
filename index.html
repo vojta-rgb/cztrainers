@@ -57,11 +57,13 @@
     getAuth,
     createUserWithEmailAndPassword,
     sendEmailVerification,
-    onAuthStateChanged,
     signOut
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import {
+    getDatabase,
+    ref,
+    set
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
@@ -83,50 +85,39 @@
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    // First: Create the account
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
 
-        // Send verification email
-        sendEmailVerification(user)
-          .then(() => {
-            alert("Ověřovací e-mail byl odeslán. Zkontrolujte svou schránku a ověřte email.");
-            signOut(auth); // sign out to prevent further actions before verification
-          });
+        // Get all the user form data
+        const userData = {
+          name: document.getElementById("name").value,
+          prijmeni: document.getElementById("prijmeni").value,
+          email: user.email,
+          datum: document.getElementById("datum").value,
+          gender: document.getElementById("gender").value,
+          location: document.getElementById("location").value,
+          bio: document.getElementById("bio").value,
+          specializations: document.getElementById("specializations").value,
+          pricing: document.getElementById("pricing").value,
+          experience: document.getElementById("experience").value,
+          languages: document.getElementById("languages").value
+        };
 
+        // Save the user data under 'unverified-users'
+        return set(ref(db, 'unverified-users/' + user.uid), userData)
+          .then(() => {
+            return sendEmailVerification(user);
+          })
+          .then(() => {
+            alert("Ověřovací e-mail byl odeslán. Zkontrolujte svou schránku.");
+            signOut(auth);
+            document.getElementById("registerForm").reset();
+          });
       })
       .catch((error) => {
         alert("Chyba při registraci: " + error.message);
       });
-  });
-
-  // This part checks for verification and saves data only if verified
-  onAuthStateChanged(auth, (user) => {
-    if (user && user.emailVerified) {
-      const userData = {
-        name: document.getElementById("name").value,
-        prijmeni: document.getElementById("prijmeni").value,
-        email: user.email,
-        datum: document.getElementById("datum").value,
-        gender: document.getElementById("gender").value,
-        location: document.getElementById("location").value,
-        bio: document.getElementById("bio").value,
-        specializations: document.getElementById("specializations").value,
-        pricing: document.getElementById("pricing").value,
-        experience: document.getElementById("experience").value,
-        languages: document.getElementById("languages").value,
-      };
-
-      set(ref(db, 'users/' + user.uid), userData)
-        .then(() => {
-          alert("Registrace byla úspěšně dokončena!");
-          document.getElementById("registerForm").reset();
-        })
-        .catch((error) => {
-          alert("Chyba uložení dat: " + error.message);
-        });
-    }
   });
 </script>
 
