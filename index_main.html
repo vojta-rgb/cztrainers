@@ -96,11 +96,15 @@
     }
 
     users.forEach(([id, user]) => {
+      const photoURL = user.photoURL && user.photoURL.startsWith("http")
+        ? user.photoURL
+        : "https://via.placeholder.com/120?text=Foto";
+
       const card = document.createElement("a");
       card.className = "card";
       card.href = `profile.html?id=${id}`;
       card.innerHTML = `
-        <img class="profile-pic" src="${user.photoURL && user.photoURL.startsWith('http') ? user.photoURL : 'https://via.placeholder.com/120'}" alt="Profilový obrázek">
+        <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
         <div class="card-info">
           <h3>${user.name || "Neznámý"} ${user.prijmeni || ""}</h3>
           <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
@@ -111,7 +115,6 @@
       userList.appendChild(card);
     });
   }
-
 
   // 🔄 Update list based on search input
   function filterUsers() {
