@@ -88,27 +88,31 @@
   const searchInput = document.getElementById("search");
   let allUsers = [];
 
-  function renderUsers(users) {
-    userList.innerHTML = "";
-    if (users.length === 0) {
-      userList.innerHTML = "<p>Žádní uživatelé nebyli nalezeni.</p>";
-      return;
-    }
-
-    users.forEach(([id, user]) => {
-      const card = document.createElement("a");
-      card.className = "card";
-      card.href = `profile.html?id=${id}`;
-      card.innerHTML = `
-        <h3>${user.name || "Neznámý"} ${user.prijmeni || ""}</h3>
-        <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
-        <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-        <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
-        <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
-      `;
-      userList.appendChild(card);
-    });
+function renderUsers(users) {
+  userList.innerHTML = "";
+  if (users.length === 0) {
+    userList.innerHTML = "<p>Žádní uživatelé nebyli nalezeni.</p>";
+    return;
   }
+
+  users.forEach(([id, user]) => {
+    const card = document.createElement("a");
+    card.className = "card";
+    card.href = `profile.html?id=${id}`;
+    card.innerHTML = `
+      <div class="card-content">
+        <img class="profile-pic" src="${user.photoURL || 'https://via.placeholder.com/120'}" alt="Profilový obrázek">
+        <div class="card-info">
+          <h3>${user.name || "Neznámý"} ${user.prijmeni || ""}</h3>
+          <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
+          <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
+          <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
+        </div>
+      </div>
+    `;
+    userList.appendChild(card);
+  });
+}
 
   // 🔄 Update list based on search input
   function filterUsers() {
