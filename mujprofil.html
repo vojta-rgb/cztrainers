@@ -74,7 +74,7 @@
 
       const userRef = ref(db, "users/" + user.uid);
 
-      // Load data
+      // Load data how tf it aint working
       get(userRef).then((snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.val();
