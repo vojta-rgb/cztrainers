@@ -110,7 +110,7 @@
           languages: document.getElementById("languages").value
         };
 
-        // Save the user data under 'unverified-users'
+        // Save the user data under 'unverified-usersss'
         return set(ref(db, 'unverified-users/' + user.uid), userData)
           .then(() => {
             return sendEmailVerification(user);
