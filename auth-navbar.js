@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCYpN-GLPRWu-VhhOVruSgy5I1UN1k-2a4",
+  apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
   authDomain: "cztrainers-dat1.firebaseapp.com",
   databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "cztrainers-dat1",
