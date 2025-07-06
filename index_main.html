@@ -98,7 +98,7 @@
     users.forEach(([id, user]) => {
       const photoURL = user.photoURL && user.photoURL.startsWith("http")
         ? user.photoURL
-        : "https://via.placeholder.com/120?text=Foto";
+        : "https://placehold.co/600x400";
 
       const card = document.createElement("a");
       card.className = "card";
