@@ -40,6 +40,8 @@
       <input type="text" id="pricing" placeholder="Cena" />
       <input type="text" id="experience" placeholder="Roky zkušeností" />
       <input type="text" id="languages" placeholder="Jazyky" />
+      <img id="profilePreview" src="" alt="Profilový obrázek" style="max-width: 150px; display: none;" />
+      <input type="file" id="profileImage" accept="image/*" />
       <button type="submit">Uložit změny</button>
     </form>
   </div>
@@ -53,17 +55,39 @@
   const firebaseConfig = {
     apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
     authDomain: "cztrainers-dat1.firebaseapp.com",
-    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebaseio.com",
     projectId: "cztrainers-dat1",
     storageBucket: "cztrainers-dat1.appspot.com",
     messagingSenderId: "369200533487",
     appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
   };
 
+  const CLOUD_NAME = "your_cloud_name"; // 🔁 Replace this with your Cloudinary name
+  const UPLOAD_PRESET = "cztrainers_unsigned";
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
+
   const form = document.getElementById("profileForm");
+  const profileImageInput = document.getElementById("profileImage");
+  const profilePreview = document.getElementById("profilePreview");
+
+  let currentImageUrl = "";
+
+  async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    return data.secure_url;
+  }
 
   onAuthStateChanged(auth, (user) => {
     if (!user || !user.emailVerified) {
@@ -73,14 +97,11 @@
     }
 
     const userRef = ref(db, "users/" + user.uid);
-    let userEmail = user.email; // default fallback
 
-    // Load existing profile data
+    // Load existing profile
     get(userRef).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        userEmail = data.email || user.email; // fallback if email missing
-
         form.name.value = data.name || "";
         form.prijmeni.value = data.prijmeni || "";
         form.datum.value = data.datum || "";
@@ -91,12 +112,30 @@
         form.pricing.value = data.pricing || "";
         form.experience.value = data.experience || "";
         form.languages.value = data.languages || "";
+        currentImageUrl = data.profilePicture || "";
+
+        if (currentImageUrl) {
+          profilePreview.src = currentImageUrl;
+          profilePreview.style.display = "block";
+        }
       }
     });
 
-    // Save updated profile data
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      let newImageUrl = currentImageUrl;
+
+      // If new file is selected
+      if (profileImageInput.files.length > 0) {
+        try {
+          newImageUrl = await uploadToCloudinary(profileImageInput.files[0]);
+        } catch (err) {
+          alert("Nepodařilo se nahrát obrázek.");
+          return;
+        }
+      }
+
       const updatedData = {
         name: form.name.value,
         prijmeni: form.prijmeni.value,
@@ -108,15 +147,21 @@
         pricing: form.pricing.value,
         experience: form.experience.value,
         languages: form.languages.value,
-        email: userEmail  // 💡 Preserve email so user is not removed from homepage
+        email: user.email,
+        profilePicture: newImageUrl
       };
 
       set(userRef, updatedData)
         .then(() => {
           alert("Profil byl aktualizován.");
+          currentImageUrl = newImageUrl;
+          if (currentImageUrl) {
+            profilePreview.src = currentImageUrl;
+            profilePreview.style.display = "block";
+          }
         })
-        .catch((error) => {
-          alert("Chyba při ukládání: " + error.message);
+        .catch((err) => {
+          alert("Chyba při ukládání: " + err.message);
         });
     });
   });
