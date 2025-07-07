@@ -62,8 +62,9 @@
     appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
   };
 
-  const CLOUD_NAME = "dkt3pdcbe"; // Replace with your Cloudinary name
+  const CLOUD_NAME = "dkt3pdcbe";
   const UPLOAD_PRESET = "cztrainers_unsigned";
+  const MAX_FILE_SIZE = 500 * 1024; // 500 KB
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -75,6 +76,22 @@
 
   let currentImageUrl = "";
 
+  profileImageInput.addEventListener("change", () => {
+    const file = profileImageInput.files[0];
+    if (file && file.size <= MAX_FILE_SIZE) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        profilePreview.src = e.target.result;
+        profilePreview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Obrázek je příliš velký. Maximální velikost je 500 KB.");
+      profileImageInput.value = "";
+      profilePreview.style.display = "none";
+    }
+  });
+
   async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -84,6 +101,8 @@
       method: "POST",
       body: formData
     });
+
+    if (!res.ok) throw new Error("Image upload failed");
 
     const data = await res.json();
     return data.secure_url;
@@ -102,7 +121,6 @@
     get(userRef).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        console.log("Loaded profile data:", data); // Debug
 
         form.elements["name"].value = data.name || "";
         form.elements["prijmeni"].value = data.prijmeni || "";
@@ -120,8 +138,6 @@
           profilePreview.src = currentImageUrl;
           profilePreview.style.display = "block";
         }
-      } else {
-        console.warn("No data found for this user.");
       }
     });
 
@@ -131,8 +147,14 @@
       let newImageUrl = currentImageUrl;
 
       if (profileImageInput.files.length > 0) {
+        const file = profileImageInput.files[0];
+        if (file.size > MAX_FILE_SIZE) {
+          alert("Obrázek je příliš velký. Maximální velikost je 500 KB.");
+          return;
+        }
+
         try {
-          newImageUrl = await uploadToCloudinary(profileImageInput.files[0]);
+          newImageUrl = await uploadToCloudinary(file);
         } catch (err) {
           alert("Nepodařilo se nahrát obrázek.");
           return;
