@@ -81,49 +81,68 @@
     appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
   };
 
+  const CLOUD_NAME = "your_cloud_name"; // 🔁 Replace with your Cloudinary cloud name
+  const UPLOAD_PRESET = "cztrainers_unsigned"; // ✅ Must be an unsigned preset
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  document.getElementById("registerForm").addEventListener("submit", function (e) {
+  async function uploadImageToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) throw new Error("Image upload failed");
+
+    const data = await response.json();
+    return data.secure_url;
+  }
+
+  document.getElementById("registerForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const file = document.getElementById("profileImage").files[0];
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        // Get all the user form data
-        const userData = {
-          name: document.getElementById("name").value,
-          prijmeni: document.getElementById("prijmeni").value,
-          email: user.email,
-          datum: document.getElementById("datum").value,
-          gender: document.getElementById("gender").value,
-          location: document.getElementById("location").value,
-          bio: document.getElementById("bio").value,
-          specializations: document.getElementById("specializations").value,
-          pricing: document.getElementById("pricing").value,
-          experience: document.getElementById("experience").value,
-          languages: document.getElementById("languages").value
-        };
+      let profilePictureUrl = "";
+      if (file) {
+        profilePictureUrl = await uploadImageToCloudinary(file);
+      }
 
-        // Save the user data under 'unverified-usersss'
-        return set(ref(db, 'unverified-users/' + user.uid), userData)
-          .then(() => {
-            return sendEmailVerification(user);
-          })
-          .then(() => {
-            alert("Ověřovací e-mail byl odeslán. Zkontrolujte svou schránku.");
-            signOut(auth);
-            document.getElementById("registerForm").reset();
-          });
-      })
-      .catch((error) => {
-        alert("Chyba při registraci: " + error.message);
-      });
+      const userData = {
+        name: document.getElementById("name").value,
+        prijmeni: document.getElementById("prijmeni").value,
+        email: user.email,
+        datum: document.getElementById("datum").value,
+        gender: document.getElementById("gender").value,
+        location: document.getElementById("location").value,
+        bio: document.getElementById("bio").value,
+        specializations: document.getElementById("specializations").value,
+        pricing: document.getElementById("pricing").value,
+        experience: document.getElementById("experience").value,
+        languages: document.getElementById("languages").value,
+        profilePicture: profilePictureUrl
+      };
+
+      await set(ref(db, 'unverified-users/' + user.uid), userData);
+      await sendEmailVerification(user);
+      alert("Ověřovací e-mail byl odeslán. Zkontrolujte svou schránku.");
+      await signOut(auth);
+      this.reset();
+    } catch (error) {
+      alert("Chyba při registraci: " + error.message);
+    }
   });
 </script>
 
