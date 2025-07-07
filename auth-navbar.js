@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -11,7 +11,8 @@ const firebaseConfig = {
   appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
 };
 
-const app = initializeApp(firebaseConfig);
+// ✅ Avoid duplicate Firebase app initialization
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // ✅ Navbar element references
