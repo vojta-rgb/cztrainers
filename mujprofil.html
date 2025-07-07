@@ -45,7 +45,7 @@
   </div>
 
   <!-- FIREBASE PROFILE SCRIPT -->
-  <script type="module">
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -60,7 +60,7 @@
     appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
   };
 
-  const CLOUD_NAME = "your_cloud_name"; // 🔁 Replace this with your Cloudinary name
+  const CLOUD_NAME = "your_cloud_name"; // Replace with your Cloudinary name
   const UPLOAD_PRESET = "cztrainers_unsigned";
 
   const app = initializeApp(firebaseConfig);
@@ -97,38 +97,37 @@
     const userRef = ref(db, "users/" + user.uid);
 
     // Load existing profile
-  get(userRef).then((snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      console.log("Loaded profile data:", data); // ✅ Debug log
+    get(userRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        console.log("Loaded profile data:", data); // Debug
 
-      form.elements["name"].value = data.name || "";
-      form.elements["prijmeni"].value = data.prijmeni || "";
-      form.elements["datum"].value = data.datum || "";
-      form.elements["gender"].value = data.gender || "";
-      form.elements["location"].value = data.location || "";
-      form.elements["bio"].value = data.bio || "";
-      form.elements["specializations"].value = data.specializations || "";
-      form.elements["pricing"].value = data.pricing || "";
-      form.elements["experience"].value = data.experience || "";
-      form.elements["languages"].value = data.languages || "";
+        form.elements["name"].value = data.name || "";
+        form.elements["prijmeni"].value = data.prijmeni || "";
+        form.elements["datum"].value = data.datum || "";
+        form.elements["gender"].value = data.gender || "";
+        form.elements["location"].value = data.location || "";
+        form.elements["bio"].value = data.bio || "";
+        form.elements["specializations"].value = data.specializations || "";
+        form.elements["pricing"].value = data.pricing || "";
+        form.elements["experience"].value = data.experience || "";
+        form.elements["languages"].value = data.languages || "";
 
-      currentImageUrl = data.profilePicture || "";
-      if (currentImageUrl) {
-        profilePreview.src = currentImageUrl;
-        profilePreview.style.display = "block";
+        currentImageUrl = data.profilePicture || "";
+        if (currentImageUrl) {
+          profilePreview.src = currentImageUrl;
+          profilePreview.style.display = "block";
+        }
+      } else {
+        console.warn("No data found for this user.");
       }
-    } else {
-      console.warn("No data found for this user.");
-    }
-  });
+    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       let newImageUrl = currentImageUrl;
 
-      // If new file is selected
       if (profileImageInput.files.length > 0) {
         try {
           newImageUrl = await uploadToCloudinary(profileImageInput.files[0]);
@@ -139,16 +138,16 @@
       }
 
       const updatedData = {
-        name: form.name.value,
-        prijmeni: form.prijmeni.value,
-        datum: form.datum.value,
-        gender: form.gender.value,
-        location: form.location.value,
-        bio: form.bio.value,
-        specializations: form.specializations.value,
-        pricing: form.pricing.value,
-        experience: form.experience.value,
-        languages: form.languages.value,
+        name: form.elements["name"].value,
+        prijmeni: form.elements["prijmeni"].value,
+        datum: form.elements["datum"].value,
+        gender: form.elements["gender"].value,
+        location: form.elements["location"].value,
+        bio: form.elements["bio"].value,
+        specializations: form.elements["specializations"].value,
+        pricing: form.elements["pricing"].value,
+        experience: form.elements["experience"].value,
+        languages: form.elements["languages"].value,
         email: user.email,
         profilePicture: newImageUrl
       };
@@ -169,6 +168,7 @@
   });
 </script>
 
+  <script>
     document.getElementById("hamburger").addEventListener("click", function () {
       document.getElementById("navLinks").classList.toggle("active");
     });
