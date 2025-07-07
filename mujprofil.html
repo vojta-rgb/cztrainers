@@ -30,7 +30,7 @@
   <div class="container">
     <h2>Můj profil</h2>
     <form id="profileForm">
-      <input type="text" id="name" placeholder="" />
+      <input type="text" id="name" placeholder="Jmeno" />
       <input type="text" id="prijmeni" placeholder="Příjmení" />
       <input type="date" id="datum" />
       <input type="text" id="gender" placeholder="Pohlaví" />
@@ -102,16 +102,16 @@
     get(userRef).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        form.name.value = data.name || "";
-        form.prijmeni.value = data.prijmeni || "";
-        form.datum.value = data.datum || "";
-        form.gender.value = data.gender || "";
-        form.location.value = data.location || "";
-        form.bio.value = data.bio || "";
-        form.specializations.value = data.specializations || "";
-        form.pricing.value = data.pricing || "";
-        form.experience.value = data.experience || "";
-        form.languages.value = data.languages || "";
+        form.elements["name"].value = data.name || "";
+        form.elements["prijmeni"].value = data.prijmeni || "";
+        form.elements["datum"].value = data.datum || "";
+        form.elements["gender"].value = data.gender || "";
+        form.elements["location"].value = data.location || "";
+        form.elements["bio"].value = data.bio || "";
+        form.elements["specializations"].value = data.specializations || "";
+        form.elements["pricing"].value = data.pricing || "";
+        form.elements["experience"].value = data.experience || "";
+        form.elements["languages"].value = data.languages || "";
         currentImageUrl = data.profilePicture || "";
 
         if (currentImageUrl) {
