@@ -46,78 +46,82 @@
 
   <!-- FIREBASE PROFILE SCRIPT -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+    authDomain: "cztrainers-dat1.firebaseapp.com",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cztrainers-dat1",
+    storageBucket: "cztrainers-dat1.appspot.com",
+    messagingSenderId: "369200533487",
+    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const form = document.getElementById("profileForm");
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const form = document.getElementById("profileForm");
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user || !user.emailVerified) {
-        alert("Nejste přihlášen nebo nemáte ověřený email.");
-        window.location.href = "login.html";
-        return;
+  onAuthStateChanged(auth, (user) => {
+    if (!user || !user.emailVerified) {
+      alert("Nejste přihlášen nebo nemáte ověřený email.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const userRef = ref(db, "users/" + user.uid);
+    let userEmail = user.email; // default fallback
+
+    // Load existing profile data
+    get(userRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        userEmail = data.email || user.email; // fallback if email missing
+
+        form.name.value = data.name || "";
+        form.prijmeni.value = data.prijmeni || "";
+        form.datum.value = data.datum || "";
+        form.gender.value = data.gender || "";
+        form.location.value = data.location || "";
+        form.bio.value = data.bio || "";
+        form.specializations.value = data.specializations || "";
+        form.pricing.value = data.pricing || "";
+        form.experience.value = data.experience || "";
+        form.languages.value = data.languages || "";
       }
+    });
 
-      const userRef = ref(db, "users/" + user.uid);
+    // Save updated profile data
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const updatedData = {
+        name: form.name.value,
+        prijmeni: form.prijmeni.value,
+        datum: form.datum.value,
+        gender: form.gender.value,
+        location: form.location.value,
+        bio: form.bio.value,
+        specializations: form.specializations.value,
+        pricing: form.pricing.value,
+        experience: form.experience.value,
+        languages: form.languages.value,
+        email: userEmail  // 💡 Preserve email so user is not removed from homepage
+      };
 
-      // Load data how tf it aint working
-      get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          form.name.value = data.name || "";
-          form.prijmeni.value = data.prijmeni || "";
-          form.datum.value = data.datum || "";
-          form.gender.value = data.gender || "";
-          form.location.value = data.location || "";
-          form.bio.value = data.bio || "";
-          form.specializations.value = data.specializations || "";
-          form.pricing.value = data.pricing || "";
-          form.experience.value = data.experience || "";
-          form.languages.value = data.languages || "";
-        }
-      });
-
-      // Save data
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const updatedData = {
-          name: form.name.value,
-          prijmeni: form.prijmeni.value,
-          datum: form.datum.value,
-          gender: form.gender.value,
-          location: form.location.value,
-          bio: form.bio.value,
-          specializations: form.specializations.value,
-          pricing: form.pricing.value,
-          experience: form.experience.value,
-          languages: form.languages.value
-        };
-
-        set(userRef, updatedData).then(() => {
+      set(userRef, updatedData)
+        .then(() => {
           alert("Profil byl aktualizován.");
-        }).catch((error) => {
+        })
+        .catch((error) => {
           alert("Chyba při ukládání: " + error.message);
         });
-      });
     });
-  </script>
+  });
+</script>
 
-  <!-- Hamburger toggle -->
-  <script>
     document.getElementById("hamburger").addEventListener("click", function () {
       document.getElementById("navLinks").classList.toggle("active");
     });
