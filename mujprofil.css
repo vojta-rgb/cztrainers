@@ -93,3 +93,78 @@
     border-top: 1px solid rgba(255, 255, 255, 0.3);
   }
 }
+
+/* General container */
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fdfdfd;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+}
+
+/* Profile picture preview */
+#profilePreview {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  border: 3px solid #4caf50;
+}
+
+/* File input */
+#profileImage {
+  display: block;
+  margin: 10px auto 20px;
+}
+
+/* Form inputs */
+#profileForm input,
+#profileForm textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+#profileForm textarea {
+  resize: vertical;
+  height: 80px;
+}
+
+/* Submit button */
+#profileForm button {
+  background-color: #4caf50;
+  color: white;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#profileForm button:hover {
+  background-color: #45a049;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .container {
+    margin: 20px;
+    padding: 15px;
+  }
+
+  #profilePreview {
+    width: 120px;
+    height: 120px;
+  }
+}
