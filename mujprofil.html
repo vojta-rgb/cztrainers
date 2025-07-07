@@ -97,27 +97,31 @@
     const userRef = ref(db, "users/" + user.uid);
 
     // Load existing profile
-    get(userRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        form.elements["name"].value = data.name || "";
-        form.elements["prijmeni"].value = data.prijmeni || "";
-        form.elements["datum"].value = data.datum || "";
-        form.elements["gender"].value = data.gender || "";
-        form.elements["location"].value = data.location || "";
-        form.elements["bio"].value = data.bio || "";
-        form.elements["specializations"].value = data.specializations || "";
-        form.elements["pricing"].value = data.pricing || "";
-        form.elements["experience"].value = data.experience || "";
-        form.elements["languages"].value = data.languages || "";
-        currentImageUrl = data.profilePicture || "";
+  get(userRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log("Loaded profile data:", data); // ✅ Debug log
 
-        if (currentImageUrl) {
-          profilePreview.src = currentImageUrl;
-          profilePreview.style.display = "block";
-        }
+      form.elements["name"].value = data.name || "";
+      form.elements["prijmeni"].value = data.prijmeni || "";
+      form.elements["datum"].value = data.datum || "";
+      form.elements["gender"].value = data.gender || "";
+      form.elements["location"].value = data.location || "";
+      form.elements["bio"].value = data.bio || "";
+      form.elements["specializations"].value = data.specializations || "";
+      form.elements["pricing"].value = data.pricing || "";
+      form.elements["experience"].value = data.experience || "";
+      form.elements["languages"].value = data.languages || "";
+
+      currentImageUrl = data.profilePicture || "";
+      if (currentImageUrl) {
+        profilePreview.src = currentImageUrl;
+        profilePreview.style.display = "block";
       }
-    });
+    } else {
+      console.warn("No data found for this user.");
+    }
+  });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
