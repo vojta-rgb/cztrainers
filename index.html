@@ -81,12 +81,33 @@
     appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
   };
 
-  const CLOUD_NAME = "dkt3pdcbe"; // 🔁 Replace with your Cloudinary cloud name
-  const UPLOAD_PRESET = "cztrainers_unsigned"; // ✅ Must be an unsigned preset
+  const CLOUD_NAME = "dkt3pdcbe";
+  const UPLOAD_PRESET = "cztrainers_unsigned";
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
+
+  const MAX_FILE_SIZE = 500 * 1024; // 500 KB
+  const profileImageInput = document.getElementById("profileImage");
+  const profilePreview = document.getElementById("profilePreview");
+
+  // 🔁 Image preview and size check
+  profileImageInput.addEventListener("change", () => {
+    const file = profileImageInput.files[0];
+    if (file && file.size <= MAX_FILE_SIZE) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        profilePreview.src = e.target.result;
+        profilePreview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    } else {
+      profilePreview.style.display = "none";
+      alert("Soubor je příliš velký. Maximální velikost je 500 KB.");
+      profileImageInput.value = ""; // Reset input
+    }
+  });
 
   async function uploadImageToCloudinary(file) {
     const formData = new FormData();
@@ -109,7 +130,7 @@
 
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const file = document.getElementById("profileImage").files[0];
+    const file = profileImageInput.files[0];
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -117,6 +138,10 @@
 
       let profilePictureUrl = "";
       if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          alert("Soubor je příliš velký. Maximální velikost je 500 KB.");
+          return;
+        }
         profilePictureUrl = await uploadImageToCloudinary(file);
       }
 
