@@ -59,7 +59,10 @@ body.dark::before {
   display: flex;
   gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
 }
 
 .nav-button {
@@ -71,6 +74,7 @@ body.dark::before {
   text-decoration: none;
   font-weight: 600;
   transition: background 0.3s, transform 0.2s;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
@@ -79,21 +83,29 @@ body.dark::before {
   transform: scale(1.05);
 }
 
+/* Theme Toggle - fixed size and no hover reaction */
 .theme-toggle {
-  background: none;
+  width: 38px;
+  height: 27px;
+  background: #0062b5;
   color: white;
   border: none;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
-  padding: 0.4rem;
-  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
-  transform: scale(1.2);
+  background: #0062b5;
+  transform: none;
 }
 
+/* Hamburger menu */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -101,18 +113,26 @@ body.dark::before {
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 0.5rem;
 }
 
 .hamburger span {
   width: 25px;
   height: 3px;
   background: white;
+  display: block;
+  border-radius: 2px;
 }
 
 /* Responsive nav */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
+  }
+
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .nav-links {
@@ -124,6 +144,11 @@ body.dark::before {
 
   .nav-links.active {
     display: flex;
+  }
+
+  .nav-links a,
+  .theme-toggle {
+    margin-right: auto;
   }
 }
 
