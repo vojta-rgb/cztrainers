@@ -127,7 +127,7 @@
       }
 
       users.forEach(([id, user]) => {
-        const photoURL = user.profilePicture?.startsWith("http") ? user.profilePicture : "https://placehold.co/300x200?text=Profil";
+        const photoURL = user.profilePicture?.startsWith("http") ? user.profilePicture : "https://placehold.co/300x300?text=Profil";
         const name = user.name?.trim() || "Neznámý";
         const lastName = user.prijmeni?.trim() || "";
 
