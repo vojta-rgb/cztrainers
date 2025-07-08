@@ -33,7 +33,7 @@ body::before {
 
 body.dark {
   background: #121212;
-  color: #f4f4f4;
+  color: var(--light);
 }
 
 body.dark::before {
@@ -57,14 +57,15 @@ body.dark::before {
 
 .nav-links {
   display: flex;
-  gap: 1rem;
-  align-items: center;
   flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
   overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.nav-links a {
-  white-space: nowrap;
+.nav-links::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-button {
@@ -74,8 +75,9 @@ body.dark::before {
   border: 1px solid white;
   border-radius: var(--radius);
   padding: 0.4rem 0.8rem;
-  transition: 0.3s;
   font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.3s, color 0.3s;
 }
 
 .nav-button:hover {
@@ -83,27 +85,91 @@ body.dark::before {
   color: var(--primary);
 }
 
-/* Theme Toggle */
 .theme-toggle {
-  font-size: 1rem;
   width: 38px;
   height: 27px;
-  background: #0062b5;
-  color: white;
+  padding: 0;
+  font-size: 1rem;
   border: none;
-  border-radius: var(--radius);
+  background: transparent;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex-shrink: 0;
-  padding: 0;
+  line-height: 1;
 }
 
-/* Remove hover effect */
-.theme-toggle:hover {
-  background: #0062b5;
+
+/* Hamburger (optional hidden on desktop) */
+.hamburger {
+  display: none;
+}
+
+.page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 3rem;
+  min-height: calc(100vh - 80px);
+}
+
+/* Login Box */
+.login-container {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(6px);
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark .login-container {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  background: white;
+}
+
+body.dark input {
+  background: #1e1e1e;
+  color: var(--light);
+  border-color: #444;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--primary);
   color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #005fa3;
+}
+
+/* Message */
+.message {
+  margin-top: 1rem;
+  text-align: center;
+  color: red;
 }
 
 /* Toast */
@@ -111,117 +177,17 @@ body.dark::before {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: var(--primary);
+  background: #333;
   color: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  padding: 10px 20px;
+  border-radius: 8px;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1000;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 9999;
 }
 
 .toast.show {
   opacity: 1;
-}
-
-/* Login form */
-.page-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  min-height: 100vh;
-}
-
-.login-container {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: var(--radius);
-  padding: 2rem;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  width: 100%;
-  max-width: 400px;
-}
-
-.login-container h2 {
-  text-align: left;
-  margin-bottom: 1.5rem;
-  color: var(--dark);
-}
-
-.login-container input {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border-radius: var(--radius);
-  border: 1px solid #ccc;
-  font-family: inherit;
-}
-
-.login-container button {
-  width: 100%;
-  background-color: var(--primary);
-  color: white;
-  padding: 0.75rem;
-  border: none;
-  border-radius: var(--radius);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-container button:hover {
-  background-color: #005bb5;
-}
-
-.message {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-}
-
-/* Hamburger (mobile) */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-}
-
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: white;
-  display: block;
-  border-radius: 2px;
-}
-
-/* Mobile nav behavior */
-@media (max-width: 768px) {
-  .hamburger {
-    display: flex;
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
-
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .nav-links a,
-  .theme-toggle {
-    margin-right: auto;
-  }
+  transform: translateY(0);
 }
