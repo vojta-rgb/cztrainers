@@ -39,6 +39,7 @@ body.dark::before {
   opacity: 0.04;
 }
 
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -106,22 +107,25 @@ body.dark::before {
   background: white;
 }
 
+/* Responsive Nav */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
   }
+
   .nav-links {
     display: none;
     flex-direction: column;
     width: 100%;
     padding-top: 1rem;
   }
+
   .nav-links.active {
     display: flex;
   }
 }
 
-/* Login Form */
+/* Page Container */
 .page-container {
   display: flex;
   justify-content: center;
@@ -130,21 +134,24 @@ body.dark::before {
   min-height: calc(100vh - 80px);
 }
 
+/* Login Box */
 .login-container {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 2rem;
   width: 100%;
   max-width: 400px;
   transition: background 0.3s, color 0.3s;
+  backdrop-filter: blur(6px);
 }
 
 body.dark .login-container {
-  background: #1e1e1e;
+  background: rgba(0, 0, 0, 0.6);
   color: var(--light);
 }
 
+/* Inputs */
 input {
   width: 100%;
   padding: 0.8rem;
@@ -152,8 +159,17 @@ input {
   border: 1px solid #ccc;
   border-radius: var(--radius);
   font-size: 1rem;
+  box-sizing: border-box;
+  background: white;
 }
 
+body.dark input {
+  background: #1e1e1e;
+  color: var(--light);
+  border-color: #444;
+}
+
+/* Button */
 button {
   width: 100%;
   padding: 0.8rem;
@@ -163,20 +179,22 @@ button {
   font-weight: bold;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s ease;
+  font-size: 1rem;
 }
 
 button:hover {
   background: #005fa3;
 }
 
+/* Error Message */
 .message {
   margin-top: 1rem;
   text-align: center;
   color: red;
 }
 
-/* Toast */
+/* Toast Notification */
 .toast {
   position: fixed;
   bottom: 20px;
