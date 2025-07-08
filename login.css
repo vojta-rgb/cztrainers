@@ -35,7 +35,6 @@ body.dark {
   background: #121212;
   color: var(--light);
 }
-
 body.dark::before {
   opacity: 0.04;
 }
@@ -61,8 +60,9 @@ body.dark::before {
   align-items: center;
   flex-wrap: nowrap;
   overflow-x: auto;
-  justify-content: flex-end;
-  scrollbar-width: none;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  justify-content: flex-start;
 }
 
 .nav-button {
@@ -74,7 +74,6 @@ body.dark::before {
   text-decoration: none;
   font-weight: 600;
   transition: background 0.3s, transform 0.2s;
-  white-space: nowrap;
 }
 
 .nav-button:hover {
@@ -83,16 +82,12 @@ body.dark::before {
   transform: scale(1.05);
 }
 
-/* Theme toggle (small and non-reactive like O nás) */
 .theme-toggle {
   font-size: 1.2rem;
   background: none;
   border: none;
   color: white;
   cursor: pointer;
-  padding: 0;
-  margin-left: 0.5rem;
-  line-height: 1;
 }
 
 /* Hamburger */
@@ -104,14 +99,13 @@ body.dark::before {
   border: none;
   cursor: pointer;
 }
-
 .hamburger span {
   width: 25px;
   height: 3px;
   background: white;
 }
 
-/* Responsive nav - force horizontal layout */
+/* Responsive Nav */
 @media (max-width: 768px) {
   .hamburger {
     display: none;
@@ -120,7 +114,7 @@ body.dark::before {
   .nav-links {
     flex-wrap: nowrap;
     overflow-x: auto;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 }
 
