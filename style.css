@@ -14,11 +14,30 @@ body {
   margin: 0;
   transition: background 0.3s, color 0.3s;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  z-index: -1;
 }
 
 body.dark {
   background: #121212;
-  color: #f4f4f4;
+  color: var(--light);
+}
+
+body.dark::before {
+  opacity: 0.04;
 }
 
 /* Navbar */
@@ -40,62 +59,101 @@ body.dark {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-button {
   color: white;
   background: transparent;
-  text-decoration: none;
   border: 1px solid white;
   border-radius: var(--radius);
   padding: 0.4rem 0.8rem;
-  transition: 0.3s;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
 }
 
 .nav-button:hover {
   background: white;
   color: var(--primary);
+  transform: scale(1.05);
+}
+
+.theme-toggle {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 0.4rem;
+  line-height: 1;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.2);
 }
 
 .hamburger {
   display: none;
-  font-size: 28px;
-  background: none;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
   border: none;
-  color: white;
   cursor: pointer;
 }
 
-.theme-toggle {
-  font-size: 1.2rem;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: white;
 }
 
-/* Form container */
+/* Responsive nav */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 1rem;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+}
+
+/* Page Wrapper */
 .page-wrapper {
   display: flex;
   justify-content: center;
   padding: 2rem;
+  min-height: calc(100vh - 80px);
+  align-items: center;
 }
 
+/* Form Container */
 .form-container {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
-  padding: 2rem;
-  max-width: 600px;
-  width: 100%;
   box-shadow: var(--shadow);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  backdrop-filter: blur(8px);
   transition: background 0.3s, color 0.3s;
 }
 
 body.dark .form-container {
-  background: #1e1e1e;
-  color: #f4f4f4;
+  background: rgba(30, 30, 30, 0.85);
+  color: var(--light);
 }
 
+/* Form Elements */
 form input,
 form select,
 form textarea,
@@ -123,6 +181,7 @@ form button {
   color: white;
   font-weight: bold;
   cursor: pointer;
+  border: none;
 }
 
 form button:hover {
@@ -138,22 +197,4 @@ form button:hover {
 
 .btn-red:hover {
   background: darkred;
-}
-
-/* Responsive nav */
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
 }
