@@ -1,144 +1,200 @@
-/* === Global Styles === */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-body {
-  font-family: 'Roboto', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f7f9fc;
-  color: #333;
+:root {
+  --primary: #0072CE;
+  --dark: #111;
+  --light: #f4f4f4;
+  --white: #fff;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* === Navigation Bar === */
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--light);
+  color: var(--dark);
+  margin: 0;
+  transition: background 0.3s, color 0.3s;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  z-index: -1;
+}
+
+body.dark {
+  background: #121212;
+  color: var(--light);
+}
+
+body.dark::before {
+  opacity: 0.04;
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #004aad;
-  color: white;
+  background: var(--primary);
   padding: 1rem 2rem;
+  color: white;
+  flex-wrap: wrap;
 }
 
-.nav-logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+.nav-logo img {
+  height: 60px;
 }
 
 .nav-links {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .nav-button {
   color: white;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: background-color 0.3s ease;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid white;
+  border-radius: var(--radius);
+  transition: background 0.3s, transform 0.2s;
 }
 
 .nav-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: white;
+  color: var(--primary);
+  transform: scale(1.05);
 }
 
-/* === Hamburger for mobile === */
-.hamburger {
-  display: none;
-  font-size: 1.5rem;
+.theme-toggle {
   background: none;
-  border: none;
   color: white;
+  border: none;
+  font-size: 1.2rem;
   cursor: pointer;
 }
 
-/* === Container === */
-.container {
-  max-width: 700px;
-  margin: 2rem auto;
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+.theme-toggle:hover {
+  transform: scale(1.2);
 }
 
-/* === Heading === */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: white;
+}
+
+.container {
+  max-width: 600px;
+  margin: 2rem auto;
+  background: var(--white);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+body.dark .container {
+  background: #1e1e1e;
+}
+
 .container h2 {
   margin-bottom: 1.5rem;
-  font-size: 2rem;
-  color: #004aad;
+  color: var(--primary);
   text-align: center;
 }
 
-/* === Form === */
 form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-input[type="text"],
-input[type="date"],
-textarea {
+input, textarea {
   padding: 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 1rem;
-  width: 100%;
   box-sizing: border-box;
+  width: 100%;
 }
 
 textarea {
   resize: vertical;
-  min-height: 100px;
 }
 
-input[type="file"] {
-  margin-top: 1rem;
-}
-
-button[type="submit"] {
-  background-color: #004aad;
+button {
+  padding: 0.8rem;
+  background: var(--primary);
   color: white;
-  padding: 0.75rem;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  font-weight: bold;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-button[type="submit"]:hover {
-  background-color: #003080;
+button:hover {
+  background: #005fa3;
 }
 
-/* === Profile Image Preview === */
 #profilePreview {
-  margin-top: 1rem;
-  border-radius: 8px;
   max-width: 100%;
-  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius);
   object-fit: cover;
-  border: 1px solid #ccc;
+  display: block;
 }
 
-/* === Responsive Navigation === */
-@media screen and (max-width: 768px) {
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
   .nav-links {
     display: none;
     flex-direction: column;
-    background-color: #004aad;
-    position: absolute;
-    top: 60px;
-    right: 0;
     width: 100%;
-    padding: 1rem;
+    padding-top: 1rem;
   }
 
   .nav-links.active {
     display: flex;
-  }
-
-  .hamburger {
-    display: block;
   }
 }
