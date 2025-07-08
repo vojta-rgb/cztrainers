@@ -1,4 +1,4 @@
-<!-- soubor: cztrainers_clickable_cards.html -->
+<!-- CZTRAINERS – clickable cards with hover and correct profile link -->
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -57,18 +57,6 @@
       color: white;
       padding: 1rem 2rem;
       flex-wrap: wrap;
-      animation: slideDown 0.6s ease-out forwards;
-    }
-
-    @keyframes slideDown {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
     }
 
     .nav-logo img {
@@ -155,22 +143,22 @@
     }
 
     .card {
+      display: block;
       background: var(--white);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
-      animation: fadeInUp 0.5s ease forwards;
       transform: translateY(20px);
       opacity: 0;
       transition: all 0.3s ease;
-      cursor: pointer;
-      display: block;
       text-decoration: none;
       color: inherit;
+      animation: fadeInUp 0.5s ease forwards;
     }
 
     .card:hover {
-      transform: scale(1.03);
+      transform: scale(1.05);
+      filter: brightness(1.05);
     }
 
     body.dark .card {
@@ -339,7 +327,7 @@
 
         const card = document.createElement("a");
         card.className = "card";
-        card.href = `profil.html?id=${id}`;
+        card.href = `profile.html?id=${id}`;
         card.innerHTML = `
           <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
           <div class="card-info">
