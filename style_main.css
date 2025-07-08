@@ -28,12 +28,11 @@ body::before {
   background-repeat: repeat;
   opacity: 0.08;
   z-index: -1;
-  transition: opacity 0.3s;
 }
 
 body.dark {
   background: #121212;
-  color: #f4f4f4;
+  color: var(--light);
 }
 
 body.dark::before {
@@ -58,6 +57,8 @@ body.dark::before {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .nav-button {
@@ -67,44 +68,63 @@ body.dark::before {
   padding: 0.4rem 0.8rem;
   border: 1px solid white;
   border-radius: var(--radius);
-  transition: background 0.3s, transform 0.2s ease;
+  transition: background 0.3s;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
   background: white;
   color: var(--primary);
-  transform: scale(1.05);
 }
 
 .theme-toggle {
-  font-size: 1.2rem;
+  font-size: 1rem;
   background: none;
   color: white;
   border: none;
   cursor: pointer;
   padding: 0.4rem;
-  transition: transform 0.2s ease;
+  line-height: 1;
 }
 
-.theme-toggle:hover {
-  transform: scale(1.2);
-}
-
+/* Hamburger */
 .hamburger {
   display: none;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 5px;
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 6px;
 }
 
 .hamburger span {
-  width: 25px;
+  width: 28px;
   height: 3px;
   background: white;
+  border-radius: 2px;
 }
 
+/* Responsive nav */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 1rem;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+}
+
+/* Content */
 .container {
   padding: 2rem;
   max-width: 1200px;
@@ -154,7 +174,7 @@ h1 {
 
 body.dark .card {
   background: #1e1e1e;
-  color: #f4f4f4;
+  color: var(--light);
 }
 
 @keyframes fadeInUp {
@@ -166,11 +186,10 @@ body.dark .card {
 
 .profile-pic {
   width: 100%;
-  aspect-ratio: 1 / 1; /* zajišťuje poměr stran 1:1 */
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 12px;
 }
-
 
 .card-info {
   padding: 1rem;
@@ -204,21 +223,4 @@ body.dark .card {
 .toast.show {
   opacity: 1;
   transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-  .hamburger {
-    display: flex;
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
 }
