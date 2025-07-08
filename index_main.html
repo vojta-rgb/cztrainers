@@ -19,9 +19,9 @@
       font-family: 'Inter', sans-serif;
       background: var(--light);
       color: var(--dark);
-      position: relative;
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
+      position: relative;
     }
 
     body::before {
@@ -31,7 +31,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-image: url("https://github.com/vojta-rgb/cztrainers/blob/main/dumbell%20art.png");
+      background-image: url("https://raw.githubusercontent.com/vojta-rgb/cztrainers/main/dumbell%20art.png");
       background-size: 200px;
       background-repeat: repeat;
       opacity: 0.08;
@@ -41,7 +41,7 @@
 
     body.dark {
       background: #121212;
-      color: #f4f4f4;
+      color: var(--light);
     }
 
     body.dark::before {
@@ -56,16 +56,12 @@
       color: white;
       padding: 1rem 2rem;
       flex-wrap: wrap;
-      transform: translateY(-20px);
-      opacity: 0;
       animation: slideDown 0.6s ease-out forwards;
     }
 
     @keyframes slideDown {
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .nav-logo img {
@@ -101,11 +97,6 @@
       border: none;
       cursor: pointer;
       padding: 0.4rem;
-      transition: transform 0.2s ease;
-    }
-
-    .theme-toggle:hover {
-      transform: scale(1.2);
     }
 
     .hamburger {
@@ -152,52 +143,25 @@
     }
 
     .card {
-      perspective: 1000px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
       animation: fadeInUp 0.5s ease forwards;
       transform: translateY(20px);
       opacity: 0;
+      transition: transform 0.3s;
     }
 
-    .card:nth-child(1) { animation-delay: 0.05s; }
-    .card:nth-child(2) { animation-delay: 0.1s; }
-    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:hover {
+      transform: translateY(10px);
+    }
 
     @keyframes fadeInUp {
       to {
         transform: translateY(0);
         opacity: 1;
       }
-    }
-
-    .card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.6s;
-    }
-
-    .card:hover .card-inner {
-      transform: rotateY(180deg);
-    }
-
-    .card-face {
-      position: absolute;
-      width: 100%;
-      backface-visibility: hidden;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      background: var(--white);
-    }
-
-    .card-front {
-      z-index: 2;
-    }
-
-    .card-back {
-      transform: rotateY(180deg);
-      padding: 1rem;
     }
 
     .profile-pic {
@@ -269,7 +233,7 @@
 
   <script>
     if (localStorage.getItem('theme') === 'dark') {
-      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -286,10 +250,6 @@
         setTimeout(() => toast.classList.remove('show'), 2000);
       }
 
-      if (localStorage.getItem('theme') === 'dark') {
-        updateThemeUI(true);
-      }
-
       themeToggle.addEventListener('click', () => {
         const isDark = !document.body.classList.contains('dark');
         updateThemeUI(isDark);
@@ -298,6 +258,11 @@
       document.getElementById("hamburger").addEventListener("click", () => {
         document.getElementById("navLinks").classList.toggle("active");
       });
+
+      // auto apply saved theme
+      if (localStorage.getItem('theme') === 'dark') {
+        updateThemeUI(true);
+      }
     });
   </script>
 
@@ -363,18 +328,12 @@
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-          <div class="card-inner">
-            <div class="card-face card-front">
-              <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
-              <div class="card-info">
-                <h3>${name} ${lastName}</h3>
-              </div>
-            </div>
-            <div class="card-face card-back">
-              <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-              <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
-              <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
-            </div>
+          <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
+          <div class="card-info">
+            <h3>${name} ${lastName}</h3>
+            <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
+            <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
+            <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
           </div>
         `;
         userList.appendChild(card);
@@ -435,4 +394,3 @@
   <div id="toast" class="toast"></div>
 </body>
 </html>
-
