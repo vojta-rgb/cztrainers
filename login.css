@@ -1,26 +1,45 @@
 :root {
   --primary: #0072CE;
-  --light: #f4f4f4;
   --dark: #111;
+  --light: #f4f4f4;
   --white: #fff;
   --radius: 12px;
-  --transition: 0.3s ease;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: var(--light);
   color: var(--dark);
-  margin: 0;
-  transition: background var(--transition), color var(--transition);
   min-height: 100vh;
+  margin: 0;
+  transition: background 0.3s, color 0.3s;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  z-index: -1;
 }
 
 body.dark {
   background: #121212;
   color: var(--light);
 }
+body.dark::before {
+  opacity: 0.04;
+}
 
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -44,33 +63,60 @@ body.dark {
 .nav-button {
   color: white;
   background: transparent;
-  text-decoration: none;
   border: 1px solid white;
   border-radius: var(--radius);
   padding: 0.4rem 0.8rem;
-  transition: 0.3s;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
 }
 
 .nav-button:hover {
   background: white;
   color: var(--primary);
+  transform: scale(1.05);
+}
+
+.theme-toggle {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.theme-toggle:hover {
+  transform: scale(1.2);
 }
 
 .hamburger {
   display: none;
-  font-size: 28px;
-  background: none;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
   border: none;
-  color: white;
   cursor: pointer;
 }
 
-.theme-toggle {
-  font-size: 1.2rem;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 1rem;
+  }
+  .nav-links.active {
+    display: flex;
+  }
 }
 
 /* Login Form */
@@ -78,18 +124,18 @@ body.dark {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 60px);
-  padding-top: 60px;
+  padding-top: 3rem;
+  min-height: calc(100vh - 80px);
 }
 
 .login-container {
   background: var(--white);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 2rem;
-  max-width: 400px;
   width: 100%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: background var(--transition), color var(--transition);
+  max-width: 400px;
+  transition: background 0.3s, color 0.3s;
 }
 
 body.dark .login-container {
@@ -99,30 +145,23 @@ body.dark .login-container {
 
 input {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
   border: 1px solid #ccc;
+  border-radius: var(--radius);
   font-size: 1rem;
-  background: white;
-}
-
-body.dark input {
-  background: #2b2b2b;
-  color: white;
-  border-color: #555;
 }
 
 button {
   width: 100%;
-  padding: 10px;
-  margin-top: 15px;
+  padding: 0.8rem;
   background: var(--primary);
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 1rem;
+  font-weight: bold;
+  border-radius: var(--radius);
   cursor: pointer;
+  transition: background 0.3s;
 }
 
 button:hover {
@@ -130,25 +169,27 @@ button:hover {
 }
 
 .message {
-  margin-top: 15px;
+  margin-top: 1rem;
   text-align: center;
   color: red;
 }
 
-/* Responsive Navbar */
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 9999;
+}
 
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
 }
