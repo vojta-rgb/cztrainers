@@ -351,9 +351,21 @@ body.dark .card:hover {
         const photoURL = user.profilePicture?.startsWith("http") ? user.profilePicture : "https://placehold.co/300x200?text=Profil";
         const name = user.name?.trim() || "Neznámý";
         const lastName = user.prijmeni?.trim() || "";
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
+        const card = document.createElement("a");
+card.className = "card";
+card.href = `profil.html?id=${id}`;
+card.style.textDecoration = "none";
+card.style.color = "inherit";
+card.innerHTML = `
+  <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
+  <div class="card-info">
+    <h3>${name} ${lastName}</h3>
+    <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
+    <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
+    <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
+  </div>
+`;
+
           <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
           <div class="card-info">
             <h3>${name} ${lastName}</h3>
