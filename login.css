@@ -78,14 +78,15 @@ body.dark::before {
 }
 
 .theme-toggle {
+  font-size: 1.2rem;
   background: none;
   color: white;
   border: none;
-  font-size: 1.2rem;
   cursor: pointer;
   padding: 0.4rem;
   transition: transform 0.2s ease;
 }
+
 .theme-toggle:hover {
   transform: scale(1.2);
 }
