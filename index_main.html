@@ -166,8 +166,8 @@
 }
 
 .card:hover {
-  transform: translateY(0) scale(1.02);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+ transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
 body.dark .card {
@@ -177,7 +177,7 @@ body.dark .card {
 }
 
 body.dark .card:hover {
-  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.08);
+ box-shadow: 0 12px 24px rgba(255, 255, 255, 0.1);
 }
 
 
@@ -224,7 +224,7 @@ body.dark .card:hover {
     }
 
     .toast.show {
-      animation: toastFadeIn 0.4s ease, toastFadeOut 0.4s ease 1.6s;
+      animation: toastFadeIn 0.4s ease, toastFadeOut 1.2s ease 3s;
     }
 
     @keyframes toastFadeIn {
@@ -271,7 +271,7 @@ body.dark .card:hover {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         toast.textContent = isDark ? 'Tmavý mód zapnut' : 'Světlý mód zapnut';
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
+        setTimeout(() => toast.classList.remove('show'), 4200);
       }
 
       if (localStorage.getItem('theme') === 'dark') {
