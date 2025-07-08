@@ -9,8 +9,12 @@
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-logo">CZTRAINERS</div>
-    <button class="hamburger" id="hamburger">&#9776;</button>
+    <div class="nav-logo">
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
       <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
@@ -18,18 +22,19 @@
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Přepnout téma">
+        <span id="themeIcon">☀️</span>
+      </button>
     </div>
   </nav>
 
   <main class="page-container">
     <div class="login-wrapper">
-      <div class="login-box">
-        <h2>Přihlášení</h2>
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Heslo" required />
-        <button id="loginFormBtn">Přihlásit se</button>
-        <div class="message" id="messageBox"></div>
-      </div>
+      <h2>Přihlášení</h2>
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Heslo" required />
+      <button id="loginFormBtn">Přihlásit se</button>
+      <div class="message" id="messageBox"></div>
     </div>
   </main>
 
@@ -51,11 +56,11 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-    const messageBox = document.getElementById("messageBox");
 
     document.getElementById("loginFormBtn").addEventListener("click", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+      const messageBox = document.getElementById("messageBox");
 
       if (!email || !password) {
         messageBox.textContent = "Zadejte prosím email a heslo.";
@@ -65,7 +70,6 @@
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-
           if (!user.emailVerified) {
             messageBox.textContent = "Nejprve prosím ověřte svůj e-mail.";
             signOut(auth);
@@ -105,11 +109,27 @@
   </script>
 
   <script>
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function updateTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      updateTheme(true);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = !document.body.classList.contains("dark");
+      updateTheme(isDark);
+    });
+
     document.getElementById("hamburger").addEventListener("click", () => {
       document.getElementById("navLinks").classList.toggle("active");
     });
   </script>
-
-  <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
