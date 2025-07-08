@@ -3,17 +3,14 @@ body {
   background: #f4f4f4;
   margin: 0;
 }
-
 .container {
   max-width: 900px;
   margin: 0 auto;
 }
-
 h1 {
   text-align: center;
   margin-bottom: 20px;
 }
-
 #search {
   width: 100%;
   padding: 10px 14px;
@@ -22,7 +19,6 @@ h1 {
   border-radius: 6px;
   margin-bottom: 20px;
 }
-
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -31,7 +27,6 @@ h1 {
   max-width: 1200px;
   margin: auto;
 }
-
 .card {
   background-color: white;
   border-radius: 16px;
@@ -45,11 +40,9 @@ h1 {
   transition: transform 0.2s;
   padding: 16px;
 }
-
 .card:hover {
   transform: scale(1.02);
 }
-
 .profile-pic {
   width: 120px;
   height: 120px;
@@ -57,21 +50,16 @@ h1 {
   border-radius: 8px;
   margin-bottom: 16px;
 }
-
 .card-info {
   text-align: center;
   width: 100%;
 }
-
 .card-info h3 {
   margin: 8px 0;
 }
-
 .card-info p {
   margin: 4px 0;
 }
-
-/* Button (bottom of page) */
 .button {
   display: block;
   width: fit-content;
@@ -83,7 +71,6 @@ h1 {
   border-radius: 6px;
   text-align: center;
 }
-
 .profilecard {
   background: white;
   border-radius: 10px;
@@ -101,11 +88,9 @@ h1 {
   max-width: 100%;
   box-sizing: border-box;
 }
-
 .profilecard h2{
   text-align: center;
 }
-
 .button {
   display: inline-block;
   padding: 12px 24px;
@@ -121,7 +106,6 @@ h1 {
   text-align: center;
   text-decoration: none;
 }
-
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -131,17 +115,14 @@ h1 {
   color: white;
   position: relative;
 }
-
 .nav-logo {
   font-size: 1.5rem;
   font-weight: bold;
 }
-
 .nav-links {
   display: flex;
   gap: 16px;
 }
-
 .nav-button {
   color: white;
   background-color: transparent;
@@ -152,13 +133,10 @@ h1 {
   font-weight: 500;
   transition: all 0.3s ease;
 }
-
 .nav-button:hover {
   background-color: white;
   color: #4CAF50;
 }
-
-/* Hamburger button (hidden on desktop) */
 .hamburger {
   display: none;
   font-size: 28px;
@@ -167,29 +145,24 @@ h1 {
   border: none;
   cursor: pointer;
 }
-
-/* Responsive styles */
 @media (max-width: 768px) {
   .hamburger {
     display: block;
   }
-
   .nav-links {
     display: none;
     flex-direction: column;
     position: absolute;
-    top: 60px; /* below navbar */
+    top: 60px;
     right: 0;
     background-color: #4CAF50;
     width: 100%;
     padding: 10px 0;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   }
-
   .nav-links.active {
     display: flex;
   }
-
   .nav-button {
     width: 100%;
     text-align: center;
@@ -198,13 +171,22 @@ h1 {
     border-top: 1px solid rgba(255, 255, 255, 0.3);
   }
 }
-
 .profile-image {
   width: 100%;
-  max-width: 300px; /* or larger if you want */
+  max-width: 300px;
   height: auto;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   display: block;
   margin: 20px auto;
+}
+
+
+:root {
+  --primary: #0072CE;
+  --dark: #111;
+  --light: #f4f4f4;
+  --white: #fff;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
