@@ -9,7 +9,7 @@
 <body>
   <nav class="navbar">
     <div class="nav-logo">
-      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" style="height: 60px;" />
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
     </div>
     <button class="hamburger" id="hamburger">&#9776;</button>
     <div class="nav-links" id="navLinks">
@@ -54,7 +54,6 @@
   </div>
 
   <script type="module">
-    // --- Firebase ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut
@@ -99,7 +98,7 @@
         body: formData
       });
 
-      if (!response.ok) throw new Error("Image upload failed");
+      if (!response.ok) throw new Error("Nahrání obrázku selhalo");
       const data = await response.json();
       return data.secure_url;
     }
@@ -115,11 +114,7 @@
         const user = userCredential.user;
 
         let profilePictureUrl = "";
-        if (file) {
-          if (file.size > MAX_FILE_SIZE) {
-            alert("Soubor je příliš velký.");
-            return;
-          }
+        if (file && file.size <= MAX_FILE_SIZE) {
           profilePictureUrl = await uploadImageToCloudinary(file);
         }
 
@@ -155,13 +150,8 @@
       document.getElementById("navLinks").classList.toggle("active");
     });
 
-    // Dark/light mode from localStorage
-    const themeToggle = document.createElement("button");
-    themeToggle.id = "themeToggle";
-    themeToggle.className = "theme-toggle";
-    themeToggle.innerHTML = `<span id="themeIcon">☀️</span>`;
-    document.querySelector(".nav-links").appendChild(themeToggle);
-
+    // Dark/light mode
+    const themeToggle = document.getElementById("themeToggle");
     const themeIcon = document.getElementById("themeIcon");
 
     function updateTheme(isDark) {
@@ -170,8 +160,7 @@
       localStorage.setItem("theme", isDark ? "dark" : "light");
     }
 
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
+    if (localStorage.getItem("theme") === "dark") {
       updateTheme(true);
     }
 
