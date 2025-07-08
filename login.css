@@ -33,7 +33,7 @@ body::before {
 
 body.dark {
   background: #121212;
-  color: #f4f4f4;
+  color: var(--light);
 }
 
 body.dark::before {
@@ -57,11 +57,15 @@ body.dark::before {
 
 .nav-links {
   display: flex;
-  gap: 1rem;
-  align-items: center;
   flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+.nav-links::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-button {
@@ -71,8 +75,9 @@ body.dark::before {
   border: 1px solid white;
   border-radius: var(--radius);
   padding: 0.4rem 0.8rem;
-  transition: 0.3s;
   font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.3s, color 0.3s;
 }
 
 .nav-button:hover {
@@ -86,33 +91,15 @@ body.dark::before {
   border: none;
   color: white;
   cursor: pointer;
-  padding: 0.3rem 0.5rem;
-  border-radius: var(--radius);
+  padding: 0.2rem;
+  line-height: 1;
 }
 
-/* No hover effect on theme toggle */
-.theme-toggle:hover {
-  background: none;
-  transform: none;
-}
-
-/* Hamburger */
+/* Hamburger (optional hidden on desktop) */
 .hamburger {
   display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: white;
-}
-
-/* Login Page Container */
 .page-container {
   display: flex;
   justify-content: center;
@@ -121,6 +108,7 @@ body.dark::before {
   min-height: calc(100vh - 80px);
 }
 
+/* Login Box */
 .login-container {
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -128,15 +116,15 @@ body.dark::before {
   padding: 2rem;
   width: 100%;
   max-width: 400px;
-  transition: background 0.3s, color 0.3s;
   backdrop-filter: blur(6px);
+  transition: background 0.3s, color 0.3s;
 }
 
 body.dark .login-container {
   background: rgba(0, 0, 0, 0.6);
-  color: var(--light);
 }
 
+/* Inputs */
 input {
   width: 100%;
   padding: 0.8rem;
@@ -144,7 +132,6 @@ input {
   border: 1px solid #ccc;
   border-radius: var(--radius);
   font-size: 1rem;
-  box-sizing: border-box;
   background: white;
 }
 
@@ -154,6 +141,7 @@ body.dark input {
   border-color: #444;
 }
 
+/* Button */
 button {
   width: 100%;
   padding: 0.8rem;
@@ -163,20 +151,22 @@ button {
   font-weight: bold;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.3s ease;
   font-size: 1rem;
+  transition: background 0.3s;
 }
 
 button:hover {
   background: #005fa3;
 }
 
+/* Message */
 .message {
   margin-top: 1rem;
   text-align: center;
   color: red;
 }
 
+/* Toast */
 .toast {
   position: fixed;
   bottom: 20px;
@@ -194,16 +184,4 @@ button:hover {
 .toast.show {
   opacity: 1;
   transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-  .hamburger {
-    display: none;
-  }
-
-  .nav-links {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: flex-end;
-  }
 }
