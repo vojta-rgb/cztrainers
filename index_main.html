@@ -1,4 +1,3 @@
-<!-- CZTRAINERS – clickable cards with hover and correct profile link -->
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -6,230 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CZTRAINERS</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
-  <style>
-    :root {
-      --primary: #0072CE;
-      --dark: #111;
-      --light: #f4f4f4;
-      --white: #fff;
-      --radius: 12px;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+  <link rel="stylesheet" href="style_main.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="index_main.html" class="nav-button">Domů</a>
+      <div id="authButtons">
+        <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+        <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+      </div>
+      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
+      <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
+      <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
+    </div>
+  </nav>
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      position: relative;
-      min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
-    }
+  <div class="container">
+    <h1>PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
+    <input type="text" id="search" placeholder="Hledat jméno..." />
+    <div id="loader" class="loader">Načítám uživatele...</div>
+    <div id="userList" class="cards"></div>
+  </div>
 
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
-      background-size: 200px;
-      background-repeat: repeat;
-      opacity: 0.08;
-      z-index: -1;
-      transition: opacity 0.3s;
-    }
-
-    body.dark {
-      background: #121212;
-      color: #f4f4f4;
-    }
-
-    body.dark::before {
-      opacity: 0.04;
-    }
-
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--primary);
-      color: white;
-      padding: 1rem 2rem;
-      flex-wrap: wrap;
-    }
-
-    .nav-logo img {
-      height: 60px;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .nav-button {
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-      padding: 0.4rem 0.8rem;
-      border: 1px solid white;
-      border-radius: var(--radius);
-      transition: background 0.3s, transform 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background: white;
-      color: var(--primary);
-      transform: scale(1.05);
-    }
-
-    .theme-toggle {
-      font-size: 1.2rem;
-      background: none;
-      color: white;
-      border: none;
-      cursor: pointer;
-      padding: 0.4rem;
-      transition: transform 0.2s ease;
-    }
-
-    .theme-toggle:hover {
-      transform: scale(1.2);
-    }
-
-    .hamburger {
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-    }
-
-    .hamburger span {
-      width: 25px;
-      height: 3px;
-      background: white;
-    }
-
-    .container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      color: var(--primary);
-    }
-
-    #search {
-      display: block;
-      margin: 0 auto 2rem;
-      padding: 0.7rem 1rem;
-      width: 100%;
-      max-width: 400px;
-      border-radius: var(--radius);
-      border: 1px solid #ccc;
-    }
-
-    .cards {
-      display: grid;
-      gap: 1.5rem;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-
-    .card {
-      display: block;
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      transform: translateY(20px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      color: inherit;
-      animation: fadeInUp 0.5s ease forwards;
-    }
-
-    .card:hover {
-      transform: scale(1.05);
-      filter: brightness(1.05);
-    }
-
-    body.dark .card {
-      background: #1e1e1e;
-      color: #f4f4f4;
-    }
-
-    @keyframes fadeInUp {
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .profile-pic {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-    }
-
-    .card-info {
-      padding: 1rem;
-    }
-
-    .card-info h3 {
-      margin-bottom: 0.5rem;
-    }
-
-    .loader {
-      text-align: center;
-      padding: 2rem;
-      font-size: 1.2rem;
-      color: var(--primary);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      z-index: 9999;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 768px) {
-      .hamburger {
-        display: flex;
-      }
-
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-        padding-top: 1rem;
-      }
-
-      .nav-links.active {
-        display: flex;
-      }
-    }
-  </style>
+  <div id="toast" class="toast"></div>
 
   <script>
     if (localStorage.getItem('theme') === 'dark') {
@@ -363,35 +169,5 @@
 
     searchInput.addEventListener("input", filterUsers);
   </script>
-</head>
-<body>
-  <nav class="navbar">
-    <div class="nav-logo">
-      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
-    </div>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="nav-links" id="navLinks">
-      <a href="index_main.html" class="nav-button">Domů</a>
-      <div id="authButtons">
-        <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
-        <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
-      </div>
-      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
-      <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
-      <a href="o-nas.html" class="nav-button">O nás</a>
-      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
-    </div>
-  </nav>
-
-  <div class="container">
-    <h1>PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
-    <input type="text" id="search" placeholder="Hledat jméno..." />
-    <div id="loader" class="loader">Načítám uživatele...</div>
-    <div id="userList" class="cards"></div>
-  </div>
-
-  <div id="toast" class="toast"></div>
 </body>
 </html>
