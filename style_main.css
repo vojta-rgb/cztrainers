@@ -166,9 +166,11 @@ body.dark .card {
 
 .profile-pic {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1; /* zajišťuje poměr stran 1:1 */
   object-fit: cover;
+  border-radius: 12px;
 }
+
 
 .card-info {
   padding: 1rem;
