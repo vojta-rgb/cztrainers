@@ -90,26 +90,6 @@ body.dark::before {
   cursor: pointer;
 }
 
-/* Hamburger */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: white;
-}
-
-/* Responsive Nav */
-@media (max-width: 768px) {
-  .hamburger {
-    display: none;
-  }
 
   .nav-links {
     flex-wrap: nowrap;
