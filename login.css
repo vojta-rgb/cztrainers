@@ -1,193 +1,137 @@
-:root {
-  --primary: #0072CE;
-  --dark: #111;
-  --light: #f4f4f4;
-  --white: #fff;
-  --radius: 12px;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
 body {
-  font-family: 'Inter', sans-serif;
-  background: var(--light);
-  color: var(--dark);
+  font-family: 'Roboto', sans-serif;
+  background: #f2f2f2;
   margin: 0;
-  transition: background 0.3s, color 0.3s;
-  min-height: 100vh;
-  position: relative;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
-  background-size: 200px;
-  background-repeat: repeat;
-  opacity: 0.08;
-  z-index: -1;
-}
-
-body.dark {
-  background: #121212;
-  color: var(--light);
-}
-
-body.dark::before {
-  opacity: 0.04;
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--primary);
-  padding: 1rem 2rem;
-  color: white;
-  flex-wrap: wrap;
-}
-
-.nav-logo img {
-  height: 60px;
-}
-
-.nav-links {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 1rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.nav-links::-webkit-scrollbar {
-  display: none;
-}
-
-.nav-button {
-  color: white;
-  background: transparent;
-  text-decoration: none;
-  border: 1px solid white;
-  border-radius: var(--radius);
-  padding: 0.4rem 0.8rem;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: background 0.3s, color 0.3s;
-}
-
-.nav-button:hover {
-  background: white;
-  color: var(--primary);
-}
-
-.theme-toggle {
-  width: 38px;
-  height: 27px;
   padding: 0;
-  font-size: 1rem;
-  border: none;
-  background: transparent;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  line-height: 1;
-}
-
-
-/* Hamburger (optional hidden on desktop) */
-.hamburger {
-  display: none;
 }
 
 .page-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 3rem;
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 60px); /* leave space for navbar */
+  padding-top: 60px; /* or however tall your navbar is */
 }
 
-/* Login Box */
-.login-container {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 2rem;
-  width: 100%;
-  max-width: 400px;
-  backdrop-filter: blur(6px);
-  transition: background 0.3s, color 0.3s;
+    .login-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      color: red;
+    }
+
+    /* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4CAF50;
+  padding: 12px 24px;
+  color: white;
+  position: relative;
 }
 
-body.dark .login-container {
-  background: rgba(0, 0, 0, 0.6);
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
-/* Inputs */
-input {
-  width: 100%;
-  padding: 0.8rem;
-  margin: 0.5rem 0;
-  border: 1px solid #ccc;
-  border-radius: var(--radius);
-  font-size: 1rem;
-  background: white;
+.nav-links {
+  display: flex;
+  gap: 16px;
 }
 
-body.dark input {
-  background: #1e1e1e;
-  color: var(--light);
-  border-color: #444;
+.nav-button {
+  color: white;
+  background-color: transparent;
+  border: 2px solid white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-/* Button */
-button {
-  width: 100%;
-  padding: 0.8rem;
-  background: var(--primary);
+.nav-button:hover {
+  background-color: white;
+  color: #4CAF50;
+}
+
+/* Hamburger button (hidden on desktop) */
+.hamburger {
+  display: none;
+  font-size: 28px;
+  background: none;
   color: white;
   border: none;
-  font-weight: bold;
-  border-radius: var(--radius);
   cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.3s;
 }
 
-button:hover {
-  background: #005fa3;
-}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
 
-/* Message */
-.message {
-  margin-top: 1rem;
-  text-align: center;
-  color: red;
-}
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 60px; /* below navbar */
+    right: 0;
+    background-color: #4CAF50;
+    width: 100%;
+    padding: 10px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
 
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #333;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  z-index: 9999;
-}
+  .nav-links.active {
+    display: flex;
+  }
 
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
+  .nav-button {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+  }
 }
