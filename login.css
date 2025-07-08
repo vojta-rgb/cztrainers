@@ -39,6 +39,7 @@ body.dark::before {
   opacity: 0.04;
 }
 
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -96,6 +97,7 @@ body.dark::before {
   border: none;
   cursor: pointer;
 }
+
 .hamburger span {
   width: 25px;
   height: 3px;
@@ -161,6 +163,7 @@ button {
   cursor: pointer;
   transition: background 0.3s;
 }
+
 button:hover {
   background: #005fa3;
 }
@@ -171,6 +174,7 @@ button:hover {
   color: red;
 }
 
+/* Toast */
 .toast {
   position: fixed;
   bottom: 20px;
