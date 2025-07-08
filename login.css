@@ -35,6 +35,7 @@ body.dark {
   background: #121212;
   color: var(--light);
 }
+
 body.dark::before {
   opacity: 0.04;
 }
@@ -58,10 +59,12 @@ body.dark::before {
   display: flex;
   gap: 1rem;
   align-items: center;
-  flex-wrap: nowrap; /* prevents vertical stacking */
-  overflow-x: auto;  /* allows scroll on very narrow screens */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  justify-content: flex-end;
 }
-
 
 .nav-button {
   color: white;
@@ -102,27 +105,23 @@ body.dark::before {
   border: none;
   cursor: pointer;
 }
+
 .hamburger span {
   width: 25px;
   height: 3px;
   background: white;
 }
 
-/* Responsive Nav */
+/* Force horizontal layout always */
 @media (max-width: 768px) {
   .hamburger {
-    display: flex;
+    display: none;
   }
 
   .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-  }
-
-  .nav-links.active {
-    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-end;
   }
 }
 
