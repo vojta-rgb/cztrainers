@@ -1,3 +1,4 @@
+<!-- soubor: cztrainers_clickable_cards.html -->
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -72,7 +73,6 @@
 
     .nav-logo img {
       height: 60px;
-  max-height: 60px;
     }
 
     .nav-links {
@@ -154,35 +154,29 @@
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
 
-   .card {
-   background: var(--white);
-  border-radius: var(--radius);
-  overflow: hidden;
-  transform: translateY(20px);
-  opacity: 0;
-  animation: fadeInUp 0.5s ease forwards;
-  transition: transform 0.3s ease, border 0.3s ease, background-color 0.3s ease;
-  border: 2px solid transparent;
-}
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: fadeInUp 0.5s ease forwards;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
 
-.card:hover {
- transform: scale(1.04);
-  border: 2px solid var(--primary);
-  background-color: #ffffffee;
-}
+    .card:hover {
+      transform: scale(1.03);
+    }
 
-body.dark .card {
- background: #1e1e1e;
-  color: #f4f4f4;
-  border: 2px solid transparent;
-}
-
-body.dark .card:hover {
- transform: scale(1.04);
-  border: 2px solid #0072CE;
-  background-color: #1e1e1eee;
-}
-
+    body.dark .card {
+      background: #1e1e1e;
+      color: #f4f4f4;
+    }
 
     @keyframes fadeInUp {
       to {
@@ -222,22 +216,13 @@ body.dark .card:hover {
       border-radius: 8px;
       opacity: 0;
       transform: translateY(20px);
-      transition: opacity 0.4s, transform 0.4s;
+      transition: opacity 0.4s ease, transform 0.4s ease;
       z-index: 9999;
     }
 
     .toast.show {
-      animation: toastFadeIn 0.4s ease, toastFadeOut 1.2s ease 3s;
-    }
-
-    @keyframes toastFadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes toastFadeOut {
-      from { opacity: 1; }
-      to   { opacity: 0; }
+      opacity: 1;
+      transform: translateY(0);
     }
 
     @media (max-width: 768px) {
@@ -274,7 +259,7 @@ body.dark .card:hover {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         toast.textContent = isDark ? 'Tmavý mód zapnut' : 'Světlý mód zapnut';
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 4200);
+        setTimeout(() => toast.classList.remove('show'), 3000);
       }
 
       if (localStorage.getItem('theme') === 'dark') {
@@ -351,21 +336,11 @@ body.dark .card:hover {
         const photoURL = user.profilePicture?.startsWith("http") ? user.profilePicture : "https://placehold.co/300x200?text=Profil";
         const name = user.name?.trim() || "Neznámý";
         const lastName = user.prijmeni?.trim() || "";
-        const card = document.createElement("a");
-card.className = "card";
-card.href = `profil.html?id=${id}`;
-card.style.textDecoration = "none";
-card.style.color = "inherit";
-card.innerHTML = `
-  <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
-  <div class="card-info">
-    <h3>${name} ${lastName}</h3>
-    <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-    <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
-    <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
-  </div>
-`;
 
+        const card = document.createElement("a");
+        card.className = "card";
+        card.href = `trainer_profile.html?id=${id}`;
+        card.innerHTML = `
           <img class="profile-pic" src="${photoURL}" alt="Profilový obrázek">
           <div class="card-info">
             <h3>${name} ${lastName}</h3>
@@ -404,7 +379,7 @@ card.innerHTML = `
 <body>
   <nav class="navbar">
     <div class="nav-logo">
-      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
+      <img src="CZTRAINERS LOGO.png" alt="CZTRAINERS Logo" />
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
