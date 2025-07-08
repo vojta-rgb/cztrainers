@@ -4,25 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>O nás – CZTRAINERS</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <link rel="stylesheet" href="o-nas.css" />
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-logo">CZTRAINERS</div>
-
-    <button class="hamburger" id="hamburger">&#9776;</button>
-
+    <div class="nav-logo">
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
-
       <div id="authButtons">
         <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
         <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       </div>
-
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
     </div>
   </nav>
 
@@ -36,7 +38,7 @@
       <section class="about">
         <h2>O nás</h2>
         <p>
-          Jsme platforma spojující špičkové trenéry z celé České republiky s klienty hledajícími profesionální pomoc v oblasti fitness, výživy, zdraví a osobního růstu. Věříme, že každý má právo na kvalitního průvodce na cestě ke zdravému životnímu stylu.
+          Jsme platforma spojující špičkové trenéry z celé České republiky s klienty hledajícími profesionální pomoc v oblasti fitness, výživy, zdraví a osobního růstu.
         </p>
         <p>
           Naším cílem je jednoduché propojení mezi trenéry a klienty, transparentnost a důvěra. Vytvořte si svůj profil, najděte trenéra ve vašem okolí a začněte pracovat na svých cílech ještě dnes!
@@ -57,10 +59,31 @@
   </div>
 
   <script>
-  document.getElementById("hamburger").addEventListener("click", function () {
-    document.getElementById("navLinks").classList.toggle("active");
-  });
+    // Hamburger menu
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("navLinks").classList.toggle("active");
+    });
+
+    // Theme toggle with memory
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function updateTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      updateTheme(true);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = !document.body.classList.contains("dark");
+      updateTheme(isDark);
+    });
   </script>
-<script type="module" src="auth-navbar.js"></script>
+
+  <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
