@@ -4,53 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Přihlášení – CZTRAINERS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="login.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
   <nav class="navbar">
     <div class="nav-logo">CZTRAINERS</div>
-
     <button class="hamburger" id="hamburger">&#9776;</button>
-
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
-
-      <div id="authButtons">
-        <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
-        <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
-      </div>
-
+      <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
     </div>
   </nav>
 
-  <div class="page-container">
-    <div class="login-container">
-      <h2>Přihlášení</h2>
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Heslo" required />
-      <button id="loginFormBtn">Přihlásit se</button>
-      <div class="message" id="messageBox"></div>
+  <main class="page-container">
+    <div class="login-wrapper">
+      <div class="login-box">
+        <h2>Přihlášení</h2>
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Heslo" required />
+        <button id="loginFormBtn">Přihlásit se</button>
+        <div class="message" id="messageBox"></div>
+      </div>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      get,
-      set,
-      remove
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -90,21 +76,16 @@
           const unverifiedRef = ref(db, 'unverified-users/' + uid);
           const verifiedRef = ref(db, 'users/' + uid);
 
-          // Move user data if not already in 'users'
           get(verifiedRef).then(snapshot => {
             if (!snapshot.exists()) {
-              // Move from unverified to verified
               get(unverifiedRef).then(dataSnap => {
                 if (dataSnap.exists()) {
                   const userData = dataSnap.val();
-
                   set(verifiedRef, userData).then(() => {
                     remove(unverifiedRef);
                     messageBox.style.color = 'green';
                     messageBox.textContent = "Přihlášení úspěšné. Profil byl aktivován.";
-                    setTimeout(() => {
-                      window.location.href = "index_main.html";
-                    }, 2000);
+                    setTimeout(() => window.location.href = "index_main.html", 2000);
                   });
                 } else {
                   messageBox.textContent = "Data nebyla nalezena.";
@@ -113,18 +94,22 @@
             } else {
               messageBox.style.color = 'green';
               messageBox.textContent = "Přihlášení úspěšné.";
-              setTimeout(() => {
-                window.location.href = "index_main.html";
-              }, 2000);
+              setTimeout(() => window.location.href = "index_main.html", 2000);
             }
           });
-
         })
         .catch((error) => {
           messageBox.textContent = "Chyba přihlášení: " + error.message;
         });
     });
   </script>
-<script type="module" src="auth-navbar.js"></script>
+
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("navLinks").classList.toggle("active");
+    });
+  </script>
+
+  <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
