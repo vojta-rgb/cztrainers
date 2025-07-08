@@ -78,13 +78,14 @@ body.dark::before {
 }
 
 .theme-toggle {
-  font-size: 1.2rem;
   background: none;
   color: white;
   border: none;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 0.4rem;
   transition: transform 0.2s ease;
+  padding: 0.4rem;
+  line-height: 1;
 }
 
 .theme-toggle:hover {
