@@ -5,25 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Přihlášení – CZTRAINERS</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="login.css" />
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-logo">CZTRAINERS</div>
+    <div class="nav-logo">
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" style="height: 60px;" />
+    </div>
 
     <button class="hamburger" id="hamburger">&#9776;</button>
 
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
-
       <div id="authButtons">
         <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
         <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       </div>
-
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
     </div>
   </nav>
 
@@ -39,18 +40,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      get,
-      set,
-      remove
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -90,21 +81,16 @@
           const unverifiedRef = ref(db, 'unverified-users/' + uid);
           const verifiedRef = ref(db, 'users/' + uid);
 
-          // Move user data if not already in 'users'
           get(verifiedRef).then(snapshot => {
             if (!snapshot.exists()) {
-              // Move from unverified to verified
               get(unverifiedRef).then(dataSnap => {
                 if (dataSnap.exists()) {
                   const userData = dataSnap.val();
-
                   set(verifiedRef, userData).then(() => {
                     remove(unverifiedRef);
                     messageBox.style.color = 'green';
                     messageBox.textContent = "Přihlášení úspěšné. Profil byl aktivován.";
-                    setTimeout(() => {
-                      window.location.href = "index_main.html";
-                    }, 2000);
+                    setTimeout(() => window.location.href = "index_main.html", 2000);
                   });
                 } else {
                   messageBox.textContent = "Data nebyla nalezena.";
@@ -113,18 +99,40 @@
             } else {
               messageBox.style.color = 'green';
               messageBox.textContent = "Přihlášení úspěšné.";
-              setTimeout(() => {
-                window.location.href = "index_main.html";
-              }, 2000);
+              setTimeout(() => window.location.href = "index_main.html", 2000);
             }
           });
-
         })
         .catch((error) => {
           messageBox.textContent = "Chyba přihlášení: " + error.message;
         });
     });
   </script>
-<script type="module" src="auth-navbar.js"></script>
+
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("navLinks").classList.toggle("active");
+    });
+
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function updateTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      updateTheme(true);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = !document.body.classList.contains("dark");
+      updateTheme(isDark);
+    });
+  </script>
+
+  <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
