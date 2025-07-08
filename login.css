@@ -11,10 +11,10 @@ body {
   font-family: 'Inter', sans-serif;
   background: var(--light);
   color: var(--dark);
-  min-height: 100vh;
   margin: 0;
   transition: background 0.3s, color 0.3s;
   position: relative;
+  min-height: 100vh;
 }
 
 body::before {
@@ -39,7 +39,6 @@ body.dark::before {
   opacity: 0.04;
 }
 
-/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -58,6 +57,7 @@ body.dark::before {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-button {
@@ -83,6 +83,7 @@ body.dark::before {
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
+  padding: 0.4rem;
   transition: transform 0.2s ease;
 }
 .theme-toggle:hover {
@@ -97,7 +98,6 @@ body.dark::before {
   border: none;
   cursor: pointer;
 }
-
 .hamburger span {
   width: 25px;
   height: 3px;
