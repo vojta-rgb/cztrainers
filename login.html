@@ -12,6 +12,9 @@
     <div class="nav-logo">
       <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
     </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
       <div id="authButtons">
@@ -23,13 +26,10 @@
       <a href="o-nas.html" class="nav-button">O nás</a>
       <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
     </div>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
   </nav>
 
-  <div class="page-wrapper">
-    <div class="form-container">
+  <div class="page-container">
+    <div class="login-container">
       <h2>Přihlášení</h2>
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Heslo" required />
@@ -37,6 +37,8 @@
       <div class="message" id="messageBox"></div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -109,12 +111,7 @@
   </script>
 
   <script>
-    // Hamburger menu
-    document.getElementById("hamburger").addEventListener("click", () => {
-      document.getElementById("navLinks").classList.toggle("active");
-    });
-
-    // Theme toggle with memory
+    // Theme toggle from O nás
     const themeToggle = document.getElementById("themeToggle");
     const themeIcon = document.getElementById("themeIcon");
 
@@ -131,6 +128,11 @@
     themeToggle.addEventListener("click", () => {
       const isDark = !document.body.classList.contains("dark");
       updateTheme(isDark);
+    });
+
+    // Hamburger
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("navLinks").classList.toggle("active");
     });
   </script>
 
