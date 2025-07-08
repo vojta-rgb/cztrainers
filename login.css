@@ -57,13 +57,13 @@ body.dark::before {
 
 .nav-links {
   display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: unset;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
 }
 
 .nav-button {
@@ -75,6 +75,7 @@ body.dark::before {
   text-decoration: none;
   font-weight: 600;
   transition: background 0.3s, transform 0.2s;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
@@ -112,16 +113,19 @@ body.dark::before {
   background: white;
 }
 
-/* Force horizontal layout always */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .hamburger {
-    display: none;
+  .nav-links {
+    justify-content: center;
   }
 
-  .nav-links {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: flex-end;
+  .nav-button {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .theme-toggle {
+    font-size: 0.9rem;
   }
 }
 
