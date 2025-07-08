@@ -1,3 +1,5 @@
+/* login.css - recreated based on reference image */
+
 :root {
   --primary: #0072CE;
   --dark: #111;
@@ -12,9 +14,9 @@ body {
   background: var(--light);
   color: var(--dark);
   margin: 0;
+  min-height: 100vh;
   transition: background 0.3s, color 0.3s;
   position: relative;
-  min-height: 100vh;
 }
 
 body::before {
@@ -40,15 +42,13 @@ body.dark::before {
   opacity: 0.04;
 }
 
-/* Navbar */
 .navbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   background: var(--primary);
-  padding: 1rem 2rem;
-  color: white;
-  flex-wrap: wrap;
+  padding: 0.8rem 2rem;
+  flex-wrap: nowrap;
 }
 
 .nav-logo img {
@@ -57,13 +57,10 @@ body.dark::before {
 
 .nav-links {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.5rem;
   align-items: center;
-  overflow-x: unset;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
 }
 
 .nav-button {
@@ -74,8 +71,8 @@ body.dark::before {
   padding: 0.4rem 0.8rem;
   text-decoration: none;
   font-weight: 600;
-  transition: background 0.3s, transform 0.2s;
   white-space: nowrap;
+  transition: background 0.3s, transform 0.2s;
 }
 
 .nav-button:hover {
@@ -86,50 +83,25 @@ body.dark::before {
 
 .theme-toggle {
   background: none;
-  color: white;
   border: none;
+  color: white;
   font-size: 1rem;
   cursor: pointer;
+  margin-left: 0.5rem;
   transition: transform 0.2s ease;
+  padding: 0.4rem;
   line-height: 1;
 }
 
 .theme-toggle:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 .hamburger {
   display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
 }
 
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: white;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .nav-links {
-    justify-content: center;
-  }
-
-  .nav-button {
-    font-size: 0.9rem;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .theme-toggle {
-    font-size: 0.9rem;
-  }
-}
-
-/* Page Container */
+/* Page container */
 .page-container {
   display: flex;
   justify-content: center;
@@ -138,16 +110,15 @@ body.dark::before {
   min-height: calc(100vh - 80px);
 }
 
-/* Login Box */
 .login-container {
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 2rem;
-  width: 100%;
   max-width: 400px;
-  transition: background 0.3s, color 0.3s;
+  width: 100%;
   backdrop-filter: blur(6px);
+  transition: background 0.3s, color 0.3s;
 }
 
 body.dark .login-container {
@@ -155,7 +126,6 @@ body.dark .login-container {
   color: var(--light);
 }
 
-/* Inputs */
 input {
   width: 100%;
   padding: 0.8rem;
@@ -173,7 +143,6 @@ body.dark input {
   border-color: #444;
 }
 
-/* Button */
 button {
   width: 100%;
   padding: 0.8rem;
@@ -191,14 +160,12 @@ button:hover {
   background: #005fa3;
 }
 
-/* Error Message */
 .message {
   margin-top: 1rem;
   text-align: center;
   color: red;
 }
 
-/* Toast Notification */
 .toast {
   position: fixed;
   bottom: 20px;
@@ -216,4 +183,20 @@ button:hover {
 .toast.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .theme-toggle {
+    font-size: 0.9rem;
+  }
 }
