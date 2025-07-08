@@ -6,6 +6,15 @@
   <title>Přihlášení – CZTRAINERS</title>
   <link rel="stylesheet" href="login.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+  <style>
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -90,7 +99,7 @@
                   set(verifiedRef, userData).then(() => {
                     remove(unverifiedRef);
                     messageBox.style.color = 'green';
-                    messageBox.textContent = "Přihlášení ústěšné. Profil byl aktivován.";
+                    messageBox.textContent = "Přihlášení úspěšné. Profil byl aktivován.";
                     setTimeout(() => window.location.href = "index_main.html", 2000);
                   });
                 } else {
@@ -99,7 +108,7 @@
               });
             } else {
               messageBox.style.color = 'green';
-              messageBox.textContent = "Přihlášení ústěšné.";
+              messageBox.textContent = "Přihlášení úspěšné.";
               setTimeout(() => window.location.href = "index_main.html", 2000);
             }
           });
@@ -119,7 +128,7 @@
       document.body.classList.toggle("dark", isDark);
       icon.textContent = isDark ? "🌙" : "☀️";
       localStorage.setItem("theme", isDark ? "dark" : "light");
-      toast.textContent = isDark ? "Tmavý mód zapnut" : "Světý mód zapnut";
+      toast.textContent = isDark ? "Tmavý mód zapnut" : "Světlý mód zapnut";
       toast.classList.add("show");
       setTimeout(() => toast.classList.remove("show"), 3000);
     }
