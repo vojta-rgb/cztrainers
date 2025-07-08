@@ -1,126 +1,111 @@
+:root {
+  --primary: #0072CE;
+  --dark: #111;
+  --light: #f4f4f4;
+  --white: #fff;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 body {
-  font-family: 'Roboto', sans-serif;
-  background: #f2f2f2;
+  font-family: 'Inter', sans-serif;
+  background: var(--light);
+  color: var(--dark);
   margin: 0;
-  padding: 0;
+  transition: background 0.3s, color 0.3s;
+  min-height: 100vh;
+  position: relative;
 }
 
-.page-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 60px); /* leave space for navbar */
-  padding-top: 60px; /* or however tall your navbar is */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  z-index: -1;
 }
 
-    .login-container {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-    }
+body.dark {
+  background: #121212;
+  color: var(--light);
+}
+body.dark::before {
+  opacity: 0.04;
+}
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 15px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      color: red;
-    }
-
-    /* Navbar */
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #4CAF50;
-  padding: 12px 24px;
+  background: var(--primary);
+  padding: 1rem 2rem;
   color: white;
-  position: relative;
+  flex-wrap: wrap;
 }
 
 .nav-logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .nav-links {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-button {
   color: white;
-  background-color: transparent;
-  border: 2px solid white;
-  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid white;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.8rem;
   text-decoration: none;
-  border-radius: 5px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
 }
 
 .nav-button:hover {
-  background-color: white;
-  color: #4CAF50;
+  background: white;
+  color: var(--primary);
+  transform: scale(1.05);
 }
 
-/* Hamburger button (hidden on desktop) */
+/* Hamburger */
 .hamburger {
   display: none;
-  font-size: 28px;
-  background: none;
-  color: white;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
   border: none;
   cursor: pointer;
+  margin-left: auto;
+}
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: white;
 }
 
-/* Responsive styles */
+/* Responsive Nav */
 @media (max-width: 768px) {
   .hamburger {
-    display: block;
+    display: flex;
   }
 
   .nav-links {
     display: none;
     flex-direction: column;
-    position: absolute;
-    top: 60px; /* below navbar */
-    right: 0;
-    background-color: #4CAF50;
     width: 100%;
-    padding: 10px 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding-top: 1rem;
   }
 
   .nav-links.active {
@@ -129,9 +114,71 @@ body {
 
   .nav-button {
     width: 100%;
-    text-align: center;
-    padding: 12px;
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
   }
+}
+
+/* Login Page Layout */
+.page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  min-height: calc(100vh - 80px);
+}
+
+.login-wrapper {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(8px);
+}
+
+body.dark .login-wrapper {
+  background: rgba(30, 30, 30, 0.85);
+}
+
+.login-wrapper h2 {
+  text-align: center;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border-radius: var(--radius);
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background: white;
+}
+body.dark input {
+  background: #1e1e1e;
+  color: var(--light);
+  border-color: #444;
+}
+
+button {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+button:hover {
+  background: #005fa3;
+}
+
+.message {
+  margin-top: 1rem;
+  text-align: center;
+  color: red;
 }
