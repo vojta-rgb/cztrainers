@@ -86,14 +86,20 @@ body.dark::before {
 }
 
 .theme-toggle {
-  font-size: 1.2rem;
-  background: none;
+  width: 38px;
+  height: 27px;
+  padding: 0;
+  font-size: 1rem;
   border: none;
+  background: transparent;
   color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 0.2rem;
   line-height: 1;
 }
+
 
 /* Hamburger (optional hidden on desktop) */
 .hamburger {
