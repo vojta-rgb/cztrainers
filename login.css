@@ -51,8 +51,11 @@ body.dark::before {
 }
 
 .nav-logo img {
-  height: 60px;
+  max-height: 50px;
+  width: auto;
+  object-fit: contain;
 }
+
 
 .nav-links {
   display: flex;
