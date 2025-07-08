@@ -58,8 +58,10 @@ body.dark::before {
   display: flex;
   gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* prevents vertical stacking */
+  overflow-x: auto;  /* allows scroll on very narrow screens */
 }
+
 
 .nav-button {
   color: white;
