@@ -15,16 +15,32 @@
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
       font-family: 'Inter', sans-serif;
       background: var(--light);
       color: var(--dark);
+      position: relative;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: #121212;
+      color: #f4f4f4;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("A_2D_digital_illustration_features_a_seamless_patt.png");
+      background-size: 200px;
+      background-repeat: repeat;
+      opacity: 0.08;
+      z-index: -1;
     }
 
     .navbar {
@@ -37,9 +53,8 @@
       flex-wrap: wrap;
     }
 
-    .nav-logo {
-      font-size: 1.5rem;
-      font-weight: 700;
+    .nav-logo img {
+      height: 40px;
     }
 
     .nav-links {
@@ -60,6 +75,16 @@
     .nav-button:hover {
       background: white;
       color: var(--primary);
+    }
+
+    .toggle-darkmode {
+      background: none;
+      color: white;
+      border: 1px solid white;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
     }
 
     .hamburger {
@@ -157,39 +182,6 @@
       }
     }
   </style>
-</head>
-<body>
-
-  <!-- NAVIGATION -->
-  <nav class="navbar">
-   <div class="nav-logo">
-  <img src="CZTRAINERS LOGO.png" alt="Logo" style="height: 100px; vertical-align: middle;">
-</div>
-
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="nav-links" id="navLinks">
-      <a href="index_main.html" class="nav-button">Domů</a>
-      <div id="authButtons">
-        <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
-        <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
-      </div>
-      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
-      <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
-      <a href="o-nas.html" class="nav-button">O nás</a>
-    </div>
-  </nav>
-
-  <!-- MAIN CONTENT -->
-  <div class="container">
-    <h1>PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
-    <input type="text" id="search" placeholder="Hledat jméno..." />
-    <div id="loader" class="loader">Načítám uživatele...</div>
-    <div id="userList" class="cards"></div>
-  </div>
-
-  <!-- FIREBASE SCRIPT -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -213,7 +205,6 @@
     const loginBtn = document.getElementById("loginBtn");
     const profileBtn = document.getElementById("profileBtn");
     const logoutBtn = document.getElementById("logoutBtn");
-    const navLogo = document.querySelector(".nav-logo");
 
     onAuthStateChanged(auth, (user) => {
       if (user && user.emailVerified) {
@@ -221,7 +212,6 @@
         loginBtn.style.display = "none";
         profileBtn.style.display = "inline-block";
         logoutBtn.style.display = "inline-block";
-        navLogo.textContent = `CZTRAINERS – ${user.displayName || user.email}`;
       } else {
         registerBtn.style.display = "inline-block";
         loginBtn.style.display = "inline-block";
@@ -230,12 +220,10 @@
       }
     });
 
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        signOut(auth).then(() => window.location.reload());
-      });
-    }
+    logoutBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      signOut(auth).then(() => window.location.reload());
+    });
 
     const userList = document.getElementById("userList");
     const searchInput = document.getElementById("search");
@@ -250,10 +238,7 @@
       }
 
       users.forEach(([id, user]) => {
-        const photoURL = user.profilePicture?.startsWith("http")
-          ? user.profilePicture
-          : "https://placehold.co/300x200?text=Profil";
-
+        const photoURL = user.profilePicture?.startsWith("http") ? user.profilePicture : "https://placehold.co/300x200?text=Profil";
         const name = user.name?.trim() || "Neznámý";
         const lastName = user.prijmeni?.trim() || "";
         const card = document.createElement("a");
@@ -294,8 +279,35 @@
 
     searchInput.addEventListener("input", filterUsers);
   </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">
+      <img src="CZTRAINERS LOGO.png" alt="CZTRAINERS Logo" />
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="index_main.html" class="nav-button">Domů</a>
+      <div id="authButtons">
+        <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+        <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+      </div>
+      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
+      <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
+      <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="toggle-darkmode" onclick="document.body.classList.toggle('dark')">🌓</button>
+    </div>
+  </nav>
 
-  <!-- HAMBURGER MENU -->
+  <div class="container">
+    <h1>PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
+    <input type="text" id="search" placeholder="Hledat jméno..." />
+    <div id="loader" class="loader">Načítám uživatele...</div>
+    <div id="userList" class="cards"></div>
+  </div>
+
   <script>
     document.getElementById("hamburger").addEventListener("click", function () {
       document.getElementById("navLinks").classList.toggle("active");
