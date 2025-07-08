@@ -61,8 +61,6 @@ body.dark::before {
   align-items: center;
   flex-wrap: nowrap;
   overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
 }
 
 .nav-button {
@@ -73,86 +71,63 @@ body.dark::before {
   padding: 0.4rem 0.8rem;
   text-decoration: none;
   font-weight: 600;
-  transition: background 0.3s, transform 0.2s;
   white-space: nowrap;
+  transition: background 0.3s;
 }
 
 .nav-button:hover {
   background: white;
   color: var(--primary);
-  transform: scale(1.05);
 }
 
-/* Theme Toggle - fixed size and no hover reaction */
 .theme-toggle {
-  width: 38px;
-  height: 27px;
-  background: #0062b5;
+  background: none;
   color: white;
   border: none;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 1rem;
+  padding: 0.4rem;
+  line-height: 1;
   cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
 }
 
-.theme-toggle:hover {
-  background: #0062b5;
-  transform: none;
-}
-
-/* Hamburger menu */
+/* Hamburger */
 .hamburger {
   display: none;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 5px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 6px;
 }
 
 .hamburger span {
-  width: 25px;
+  width: 28px;
   height: 3px;
   background: white;
-  display: block;
   border-radius: 2px;
 }
 
-/* Responsive nav */
+/* Mobile Nav */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
-  }
-
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .nav-links {
     display: none;
     flex-direction: column;
     width: 100%;
-    padding-top: 1rem;
+    margin-top: 1rem;
   }
 
   .nav-links.active {
     display: flex;
   }
-
-  .nav-links a,
-  .theme-toggle {
-    margin-right: auto;
-  }
 }
 
-/* Page Wrapper */
+/* Page wrapper */
 .page-wrapper {
   display: flex;
   justify-content: center;
@@ -161,7 +136,6 @@ body.dark::before {
   align-items: center;
 }
 
-/* Form Container */
 .form-container {
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -170,15 +144,13 @@ body.dark::before {
   width: 100%;
   max-width: 600px;
   backdrop-filter: blur(8px);
-  transition: background 0.3s, color 0.3s;
 }
 
 body.dark .form-container {
   background: rgba(30, 30, 30, 0.85);
-  color: var(--light);
 }
 
-/* Form Elements */
+/* Form fields */
 form input,
 form select,
 form textarea,
@@ -191,7 +163,6 @@ form button {
   border: 1px solid #ccc;
   border-radius: var(--radius);
   box-sizing: border-box;
-  transition: 0.2s;
 }
 
 form input:focus,
@@ -205,8 +176,8 @@ form button {
   background: var(--primary);
   color: white;
   font-weight: bold;
-  cursor: pointer;
   border: none;
+  cursor: pointer;
 }
 
 form button:hover {
@@ -217,7 +188,6 @@ form button:hover {
   background: crimson;
   color: white;
   font-weight: bold;
-  cursor: pointer;
 }
 
 .btn-red:hover {
