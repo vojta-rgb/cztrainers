@@ -2,198 +2,197 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Můj profil</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Můj profil – CZTRAINERS</title>
   <link rel="stylesheet" href="mujprofil.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
 </head>
 <body>
-  <!-- the NAVIGATION  -->
   <nav class="navbar">
-    <div class="nav-logo">CZTRAINERS</div>
-    <button class="hamburger" id="hamburger">&#9776;</button>
-
+    <div class="nav-logo">
+      <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
-
       <div id="authButtons">
         <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
         <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       </div>
-
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
+      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
     </div>
   </nav>
 
-  <!-- CONTENT -->
   <div class="container">
     <h2>Můj profil</h2>
     <form id="profileForm">
-      <input type="text" id="name" name="name" placeholder="Jméno" />
-      <input type="text" id="prijmeni" name="prijmeni" placeholder="Příjmení" />
-      <input type="date" id="datum" name="datum" />
-      <input type="text" id="gender" name="gender" placeholder="Pohlaví" />
-      <input type="text" id="location" name="location" placeholder="Lokalita" />
-      <textarea id="bio" name="bio" placeholder="O mně"></textarea>
-      <input type="text" id="specializations" name="specializations" placeholder="Specializace" />
-      <input type="text" id="pricing" name="pricing" placeholder="Cena" />
-      <input type="text" id="experience" name="experience" placeholder="Roky zkušeností" />
-      <input type="text" id="languages" name="languages" placeholder="Jazyky" />
-      <img id="profilePreview" src="" alt="Profilový obrázek" style="max-width: 150px; display: none;" />
-      <input type="file" id="profileImage" name="profileImage" accept="image/*" />
+      <input type="text" id="name" placeholder="Jméno" />
+      <input type="text" id="prijmeni" placeholder="Příjmení" />
+      <input type="date" id="datum" />
+      <input type="text" id="gender" placeholder="Pohlaví" />
+      <input type="text" id="location" placeholder="Lokalita" />
+      <textarea id="bio" placeholder="O mně"></textarea>
+      <input type="text" id="specializations" placeholder="Specializace" />
+      <input type="text" id="pricing" placeholder="Cena" />
+      <input type="text" id="experience" placeholder="Roky zkušeností" />
+      <input type="text" id="languages" placeholder="Jazyky" />
+      <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
+      <input type="file" id="profileImage" accept="image/*" />
       <button type="submit">Uložit změny</button>
     </form>
   </div>
 
-  <!-- FIREBASE PROFILE SCRIPT -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  <div id="toast" class="toast"></div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-    authDomain: "cztrainers-dat1.firebaseapp.com",
-    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "cztrainers-dat1",
-    storageBucket: "cztrainers-dat1.appspot.com",
-    messagingSenderId: "369200533487",
-    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  const CLOUD_NAME = "dkt3pdcbe";
-  const UPLOAD_PRESET = "cztrainers_unsigned";
-  const MAX_FILE_SIZE = 500 * 1024; // 500 KB
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
+    const CLOUD_NAME = "dkt3pdcbe";
+    const UPLOAD_PRESET = "cztrainers_unsigned";
+    const MAX_FILE_SIZE = 500 * 1024;
 
-  const form = document.getElementById("profileForm");
-  const profileImageInput = document.getElementById("profileImage");
-  const profilePreview = document.getElementById("profilePreview");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-  let currentImageUrl = "";
+    const form = document.getElementById("profileForm");
+    const imageInput = document.getElementById("profileImage");
+    const preview = document.getElementById("profilePreview");
+    let currentUrl = "";
 
-  profileImageInput.addEventListener("change", () => {
-    const file = profileImageInput.files[0];
-    if (file && file.size <= MAX_FILE_SIZE) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        profilePreview.src = e.target.result;
-        profilePreview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-    } else {
-      alert("Obrázek je příliš velký. Maximální velikost je 500 KB.");
-      profileImageInput.value = "";
-      profilePreview.style.display = "none";
-    }
-  });
-
-  async function uploadToCloudinary(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) throw new Error("Image upload failed");
-
-    const data = await res.json();
-    return data.secure_url;
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user || !user.emailVerified) {
-      alert("Nejste přihlášen nebo nemáte ověřený email.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    const userRef = ref(db, "users/" + user.uid);
-
-    // Load existing profile
-    get(userRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-
-        form.elements["name"].value = data.name || "";
-        form.elements["prijmeni"].value = data.prijmeni || "";
-        form.elements["datum"].value = data.datum || "";
-        form.elements["gender"].value = data.gender || "";
-        form.elements["location"].value = data.location || "";
-        form.elements["bio"].value = data.bio || "";
-        form.elements["specializations"].value = data.specializations || "";
-        form.elements["pricing"].value = data.pricing || "";
-        form.elements["experience"].value = data.experience || "";
-        form.elements["languages"].value = data.languages || "";
-
-        currentImageUrl = data.profilePicture || "";
-        if (currentImageUrl) {
-          profilePreview.src = currentImageUrl;
-          profilePreview.style.display = "block";
-        }
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+      if (file && file.size <= MAX_FILE_SIZE) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert("Obrázek je moc velký (max 500 KB).");
+        imageInput.value = "";
+        preview.style.display = "none";
       }
     });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    async function uploadToCloudinary(file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData
+      });
+      if (!res.ok) throw new Error("Nahrávání selhalo");
+      const data = await res.json();
+      return data.secure_url;
+    }
 
-      let newImageUrl = currentImageUrl;
-
-      if (profileImageInput.files.length > 0) {
-        const file = profileImageInput.files[0];
-        if (file.size > MAX_FILE_SIZE) {
-          alert("Obrázek je příliš velký. Maximální velikost je 500 KB.");
-          return;
-        }
-
-        try {
-          newImageUrl = await uploadToCloudinary(file);
-        } catch (err) {
-          alert("Nepodařilo se nahrát obrázek.");
-          return;
-        }
+    onAuthStateChanged(auth, (user) => {
+      if (!user || !user.emailVerified) {
+        alert("Nejste přihlášen nebo nemáte ověřený email.");
+        window.location.href = "login.html";
+        return;
       }
 
-      const updatedData = {
-        name: form.elements["name"].value,
-        prijmeni: form.elements["prijmeni"].value,
-        datum: form.elements["datum"].value,
-        gender: form.elements["gender"].value,
-        location: form.elements["location"].value,
-        bio: form.elements["bio"].value,
-        specializations: form.elements["specializations"].value,
-        pricing: form.elements["pricing"].value,
-        experience: form.elements["experience"].value,
-        languages: form.elements["languages"].value,
-        email: user.email,
-        profilePicture: newImageUrl
-      };
+      const userRef = ref(db, "users/" + user.uid);
 
-      set(userRef, updatedData)
-        .then(() => {
-          alert("Profil byl aktualizován.");
-          currentImageUrl = newImageUrl;
-          if (currentImageUrl) {
-            profilePreview.src = currentImageUrl;
-            profilePreview.style.display = "block";
+      get(userRef).then((snap) => {
+        if (snap.exists()) {
+          const d = snap.val();
+          form.name.value = d.name || "";
+          form.prijmeni.value = d.prijmeni || "";
+          form.datum.value = d.datum || "";
+          form.gender.value = d.gender || "";
+          form.location.value = d.location || "";
+          form.bio.value = d.bio || "";
+          form.specializations.value = d.specializations || "";
+          form.pricing.value = d.pricing || "";
+          form.experience.value = d.experience || "";
+          form.languages.value = d.languages || "";
+          currentUrl = d.profilePicture || "";
+          if (currentUrl) {
+            preview.src = currentUrl;
+            preview.style.display = "block";
           }
-        })
-        .catch((err) => {
-          alert("Chyba při ukládání: " + err.message);
-        });
+        }
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        let newUrl = currentUrl;
+        if (imageInput.files.length > 0) {
+          const file = imageInput.files[0];
+          if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
+          try {
+            newUrl = await uploadToCloudinary(file);
+          } catch {
+            return alert("Nepodařilo se nahrát obrázek.");
+          }
+        }
+
+        const updated = {
+          name: form.name.value,
+          prijmeni: form.prijmeni.value,
+          datum: form.datum.value,
+          gender: form.gender.value,
+          location: form.location.value,
+          bio: form.bio.value,
+          specializations: form.specializations.value,
+          pricing: form.pricing.value,
+          experience: form.experience.value,
+          languages: form.languages.value,
+          email: user.email,
+          profilePicture: newUrl
+        };
+
+        set(userRef, updated).then(() => {
+          alert("Profil uložen.");
+          currentUrl = newUrl;
+          if (currentUrl) {
+            preview.src = currentUrl;
+            preview.style.display = "block";
+          }
+        }).catch((err) => alert("Chyba: " + err.message));
+      });
     });
-  });
-</script>
+  </script>
 
   <script>
-    document.getElementById("hamburger").addEventListener("click", function () {
+    const icon = document.getElementById("themeIcon");
+    const toggle = document.getElementById("themeToggle");
+    const toast = document.getElementById("toast");
+
+    function updateThemeUI(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      icon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      toast.textContent = isDark ? "Tmavý mód zapnut" : "Světlý mód zapnut";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    if (localStorage.getItem("theme") === "dark") updateThemeUI(true);
+    toggle.addEventListener("click", () => updateThemeUI(!document.body.classList.contains("dark")));
+    document.getElementById("hamburger").addEventListener("click", () => {
       document.getElementById("navLinks").classList.toggle("active");
     });
   </script>
