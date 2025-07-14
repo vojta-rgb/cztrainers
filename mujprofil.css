@@ -198,3 +198,70 @@ button:hover {
     display: flex;
   }
 }
+
+/* Style for select elements */
+select {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  background: white;
+  color: var(--dark);
+  box-sizing: border-box;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='black' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+body.dark select {
+  background: #2c2c2c;
+  color: var(--light);
+  border: 1px solid #555;
+  background-image: url("data:image/svg+xml,%3Csvg fill='white' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+}
+
+/* Style checkbox groups */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  background: #f8f8f8;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid #ddd;
+  transition: background 0.2s, border 0.2s;
+}
+
+.checkbox-group input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-group label:hover {
+  background: #e8f1fb;
+  border-color: var(--primary);
+}
+
+body.dark .checkbox-group label {
+  background: #2a2a2a;
+  border-color: #444;
+  color: var(--light);
+}
+
+body.dark .checkbox-group label:hover {
+  background: #333;
+  border-color: var(--primary);
+}
