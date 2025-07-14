@@ -34,13 +34,58 @@
       <input type="text" id="name" placeholder="Jméno" />
       <input type="text" id="prijmeni" placeholder="Příjmení" />
       <input type="date" id="datum" />
-      <input type="text" id="gender" placeholder="Pohlaví" />
-      <input type="text" id="location" placeholder="Lokalita" />
+      <input type="tel" id="phone" placeholder="Telefonní číslo" pattern="^\+?[0-9]{7,15}$" required />
+      <select id="gender" required>
+        <option value="">Vyber pohlaví</option>
+        <option value="muz">Muž</option>
+        <option value="zena">Žena</option>
+        <option value="jine">Jiné</option>
+      </select>
+      <select id="location" required>
+        <option value="">Vyber kraj</option>
+        <option value="Hlavní město Praha">Hlavní město Praha</option>
+        <option value="Středočeský kraj">Středočeský kraj</option>
+        <option value="Jihočeský kraj">Jihočeský kraj</option>
+        <option value="Plzeňský kraj">Plzeňský kraj</option>
+        <option value="Karlovarský kraj">Karlovarský kraj</option>
+        <option value="Ústecký kraj">Ústecký kraj</option>
+        <option value="Liberecký kraj">Liberecký kraj</option>
+        <option value="Královéhradecký kraj">Královéhradecký kraj</option>
+        <option value="Pardubický kraj">Pardubický kraj</option>
+        <option value="Vysočina">Vysočina</option>
+        <option value="Jihomoravský kraj">Jihomoravský kraj</option>
+        <option value="Olomoucký kraj">Olomoucký kraj</option>
+        <option value="Zlínský kraj">Zlínský kraj</option>
+        <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
+      </select>
       <textarea id="bio" placeholder="O mně"></textarea>
-      <input type="text" id="specializations" placeholder="Specializace" />
-      <input type="text" id="pricing" placeholder="Cena" />
-      <input type="text" id="experience" placeholder="Roky zkušeností" />
-      <input type="text" id="languages" placeholder="Jazyky" />
+      <div id="specializationOptions" class="checkbox-group">
+        <label><input type="checkbox" name="specializations" value="Fitness" /> Fitness</label><br/>
+        <label><input type="checkbox" name="specializations" value="Kondiční trénink" /> Kondiční trénink</label><br/>
+        <label><input type="checkbox" name="specializations" value="Silový trénink" /> Silový trénink</label><br/>
+        <label><input type="checkbox" name="specializations" value="Hubnutí" /> Hubnutí</label><br/>
+        <label><input type="checkbox" name="specializations" value="Výživa" /> Výživa / Nutriční poradenství</label><br/>
+        <label><input type="checkbox" name="specializations" value="Rehabilitace" /> Rehabilitace</label><br/>
+        <label><input type="checkbox" name="specializations" value="Běhání" /> Běhání</label><br/>
+        <label><input type="checkbox" name="specializations" value="Jóga" /> Jóga</label><br/>
+        <label><input type="checkbox" name="specializations" value="Pilates" /> Pilates</label><br/>
+        <label><input type="checkbox" name="specializations" value="Skupinové lekce" /> Skupinové lekce</label><br/>
+      </div>
+      <select id="pricing" required>
+        <option value="">Zvolte cenu</option>
+        <option value="do 300">Do 300 Kč/hod</option>
+        <option value="300–500">300–500 Kč/hod</option>
+        <option value="500–700">500–700 Kč/hod</option>
+        <option value="700+">700 Kč a více</option>
+      </select>
+      <input type="number" id="experience" min="0" max="50" placeholder="Roky zkušeností" />
+      <div id="languageOptions" class="checkbox-group">
+        <label><input type="checkbox" name="languages" value="CZ" /> Čeština (CZ)</label><br/>
+        <label><input type="checkbox" name="languages" value="EN" /> Angličtina (EN)</label><br/>
+        <label><input type="checkbox" name="languages" value="DE" /> Němčina (DE)</label><br/>
+        <label><input type="checkbox" name="languages" value="SK" /> Slovenština (SK)</label><br/>
+        <label><input type="checkbox" name="languages" value="RU" /> Ruština (RU)</label><br/>
+      </div>
       <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
       <input type="file" id="profileImage" accept="image/*" />
       <button type="submit">Uložit změny</button>
@@ -106,74 +151,94 @@
       return data.secure_url;
     }
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user || !user.emailVerified) {
-        alert("Nejste přihlášen nebo nemáte ověřený email.");
-        window.location.href = "login.html";
-        return;
+  onAuthStateChanged(auth, (user) => {
+    if (!user || !user.emailVerified) {
+      alert("Nejste přihlášen nebo nemáte ověřený email.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const userRef = ref(db, "users/" + user.uid);
+
+    get(userRef).then((snap) => {
+      if (snap.exists()) {
+        const d = snap.val();
+        form.name.value = d.name || "";
+        form.prijmeni.value = d.prijmeni || "";
+        form.datum.value = d.datum || "";
+        form.phone.value = d.phone || "";
+        form.gender.value = d.gender || "";
+        form.location.value = d.location || "";
+        form.bio.value = d.bio || "";
+        form.pricing.value = d.pricing || "";
+        form.experience.value = d.experience || "";
+
+        // Load specializations checkboxes
+        const specializations = Array.isArray(d.specializations) ? d.specializations : [];
+        document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
+          cb.checked = specializations.includes(cb.value);
+        });
+
+        // Load languages checkboxes
+        const languages = Array.isArray(d.languages) ? d.languages : [];
+        document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
+          cb.checked = languages.includes(cb.value);
+        });
+
+        currentUrl = d.profilePicture || "";
+        if (currentUrl) {
+          preview.src = currentUrl;
+          preview.style.display = "block";
+        }
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      let newUrl = currentUrl;
+      if (imageInput.files.length > 0) {
+        const file = imageInput.files[0];
+        if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
+        try {
+          newUrl = await uploadToCloudinary(file);
+        } catch {
+          return alert("Nepodařilo se nahrát obrázek.");
+        }
       }
 
-      const userRef = ref(db, "users/" + user.uid);
+      // Collect checkbox values
+      const selectedSpecializations = Array.from(document.querySelectorAll("#specializationOptions input[type='checkbox']:checked"))
+        .map(cb => cb.value);
+      const selectedLanguages = Array.from(document.querySelectorAll("#languageOptions input[type='checkbox']:checked"))
+        .map(cb => cb.value);
 
-      get(userRef).then((snap) => {
-        if (snap.exists()) {
-          const d = snap.val();
-          form.name.value = d.name || "";
-          form.prijmeni.value = d.prijmeni || "";
-          form.datum.value = d.datum || "";
-          form.gender.value = d.gender || "";
-          form.location.value = d.location || "";
-          form.bio.value = d.bio || "";
-          form.specializations.value = d.specializations || "";
-          form.pricing.value = d.pricing || "";
-          form.experience.value = d.experience || "";
-          form.languages.value = d.languages || "";
-          currentUrl = d.profilePicture || "";
-          if (currentUrl) {
-            preview.src = currentUrl;
-            preview.style.display = "block";
-          }
+      const updated = {
+        name: form.name.value,
+        prijmeni: form.prijmeni.value,
+        datum: form.datum.value,
+        phone: form.phone.value,
+        gender: form.gender.value,
+        location: form.location.value,
+        bio: form.bio.value,
+        specializations: selectedSpecializations,
+        pricing: form.pricing.value,
+        experience: form.experience.value,
+        languages: selectedLanguages,
+        email: user.email,
+        profilePicture: newUrl
+      };
+
+      set(userRef, updated).then(() => {
+        alert("Profil uložen.");
+        currentUrl = newUrl;
+        if (currentUrl) {
+          preview.src = currentUrl;
+          preview.style.display = "block";
         }
-      });
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        let newUrl = currentUrl;
-        if (imageInput.files.length > 0) {
-          const file = imageInput.files[0];
-          if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
-          try {
-            newUrl = await uploadToCloudinary(file);
-          } catch {
-            return alert("Nepodařilo se nahrát obrázek.");
-          }
-        }
-
-        const updated = {
-          name: form.name.value,
-          prijmeni: form.prijmeni.value,
-          datum: form.datum.value,
-          gender: form.gender.value,
-          location: form.location.value,
-          bio: form.bio.value,
-          specializations: form.specializations.value,
-          pricing: form.pricing.value,
-          experience: form.experience.value,
-          languages: form.languages.value,
-          email: user.email,
-          profilePicture: newUrl
-        };
-
-        set(userRef, updated).then(() => {
-          alert("Profil uložen.");
-          currentUrl = newUrl;
-          if (currentUrl) {
-            preview.src = currentUrl;
-            preview.style.display = "block";
-          }
-        }).catch((err) => alert("Chyba: " + err.message));
-      });
+      }).catch((err) => alert("Chyba: " + err.message));
     });
+});
   </script>
 
   <script>
