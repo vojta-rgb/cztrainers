@@ -35,6 +35,7 @@
         <input type="text" id="prijmeni" placeholder="Příjmení" required />
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Heslo" required />
+        <input type="tel" id="phone" placeholder="+420 123 456 789" required pattern="\+?[0-9\s]{9,15}" />
         <input type="date" id="datum" required />
         <select id="gender" required>
           <option value="">Vyber pohlaví</option>
@@ -42,12 +43,52 @@
           <option value="zena">Žena</option>
           <option value="jine">Jiné</option>
         </select>
-        <input type="text" id="location" placeholder="Město / Lokalita" required />
+        <select id="location" required>
+          <option value="">Vyber kraj</option>
+          <option value="Hlavní město Praha">Hlavní město Praha</option>
+          <option value="Středočeský kraj">Středočeský kraj</option>
+          <option value="Jihočeský kraj">Jihočeský kraj</option>
+          <option value="Plzeňský kraj">Plzeňský kraj</option>
+          <option value="Karlovarský kraj">Karlovarský kraj</option>
+          <option value="Ústecký kraj">Ústecký kraj</option>
+          <option value="Liberecký kraj">Liberecký kraj</option>
+          <option value="Královéhradecký kraj">Královéhradecký kraj</option>
+          <option value="Pardubický kraj">Pardubický kraj</option>
+          <option value="Vysočina">Vysočina</option>
+          <option value="Jihomoravský kraj">Jihomoravský kraj</option>
+          <option value="Olomoucký kraj">Olomoucký kraj</option>
+          <option value="Zlínský kraj">Zlínský kraj</option>
+          <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
+        </select>
         <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
-        <input type="text" id="specializations" placeholder="Specializace (např. Fitness, Hubnutí)" />
-        <input type="text" id="pricing" placeholder="Cena (např. 500 CZK/hod)" />
+        <div id="specializationOptions" class="checkbox-group">
+          <label><input type="checkbox" name="specializations" value="Fitness" /> Fitness</label><br/>
+          <label><input type="checkbox" name="specializations" value="Kondiční trénink" /> Kondiční trénink</label><br/>
+          <label><input type="checkbox" name="specializations" value="Silový trénink" /> Silový trénink</label><br/>
+          <label><input type="checkbox" name="specializations" value="Hubnutí" /> Hubnutí</label><br/>
+          <label><input type="checkbox" name="specializations" value="Výživa" /> Výživa / Nutriční poradenství</label><br/>
+          <label><input type="checkbox" name="specializations" value="Rehabilitace" /> Rehabilitace</label><br/>
+          <label><input type="checkbox" name="specializations" value="Běhání" /> Běhání</label><br/>
+          <label><input type="checkbox" name="specializations" value="Jóga" /> Jóga</label><br/>
+          <label><input type="checkbox" name="specializations" value="Pilates" /> Pilates</label><br/>
+          <label><input type="checkbox" name="specializations" value="Skupinové lekce" /> Skupinové lekce</label><br/>
+        </div>
+        <select id="pricing">
+          <option value="">Zvolte cenu</option>
+          <option value="do 300">Do 300 Kč/hod</option>
+          <option value="300–500">300–500 Kč/hod</option>
+          <option value="500–700">500–700 Kč/hod</option>
+          <option value="700+">700 Kč a více</option>
+        </select>
         <input type="number" id="experience" placeholder="Roky zkušeností" />
-        <input type="text" id="languages" placeholder="Jazyky (např. CZ, EN)" />
+        <div id="languageOptions" class="checkbox-group">
+          <label><input type="checkbox" name="languages" value="CZ" /> Čeština (CZ)</label><br/>
+          <label><input type="checkbox" name="languages" value="EN" /> Angličtina (EN)</label><br/>
+          <label><input type="checkbox" name="languages" value="DE" /> Němčina (DE)</label><br/>
+          <label><input type="checkbox" name="languages" value="SK" /> Slovenština (SK)</label><br/>
+          <label><input type="checkbox" name="languages" value="RU" /> Ruština (RU)</label><br/>
+          <label><input type="checkbox" name="languages" value="FR" /> Francouzština (FR)</label><br/>
+        </div>
         <button type="submit">Odeslat</button>
         <button type="button" class="btn-red" onclick="window.location.href='index_main.html'">Zpět</button>
       </form>
@@ -124,13 +165,14 @@
           prijmeni: document.getElementById("prijmeni").value,
           email: user.email,
           datum: document.getElementById("datum").value,
+          phone: document.getElementById("phone").value,
           gender: document.getElementById("gender").value,
           location: document.getElementById("location").value,
           bio: document.getElementById("bio").value,
-          specializations: document.getElementById("specializations").value,
+          specializations: Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(el => el.value).join(", "),
           pricing: document.getElementById("pricing").value,
           experience: document.getElementById("experience").value,
-          languages: document.getElementById("languages").value,
+          languages: Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value).join(", "),
           profilePicture: profilePictureUrl
         };
 
@@ -139,6 +181,7 @@
         alert("Ověřovací e-mail byl odeslán.");
         await signOut(auth);
         this.reset();
+        window.location.href = "login.html";
       } catch (error) {
         alert("Chyba při registraci: " + error.message);
       }
