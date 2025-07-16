@@ -231,6 +231,7 @@
 
       set(userRef, updated).then(() => {
         alert("Profil uložen.");
+        window.location.href = "index_main.html";
         currentUrl = newUrl;
         if (currentUrl) {
           preview.src = currentUrl;

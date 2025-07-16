@@ -139,7 +139,7 @@
           <div class="card-info">
             <h3>${name} ${lastName}</h3>
             <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-            <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
+            <p><strong>Specializace:</strong> ${(user.specializations || "-").split(",").join(", ")}</p>
             <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
           </div>
         `;
