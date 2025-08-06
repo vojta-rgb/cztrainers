@@ -91,13 +91,13 @@
         if (snapshot.exists()) {
           const user = snapshot.val();
 
-          const specializations = user.specializations
-            ? user.specializations.split(',').map(s => s.trim()).join(', ')
-            : '-';
+          const specializations = Array.isArray(user.specializations)
+            ? user.specializations.join(', ')
+            : (typeof user.specializations === 'string' ? user.specializations : '-');
 
-          const languages = user.languages
-            ? user.languages.split(',').map(l => l.trim()).join(', ')
-            : '-';
+          const languages = Array.isArray(user.languages)
+            ? user.languages.join(', ')
+            : (typeof user.languages === 'string' ? user.languages : '-');
 
           profileCard.innerHTML = `
             <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
