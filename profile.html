@@ -34,7 +34,6 @@
 
   <!-- THEME SCRIPT -->
   <script>
-    // Apply stored theme on load
     if (localStorage.getItem('theme') === 'dark') {
       document.body.classList.add('dark');
     }
@@ -49,7 +48,6 @@
         icon.textContent = isDark ? '🌙' : '☀️';
       }
 
-      // Set icon initially
       if (localStorage.getItem('theme') === 'dark') {
         icon.textContent = '🌙';
       }
@@ -59,7 +57,6 @@
         updateTheme(isDark);
       });
 
-      // Hamburger toggle
       document.getElementById("hamburger").addEventListener("click", function () {
         document.getElementById("navLinks").classList.toggle("active");
       });
@@ -93,19 +90,35 @@
       get(userRef).then(snapshot => {
         if (snapshot.exists()) {
           const user = snapshot.val();
+
+          const specializations = user.specializations
+            ? user.specializations.split(',').map(s => s.trim()).join(', ')
+            : '-';
+
+          const languages = user.languages
+            ? user.languages.split(',').map(l => l.trim()).join(', ')
+            : '-';
+
           profileCard.innerHTML = `
             <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-            ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Profilová fotka" class="profile-image" />` : "<p><i>Profilový obrázek nebyl nahrán.</i></p>"}
-            <p><strong>Email:</strong> ${user.email || "neuvedeno"}</p>
+            ${user.profilePicture
+              ? `<img src="${user.profilePicture}" alt="Profilová fotka" class="profile-image" />`
+              : "<p><i>Profilový obrázek nebyl nahrán.</i></p>"}
+
+            <p><strong>🧍 O mně:</strong> ${user.bio || "-"}</p>
+            <p><strong>💪 Specializace:</strong> ${specializations}</p>
+            <p><strong>🗣️ Jazyky:</strong> ${languages}</p>
+            <p><strong>📈 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+            <p><strong>💸 Cena:</strong> ${user.pricing || "-"} Kč/hod</p>
+            <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+            <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+            <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+
+            <!-- Optional info, not shown by default -->
+            <!--
             <p><strong>Datum narození:</strong> ${user.datum || "-"}</p>
             <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
-            <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
-            <p><strong>O mně:</strong> ${user.bio || "-"}</p>
-            <p><strong>Specializace:</strong> ${user.specializations || "-"}</p>
-            <p><strong>Cena:</strong> ${user.pricing || "-"}</p>
-            <p><strong>Roky zkušeností:</strong> ${user.experience || "-"}</p>
-            <p><strong>Jazyky:</strong> ${user.languages || "-"}</p>
-            <p><strong>Telefon:</strong> ${user.phone || "-"}</p>
+            -->
           `;
         } else {
           profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
