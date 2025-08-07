@@ -139,7 +139,11 @@
           <div class="card-info">
             <h3>${name} ${lastName}</h3>
             <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-            <p><strong>Specializace:</strong> ${(user.specializations || "-").split(",").join(", ")}</p>
+            <p><strong>Specializace:</strong> ${
+                Array.isArray(user.specializations)
+                  ? user.specializations.join(", ")
+                  : (user.specializations || "-")
+              }</p>
             <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
           </div>
         `;
@@ -153,7 +157,11 @@
         (user.name && user.name.toLowerCase().includes(query)) ||
         (user.prijmeni && user.prijmeni.toLowerCase().includes(query)) ||
         (user.experience && user.experience.toString().includes(query)) ||
-        (user.specializations && user.specializations.toLowerCase().includes(query)) ||
+        (user.specializations &&(
+          Array.isArray(user.specializations)
+            ? user.specializations.join(", ").toLowerCase().includes(query)
+            : user.specializations.toLowerCase().includes(query)
+        )) ||
         (user.location && user.location.toLowerCase().includes(query))
       );
       renderUsers(filtered);
@@ -165,6 +173,7 @@
       const data = snapshot.val();
       allUsers = Object.entries(data || {}).filter(([_, user]) => user.email);
       renderUsers(allUsers);
+      console.log("Loaded users:", data);
     });
 
     searchInput.addEventListener("input", filterUsers);
