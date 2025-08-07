@@ -100,25 +100,33 @@
             : (typeof user.languages === 'string' ? user.languages : '-');
 
           profileCard.innerHTML = `
-            <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-            ${user.profilePicture
-              ? `<img src="${user.profilePicture}" alt="Profilová fotka" class="profile-image" />`
-              : "<p><i>Profilový obrázek nebyl nahrán.</i></p>"}
+            <div class="profile-container">
+              <div class="profile-left">
+                <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
+                <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+                <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+                <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+                <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+              </div>
 
-            <p><strong>🧍 O mně:</strong> ${user.bio || "-"}</p>
-            <p><strong>💪 Specializace:</strong> ${specializations}</p>
-            <p><strong>🗣️ Jazyky:</strong> ${languages}</p>
-            <p><strong>📈 Zkušenosti:</strong> ${user.experience || "-"} let</p>
-            <p><strong>💸 Cena:</strong> ${user.pricing || "-"} Kč/hod</p>
-            <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
-            <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
-            <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+              <div class="profile-right">
+                <p><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
+                <p><strong>💪 Specializace:</strong></p>
+                <div class="tag-list">
+                  ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
+                    .map(s => `<span class="tag">${s.trim()}</span>`).join("") || "-"}
+                </div>
+                
+                <p><strong>🗣️ Jazyky:</strong></p>
+                <div class="tag-list">
+                  ${(Array.isArray(user.languages) ? user.languages : (user.languages || "").split(","))
+                    .map(l => `<span class="tag">${l.trim()}</span>`).join("") || "-"}
+                </div>
 
-            <!-- Optional info, not shown by default -->
-            <!--
-            <p><strong>Datum narození:</strong> ${user.datum || "-"}</p>
-            <p><strong>Pohlaví:</strong> ${user.gender || "-"}</p>
-            -->
+                <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+                <p><strong>💰 Cena:</strong> ${user.pricing || "-"} Kč/hod</p>
+              </div>
+            </div>
           `;
         } else {
           profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
