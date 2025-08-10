@@ -83,158 +83,173 @@
       <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
       <input type="file" id="profileImage" accept="image/*" />
       <button type="submit">Uložit změny</button>
+      <h3>Sociální sítě (volitelné)</h3>
+      <input type="text" id="instagram" placeholder="Instagram (uživatelské jméno nebo odkaz)" />
+      <input type="text" id="facebook" placeholder="Facebook (uživatelské jméno nebo odkaz)" />
+      <input type="text" id="tiktok" placeholder="TikTok (uživatelské jméno nebo odkaz)" />
     </form>
   </div>
 
   <div id="toast" class="toast"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+const firebaseConfig = {
+  apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+  authDomain: "cztrainers-dat1.firebaseapp.com",
+  databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cztrainers-dat1",
+  storageBucket: "cztrainers-dat1.appspot.com",
+  messagingSenderId: "369200533487",
+  appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+};
+
+const CLOUD_NAME = "dkt3pdcbe";
+const UPLOAD_PRESET = "cztrainers_unsigned";
+const MAX_FILE_SIZE = 500 * 1024;
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const form = document.getElementById("profileForm");
+const imageInput = document.getElementById("profileImage");
+const preview = document.getElementById("profilePreview");
+let currentUrl = "";
+
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (file && file.size <= MAX_FILE_SIZE) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  } else {
+    alert("Obrázek je moc velký (max 500 KB).");
+    imageInput.value = "";
+    preview.style.display = "none";
+  }
+});
+
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+  if (!res.ok) throw new Error("Nahrávání selhalo");
+  const data = await res.json();
+  return data.secure_url;
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (!user || !user.emailVerified) {
+    alert("Nejste přihlášen nebo nemáte ověřený email.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const userRef = ref(db, "users/" + user.uid);
+
+  get(userRef).then((snap) => {
+    if (snap.exists()) {
+      const d = snap.val();
+      form.name.value = d.name || "";
+      form.prijmeni.value = d.prijmeni || "";
+      form.datum.value = d.datum || "";
+      form.phone.value = d.phone || "";
+      form.gender.value = d.gender || "";
+      form.location.value = d.location || "";
+      form.bio.value = d.bio || "";
+      form.pricing.value = d.pricing || "";
+      form.experience.value = d.experience || "";
+
+      // Load socials
+      form.instagram.value = d.instagram || "";
+      form.facebook.value = d.facebook || "";
+      form.tiktok.value = d.tiktok || "";
+
+      // Load specializations checkboxes
+      const specializations = Array.isArray(d.specializations) ? d.specializations : [];
+      document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
+        cb.checked = specializations.includes(cb.value);
+      });
+
+      // Load languages checkboxes
+      const languages = Array.isArray(d.languages) ? d.languages : [];
+      document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
+        cb.checked = languages.includes(cb.value);
+      });
+
+      currentUrl = d.profilePicture || "";
+      if (currentUrl) {
+        preview.src = currentUrl;
+        preview.style.display = "block";
+      }
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    let newUrl = currentUrl;
+    if (imageInput.files.length > 0) {
+      const file = imageInput.files[0];
+      if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
+      try {
+        newUrl = await uploadToCloudinary(file);
+      } catch {
+        return alert("Nepodařilo se nahrát obrázek.");
+      }
+    }
+
+    // Collect checkbox values
+    const selectedSpecializations = Array.from(document.querySelectorAll("#specializationOptions input[type='checkbox']:checked"))
+      .map(cb => cb.value);
+    const selectedLanguages = Array.from(document.querySelectorAll("#languageOptions input[type='checkbox']:checked"))
+      .map(cb => cb.value);
+
+    // Get socials (username or link)
+    const getSocialValue = (val) => val.trim();
+
+    const updated = {
+      name: form.name.value,
+      prijmeni: form.prijmeni.value,
+      datum: form.datum.value,
+      phone: form.phone.value,
+      gender: form.gender.value,
+      location: form.location.value,
+      bio: form.bio.value,
+      specializations: selectedSpecializations,
+      pricing: form.pricing.value,
+      experience: form.experience.value,
+      languages: selectedLanguages,
+      email: user.email,
+      profilePicture: newUrl,
+      instagram: getSocialValue(form.instagram.value),
+      facebook: getSocialValue(form.facebook.value),
+      tiktok: getSocialValue(form.tiktok.value)
     };
 
-    const CLOUD_NAME = "dkt3pdcbe";
-    const UPLOAD_PRESET = "cztrainers_unsigned";
-    const MAX_FILE_SIZE = 500 * 1024;
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    const form = document.getElementById("profileForm");
-    const imageInput = document.getElementById("profileImage");
-    const preview = document.getElementById("profilePreview");
-    let currentUrl = "";
-
-    imageInput.addEventListener("change", () => {
-      const file = imageInput.files[0];
-      if (file && file.size <= MAX_FILE_SIZE) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          preview.src = e.target.result;
-          preview.style.display = "block";
-        };
-        reader.readAsDataURL(file);
-      } else {
-        alert("Obrázek je moc velký (max 500 KB).");
-        imageInput.value = "";
-        preview.style.display = "none";
+    set(userRef, updated).then(() => {
+      alert("Profil uložen.");
+      window.location.href = "index_main.html";
+      currentUrl = newUrl;
+      if (currentUrl) {
+        preview.src = currentUrl;
+        preview.style.display = "block";
       }
-    });
-
-    async function uploadToCloudinary(file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData
-      });
-      if (!res.ok) throw new Error("Nahrávání selhalo");
-      const data = await res.json();
-      return data.secure_url;
-    }
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user || !user.emailVerified) {
-      alert("Nejste přihlášen nebo nemáte ověřený email.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    const userRef = ref(db, "users/" + user.uid);
-
-    get(userRef).then((snap) => {
-      if (snap.exists()) {
-        const d = snap.val();
-        form.name.value = d.name || "";
-        form.prijmeni.value = d.prijmeni || "";
-        form.datum.value = d.datum || "";
-        form.phone.value = d.phone || "";
-        form.gender.value = d.gender || "";
-        form.location.value = d.location || "";
-        form.bio.value = d.bio || "";
-        form.pricing.value = d.pricing || "";
-        form.experience.value = d.experience || "";
-
-        // Load specializations checkboxes
-        const specializations = Array.isArray(d.specializations) ? d.specializations : [];
-        document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
-          cb.checked = specializations.includes(cb.value);
-        });
-
-        // Load languages checkboxes
-        const languages = Array.isArray(d.languages) ? d.languages : [];
-        document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
-          cb.checked = languages.includes(cb.value);
-        });
-
-        currentUrl = d.profilePicture || "";
-        if (currentUrl) {
-          preview.src = currentUrl;
-          preview.style.display = "block";
-        }
-      }
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      let newUrl = currentUrl;
-      if (imageInput.files.length > 0) {
-        const file = imageInput.files[0];
-        if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
-        try {
-          newUrl = await uploadToCloudinary(file);
-        } catch {
-          return alert("Nepodařilo se nahrát obrázek.");
-        }
-      }
-
-      // Collect checkbox values
-      const selectedSpecializations = Array.from(document.querySelectorAll("#specializationOptions input[type='checkbox']:checked"))
-        .map(cb => cb.value);
-      const selectedLanguages = Array.from(document.querySelectorAll("#languageOptions input[type='checkbox']:checked"))
-        .map(cb => cb.value);
-
-      const updated = {
-        name: form.name.value,
-        prijmeni: form.prijmeni.value,
-        datum: form.datum.value,
-        phone: form.phone.value,
-        gender: form.gender.value,
-        location: form.location.value,
-        bio: form.bio.value,
-        specializations: selectedSpecializations,
-        pricing: form.pricing.value,
-        experience: form.experience.value,
-        languages: selectedLanguages,
-        email: user.email,
-        profilePicture: newUrl
-      };
-
-      set(userRef, updated).then(() => {
-        alert("Profil uložen.");
-        window.location.href = "index_main.html";
-        currentUrl = newUrl;
-        if (currentUrl) {
-          preview.src = currentUrl;
-          preview.style.display = "block";
-        }
-      }).catch((err) => alert("Chyba: " + err.message));
-    });
+    }).catch((err) => alert("Chyba: " + err.message));
+  });
 });
-  </script>
+</script>
 
   <script>
     const icon = document.getElementById("themeIcon");

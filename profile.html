@@ -65,78 +65,110 @@
 
   <!-- FIREBASE + PROFILE SCRIPT -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  const firebaseConfig = {
+    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+    authDomain: "cztrainers-dat1.firebaseapp.com",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cztrainers-dat1",
+    storageBucket: "cztrainers-dat1.appspot.com",
+    messagingSenderId: "369200533487",
+    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get('id');
+  const profileCard = document.getElementById("profileCard");
+
+  function renderSocialLinks(socials = {}) {
+    const platforms = {
+      instagram: usernameOrUrl =>
+        usernameOrUrl.startsWith("http")
+          ? usernameOrUrl
+          : `https://instagram.com/${usernameOrUrl.replace(/^@/, "")}`,
+      facebook: usernameOrUrl =>
+        usernameOrUrl.startsWith("http")
+          ? usernameOrUrl
+          : `https://facebook.com/${usernameOrUrl.replace(/^@/, "")}`,
+      tiktok: usernameOrUrl =>
+        usernameOrUrl.startsWith("http")
+          ? usernameOrUrl
+          : `https://tiktok.com/@${usernameOrUrl.replace(/^@/, "")}`
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    let html = "";
+    for (let key in platforms) {
+      if (socials[key] && socials[key].trim() !== "") {
+        const link = platforms[key](socials[key]);
+        const displayName = socials[key].startsWith("http")
+          ? socials[key]
+          : `@${socials[key].replace(/^@/, "")}`;
+        html += `<a href="${link}" target="_blank" class="social-tag">${key} ${displayName}</a>`;
+      }
+    }
+    return html || "<p>Žádné sociální sítě</p>";
+  }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id');
-    const profileCard = document.getElementById("profileCard");
+  if (userId) {
+    const userRef = ref(db, 'users/' + userId);
+    get(userRef).then(snapshot => {
+      if (snapshot.exists()) {
+        const user = snapshot.val();
 
-    if (userId) {
-      const userRef = ref(db, 'users/' + userId);
-      get(userRef).then(snapshot => {
-        if (snapshot.exists()) {
-          const user = snapshot.val();
+        const specializations = Array.isArray(user.specializations)
+          ? user.specializations.join(', ')
+          : (typeof user.specializations === 'string' ? user.specializations : '-');
 
-          const specializations = Array.isArray(user.specializations)
-            ? user.specializations.join(', ')
-            : (typeof user.specializations === 'string' ? user.specializations : '-');
+        const languages = Array.isArray(user.languages)
+          ? user.languages.join(', ')
+          : (typeof user.languages === 'string' ? user.languages : '-');
 
-          const languages = Array.isArray(user.languages)
-            ? user.languages.join(', ')
-            : (typeof user.languages === 'string' ? user.languages : '-');
-
-          profileCard.innerHTML = `
-            <div class="profile-container">
-              <div class="profile-left">
-                <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
-                <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-                <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
-                <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
-                <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
-              </div>
-
-              <div class="profile-right">
-                <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
-                <p><strong>💪 Specializace:</strong></p>
-                <div class="tag-list">
-                  ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
-                    .map(s => `<span class="tag">${s.trim()}</span>`).join("") || "-"}
-                </div>
-                
-                <p><strong>🗣️ Jazyky:</strong></p>
-                <div class="tag-list">
-                  ${(Array.isArray(user.languages) ? user.languages : (user.languages || "").split(","))
-                    .map(l => `<span class="tag">${l.trim()}</span>`).join("") || "-"}
-                </div>
-
-                <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
-                <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+        profileCard.innerHTML = `
+          <div class="profile-container">
+            <div class="profile-left">
+              <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
+              <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+              <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+              <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+              <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+              <div class="socials-container">
+                ${renderSocialLinks(user.socials)}
               </div>
             </div>
-          `;
-        } else {
-          profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
-        }
-      }).catch(error => {
-        profileCard.innerHTML = `<p>Chyba načítání: ${error.message}</p>`;
-      });
-    } else {
-      profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
-    }
+
+            <div class="profile-right">
+              <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
+              <p><strong>💪 Specializace:</strong></p>
+              <div class="tag-list">
+                ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
+                  .map(s => `<span class="tag">${s.trim()}</span>`).join("") || "-"}
+              </div>
+              
+              <p><strong>🗣️ Jazyky:</strong></p>
+              <div class="tag-list">
+                ${(Array.isArray(user.languages) ? user.languages : (user.languages || "").split(","))
+                  .map(l => `<span class="tag">${l.trim()}</span>`).join("") || "-"}
+              </div>
+
+              <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+              <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
+      }
+    }).catch(error => {
+      profileCard.innerHTML = `<p>Chyba načítání: ${error.message}</p>`;
+    });
+  } else {
+    profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
+  }
   </script>
 
   <script type="module" src="auth-navbar.js"></script>

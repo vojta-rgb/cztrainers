@@ -83,6 +83,10 @@
           <label><input type="checkbox" name="languages" value="RU" /> Ruština (RU)</label><br/>
           <label><input type="checkbox" name="languages" value="FR" /> Francouzština (FR)</label><br/>
         </div>
+        <h3>Sociální sítě (volitelné)</h3>
+        <input type="text" id="instagram" placeholder="Instagram (uživatelské jméno nebo odkaz)" />
+        <input type="text" id="facebook" placeholder="Facebook (uživatelské jméno nebo odkaz)" />
+        <input type="text" id="tiktok" placeholder="TikTok (uživatelské jméno nebo odkaz)" />
         <button type="submit">Odeslat</button>
         <button type="button" class="btn-red" onclick="window.location.href='index_main.html'">Zpět</button>
       </form>
@@ -154,6 +158,12 @@
           profilePictureUrl = await uploadImageToCloudinary(file);
         }
 
+        const socials = {
+          instagram: document.getElementById("instagram").value.trim(),
+          facebook: document.getElementById("facebook").value.trim(),
+          tiktok: document.getElementById("tiktok").value.trim()
+        };
+
         const userData = {
           name: document.getElementById("name").value,
           prijmeni: document.getElementById("prijmeni").value,
@@ -167,8 +177,10 @@
           pricing: document.getElementById("pricing").value,
           experience: document.getElementById("experience").value,
           languages: Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value).join(", "),
-          profilePicture: profilePictureUrl
+          profilePicture: profilePictureUrl,
+          socials // store socials object directly
         };
+
 
         await set(ref(db, 'unverified-users/' + user.uid), userData);
         await sendEmailVerification(user);

@@ -307,3 +307,22 @@ body.dark .tag {
 .bio-text {
   white-space: pre-line; /* preserves newlines but still wraps text */
 }
+
+.socials-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.social-tag {
+  background: #0077ff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.social-tag:hover {
+  background: #005fd1;
+}
