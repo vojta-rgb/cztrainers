@@ -137,10 +137,12 @@
               <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
               <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
               <div class="socials-container">
-                ${renderSocialLinks(user.socials)}
-              </div>
+              ${renderSocialLinks({
+                instagram: user.instagram,
+                facebook: user.facebook,
+                tiktok: user.tiktok
+              })}
             </div>
-
             <div class="profile-right">
               <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
               <p><strong>💪 Specializace:</strong></p>
