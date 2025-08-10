@@ -326,3 +326,14 @@ body.dark .tag {
 .social-tag:hover {
   background: #005fd1;
 }
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between checkbox and text */
+  margin-bottom: 6px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin: 0; /* remove weird default spacing */
+}
