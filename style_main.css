@@ -299,3 +299,11 @@ body.dark .tag {
     align-items: flex-start;
   }
 }
+
+.pricing-text {
+  white-space: pre-line; /* preserves newlines but still wraps text */
+}
+
+.bio-text {
+  white-space: pre-line; /* preserves newlines but still wraps text */
+}
