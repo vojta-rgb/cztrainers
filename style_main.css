@@ -327,20 +327,3 @@ body.dark .tag {
   background: #005fd1;
 }
 
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px; /* row gap, column gap */
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* space between checkbox and text */
-  margin: 0;
-  white-space: nowrap; /* prevents breaking inside one label */
-}
-
-.checkbox-group input[type="checkbox"] {
-  margin: 0;
-}
