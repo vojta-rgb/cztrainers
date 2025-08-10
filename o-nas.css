@@ -103,7 +103,7 @@ body.dark::before {
 
 /* Overlay */
 .overlay {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.149);
   min-height: 100vh;
   padding: 40px 20px;
   display: flex;
