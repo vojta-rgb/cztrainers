@@ -193,3 +193,14 @@ form button:hover {
 .btn-red:hover {
   background: darkred;
 }
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between checkbox and text */
+  margin-bottom: 6px; /* space between rows */
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin: 0; /* removes browser default spacing */
+}

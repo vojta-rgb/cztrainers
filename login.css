@@ -1,4 +1,4 @@
-:root {
+:root { 
   --primary: #0072CE;
   --dark: #111;
   --light: #f4f4f4;
@@ -47,7 +47,6 @@ body.dark::before {
   background: var(--primary);
   padding: 1rem 2rem;
   color: white;
-  flex-wrap: wrap;
 }
 
 .nav-logo img {
@@ -56,12 +55,11 @@ body.dark::before {
   object-fit: contain;
 }
 
-
 .nav-links {
   display: flex;
-  gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 1rem;
+  flex-wrap: nowrap;
 }
 
 .nav-button {
@@ -80,8 +78,9 @@ body.dark::before {
   transform: scale(1.05);
 }
 
-/* Theme Toggle (non-reactive, minimal size) */
+/* Keep theme toggle in line */
 .theme-toggle {
+  margin-left: auto;
   background: none;
   color: white;
   border: none;
@@ -160,6 +159,7 @@ body.dark .login-wrapper {
 
 input {
   width: 100%;
+  box-sizing: border-box; /* fix for overflow */
   padding: 0.8rem;
   margin: 0.5rem 0;
   border-radius: var(--radius);
