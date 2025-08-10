@@ -237,6 +237,11 @@ body.dark .card {
   margin-top: 2rem;
 }
 
+body.dark .profile-container {
+  background-color: #1e1e1e;
+  color: white;
+}
+
 .profile-left {
   flex: 1 1 250px;
   max-width: 300px;
