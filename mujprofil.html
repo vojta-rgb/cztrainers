@@ -103,278 +103,292 @@
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
   <script src="https://unpkg.com/nsfwjs@2/dist/nsfwjs.min.js"></script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-  authDomain: "cztrainers-dat1.firebaseapp.com",
-  databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "cztrainers-dat1",
-  storageBucket: "cztrainers-dat1.appspot.com",
-  messagingSenderId: "369200533487",
-  appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-};
-
-const CLOUD_NAME = "dkt3pdcbe";
-const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
-const MAX_FILE_SIZE = 500 * 1024;
-const MAX_DIM = 800;
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const form = document.getElementById("profileForm");
-const imageInput = document.getElementById("profileImage");
-const preview = document.getElementById("profilePreview");
-let currentUrl = "";
-
-// Preview on choose
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  if (!file) return;
-  if (file.size > MAX_FILE_SIZE) {
-    alert("Obrázek je moc velký (max 500 KB).");
-    imageInput.value = "";
-    preview.style.display = "none";
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
-});
-
-// ---------- helpers: downscale, NSFW, signer, signed upload ----------
-async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
-  // Return original if browser can't create a bitmap (e.g., HEIC on some desktops)
-  try {
-    const img = await new Promise((res, rej) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = rej;
-      i.src = URL.createObjectURL(file);
-    });
-    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-    if (!isFinite(scale) || scale <= 0) return file;
-
-    const w = Math.round(img.width * scale);
-    const h = Math.round(img.height * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = w; canvas.height = h;
-    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-
-    const blob = await new Promise((res) => canvas.toBlob(res, mime, quality));
-    if (!blob || !blob.size) return file; // fallback
-    return new File([blob], "pfp.jpg", { type: mime });
-  } catch (e) {
-    console.warn("Downscale failed, using original file:", e);
-    return file;
-  }
-}
-
-async function getSignature(params){
-  console.log("[pfp] requesting signature…", params);
-  try {
-    const r = await fetch(SIGNER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params)
-    });
-    const txt = await r.text().catch(()=>"(no body)");
-    if (!r.ok) {
-      console.error("Signer HTTP error:", r.status, txt);
-      throw new Error(`Signer HTTP ${r.status}: ${txt}`);
-    }
-    const json = JSON.parse(txt);
-    console.log("[pfp] signature ok");
-    return json; // { signature, apiKey }
-  } catch (e) {
-    console.error("Signer fetch failed:", e);
-    throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker).");
-  }
-}
-
-async function uploadPfpSigned({ file, uid }){
-  const public_id = `users/${uid}/pfp`;
-  const timestamp = Math.floor(Date.now()/1000);
-
-  // 1) Ask Worker
-  const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
-
-  // 2) Upload to Cloudinary
-  console.log("[pfp] uploading to Cloudinary…");
-  const formData = new FormData();
-  formData.append("file", file, "pfp.jpg");
-  formData.append("api_key", apiKey);
-  formData.append("timestamp", String(timestamp));
-  formData.append("public_id", public_id);
-  formData.append("overwrite", "true");
-  formData.append("invalidate", "true");
-  formData.append("signature", signature);
-
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-  let resp;
-  try {
-    resp = await fetch(url, { method: "POST", body: formData });
-  } catch (e) {
-    console.error("Cloudinary fetch failed (network/CORS):", e);
-    throw new Error("Nelze se připojit ke Cloudinary (síť/CORS).");
-  }
-  const bodyTxt = await resp.text().catch(()=>"(no body)");
-  if (!resp.ok) {
-    console.error("Cloudinary HTTP error:", resp.status, bodyTxt);
-    throw new Error(`Cloudinary chyba ${resp.status}: ${bodyTxt}`);
-  }
-  const json = JSON.parse(bodyTxt);
-  console.log("[pfp] upload ok:", json.secure_url);
-  return json;
-}
-
-// Utility: normalize list coming from DB (array or comma string)
-function asArray(val){
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
-  return [];
-}
-
-onAuthStateChanged(auth, (user) => {
-  if (!user || !user.emailVerified) {
-    alert("Nejste přihlášen nebo nemáte ověřený email.");
-    window.location.href = "login.html";
-    return;
-  }
-
-  const userRef = ref(db, "users/" + user.uid);
-
-  get(userRef).then((snap) => {
-    if (!snap.exists()) return;
-
-    const d = snap.val();
-    form.name.value = d.name || "";
-    form.prijmeni.value = d.prijmeni || "";
-    form.datum.value = d.datum || "";
-    form.phone.value = d.phone || "";
-    form.gender.value = d.gender || "";
-    form.location.value = d.location || "";
-    form.bio.value = d.bio || "";
-    form.pricing.value = d.pricing || "";
-    form.experience.value = d.experience || "";
-
-    // socials (supports both flat and nested under d.socials)
-    const socials = d.socials || {};
-    form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
-    form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
-    form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
-
-    // checkboxes
-    const specs = asArray(d.specializations);
-    document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
-      cb.checked = specs.includes(cb.value);
-    });
-
-    const langs = asArray(d.languages);
-    document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
-      cb.checked = langs.includes(cb.value);
-    });
-
-    currentUrl = d.profilePicture || "";
-    if (currentUrl) {
-      // use a thumb transform if it's a Cloudinary URL
-      const thumb = currentUrl.includes("/image/upload/")
-        ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
-        : currentUrl;
-      preview.src = thumb;
-      preview.style.display = "block";
-    }
-  });
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    let newUrl = currentUrl;
-
-    // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
-    // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
-    if (imageInput.files.length > 0) {
-      const raw = imageInput.files[0];
-      if (raw.size > MAX_FILE_SIZE) {
-        alert("Obrázek je příliš velký.");
-        return;
-      }
-      try {
-        // Downscale (with fallback to original)
-        const jpg = await downscaleImage(raw);
-
-        // NSFW check
-        const safe = await isImageSafe(jpg);
-        if (!safe) {
-          alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
-          return;
-        }
-
-        // Signed upload
-        const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
-        newUrl = secure_url;
-      } catch (err) {
-        console.error("[pfp] upload failed:", err);
-        alert("Nepodařilo se nahrát obrázek: " + err.message);
-        return;
-      }
-    }
-
-
-    // Collect checkbox values
-    const selectedSpecializations = Array.from(
-      document.querySelectorAll("#specializationOptions input[type='checkbox']:checked")
-    ).map(cb => cb.value);
-
-    const selectedLanguages = Array.from(
-      document.querySelectorAll("#languageOptions input[type='checkbox']:checked")
-    ).map(cb => cb.value);
-
-    // socials (store flat; your listing code can read either flat or nested)
-    const updated = {
-      name: form.name.value,
-      prijmeni: form.prijmeni.value,
-      datum: form.datum.value,
-      phone: form.phone.value,
-      gender: form.gender.value,
-      location: form.location.value,
-      bio: form.bio.value,
-      specializations: selectedSpecializations,
-      pricing: form.pricing.value,
-      experience: form.experience.value,
-      languages: selectedLanguages,
-      email: user.email,
-      profilePicture: newUrl,
-      instagram: form.instagram.value.trim(),
-      facebook: form.facebook.value.trim(),
-      tiktok: form.tiktok.value.trim()
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    set(userRef, updated).then(() => {
-      alert("Profil uložen.");
-      currentUrl = newUrl;
-      if (currentUrl) {
-        const thumb = currentUrl.includes("/image/upload/")
-          ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
-          : currentUrl;
-        preview.src = thumb;
-        preview.style.display = "block";
+    const CLOUD_NAME = "dkt3pdcbe";
+    const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
+    const MAX_FILE_SIZE = 500 * 1024;
+    const MAX_DIM = 800;
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const form = document.getElementById("profileForm");
+    const imageInput = document.getElementById("profileImage");
+    const preview = document.getElementById("profilePreview");
+    let currentUrl = "";
+
+    // Preview on choose
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+      if (!file) return;
+      if (file.size > MAX_FILE_SIZE) {
+        alert("Obrázek je moc velký (max 500 KB).");
+        imageInput.value = "";
+        preview.style.display = "none";
+        return;
       }
-      // optional: redirect
-      // window.location.href = "index_main.html";
-    }).catch((err) => alert("Chyba: " + err.message));
-  });
-});
-</script>
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ---------- helpers: downscale, NSFW, signer, signed upload ----------
+    async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
+      try {
+        const img = await new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = rej;
+          i.src = URL.createObjectURL(file);
+        });
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        if (!isFinite(scale) || scale <= 0) return file;
+
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+        const blob = await new Promise((res) => canvas.toBlob(res, mime, quality));
+        if (!blob || !blob.size) return file; // fallback
+        return new File([blob], "pfp.jpg", { type: mime });
+      } catch (e) {
+        console.warn("Downscale failed, using original file:", e);
+        return file;
+      }
+    }
+
+    // NSFW helpers (these were missing)
+    let nsfwModelPromise;
+    function getNSFWModel(){
+      const NSFW = window.nsfwjs;
+      if (!NSFW) throw new Error("NSFWJS failed to load");
+      return nsfwModelPromise ||= NSFW.load();
+    }
+    async function isImageSafe(file){
+      const model = await getNSFWModel();
+      const dataURL = await new Promise((res)=>{ 
+        const r=new FileReader(); 
+        r.onload=()=>res(r.result); 
+        r.readAsDataURL(file);
+      });
+      const img = new Image(); 
+      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataURL; });
+      const preds = await model.classify(img);
+      const score = {Sexy:0,Porn:0,Hentai:0};
+      preds.forEach(p=>{ if(score[p.className]!=null) score[p.className]=p.probability; });
+      if (score.Porn + score.Hentai >= 0.2) return false;
+      if (score.Sexy >= 0.5) return false;
+      return true;
+    }
+
+    async function getSignature(params){
+      console.log("[pfp] requesting signature…", params);
+      try {
+        const r = await fetch(SIGNER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params)
+        });
+        const txt = await r.text().catch(()=>"(no body)");
+        if (!r.ok) {
+          console.error("Signer HTTP error:", r.status, txt);
+          throw new Error(`Signer HTTP ${r.status}: ${txt}`);
+        }
+        const json = JSON.parse(txt);
+        console.log("[pfp] signature ok");
+        return json; // { signature, apiKey }
+      } catch (e) {
+        console.error("Signer fetch failed:", e);
+        throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker).");
+      }
+    }
+
+    async function uploadPfpSigned({ file, uid }){
+      const public_id = `users/${uid}/pfp`;
+      const timestamp = Math.floor(Date.now()/1000);
+
+      const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
+
+      console.log("[pfp] uploading to Cloudinary…");
+      const formData = new FormData();
+      formData.append("file", file, "pfp.jpg");
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", String(timestamp));
+      formData.append("public_id", public_id);
+      formData.append("overwrite", "true");
+      formData.append("invalidate", "true");
+      formData.append("signature", signature);
+
+      const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+      let resp;
+      try {
+        resp = await fetch(url, { method: "POST", body: formData });
+      } catch (e) {
+        console.error("Cloudinary fetch failed (network/CORS):", e);
+        throw new Error("Nelze se připojit ke Cloudinary (síť/CORS).");
+      }
+      const bodyTxt = await resp.text().catch(()=>"(no body)");
+      if (!resp.ok) {
+        console.error("Cloudinary HTTP error:", resp.status, bodyTxt);
+        throw new Error(`Cloudinary chyba ${resp.status}: ${bodyTxt}`);
+      }
+      const json = JSON.parse(bodyTxt);
+      console.log("[pfp] upload ok:", json.secure_url);
+      return json;
+    }
+
+    // Utility: normalize list coming from DB (array or comma string)
+    function asArray(val){
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
+      return [];
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user || !user.emailVerified) {
+        alert("Nejste přihlášen nebo nemáte ověřený email.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userRef = ref(db, "users/" + user.uid);
+
+      get(userRef).then((snap) => {
+        if (!snap.exists()) return;
+
+        const d = snap.val();
+        form.name.value = d.name || "";
+        form.prijmeni.value = d.prijmeni || "";
+        form.datum.value = d.datum || "";
+        form.phone.value = d.phone || "";
+        form.gender.value = d.gender || "";
+        form.location.value = d.location || "";
+        form.bio.value = d.bio || "";
+        form.pricing.value = d.pricing || "";
+        form.experience.value = d.experience || "";
+
+        // socials (supports both flat and nested under d.socials)
+        const socials = d.socials || {};
+        form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
+        form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
+        form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
+
+        // checkboxes
+        const specs = asArray(d.specializations);
+        document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
+          cb.checked = specs.includes(cb.value);
+        });
+
+        const langs = asArray(d.languages);
+        document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
+          cb.checked = langs.includes(cb.value);
+        });
+
+        currentUrl = d.profilePicture || "";
+        if (currentUrl) {
+          const thumb = currentUrl.includes("/image/upload/")
+            ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
+            : currentUrl;
+          preview.src = thumb;
+          preview.style.display = "block";
+        }
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        let newUrl = currentUrl;
+
+        // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
+        if (imageInput.files.length > 0) {
+          const raw = imageInput.files[0];
+          if (raw.size > MAX_FILE_SIZE) {
+            alert("Obrázek je příliš velký.");
+            return;
+          }
+          try {
+            const jpg = await downscaleImage(raw);
+
+            const safe = await isImageSafe(jpg);
+            if (!safe) {
+              alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
+              return;
+            }
+
+            const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
+            newUrl = secure_url;
+          } catch (err) {
+            console.error("[pfp] upload failed:", err);
+            alert("Nepodařilo se nahrát obrázek: " + err.message);
+            return;
+          }
+        }
+
+        // Collect checkbox values
+        const selectedSpecializations = Array.from(
+          document.querySelectorAll("#specializationOptions input[type='checkbox']:checked")
+        ).map(cb => cb.value);
+
+        const selectedLanguages = Array.from(
+          document.querySelectorAll("#languageOptions input[type='checkbox']:checked")
+        ).map(cb => cb.value);
+
+        const updated = {
+          name: form.name.value,
+          prijmeni: form.prijmeni.value,
+          datum: form.datum.value,
+          phone: form.phone.value,
+          gender: form.gender.value,
+          location: form.location.value,
+          bio: form.bio.value,
+          specializations: selectedSpecializations,
+          pricing: form.pricing.value,
+          experience: form.experience.value,
+          languages: selectedLanguages,
+          email: user.email,
+          profilePicture: newUrl,
+          instagram: form.instagram.value.trim(),
+          facebook: form.facebook.value.trim(),
+          tiktok: form.tiktok.value.trim()
+        };
+
+        set(userRef, updated).then(() => {
+          alert("Profil uložen.");
+          currentUrl = newUrl;
+          if (currentUrl) {
+            const thumb = currentUrl.includes("/image/upload/")
+              ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
+              : currentUrl;
+            preview.src = thumb;
+            preview.style.display = "block";
+          }
+          // optional redirect:
+          // window.location.href = "index_main.html";
+        }).catch((err) => alert("Chyba: " + err.message));
+      });
+    });
+  </script>
 
   <script>
     const icon = document.getElementById("themeIcon");
