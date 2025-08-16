@@ -152,52 +152,48 @@ imageInput.addEventListener("change", () => {
 
 // ---------- helpers: downscale, NSFW, signer, signed upload ----------
 async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
-  const img = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = URL.createObjectURL(file);
-  });
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w; canvas.height = h;
-  canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-  return new Promise((res) => canvas.toBlob(res, mime, quality));
-}
+  // Return original if browser can't create a bitmap (e.g., HEIC on some desktops)
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = URL.createObjectURL(file);
+    });
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    if (!isFinite(scale) || scale <= 0) return file;
 
-let nsfwModelPromise;
-function getNSFWModel(){
-  const NSFW = window.nsfwjs;
-  if (!NSFW) throw new Error("NSFWJS failed to load");
-  return nsfwModelPromise ||= NSFW.load();
-}
-async function isImageSafe(file){
-  const model = await getNSFWModel();
-  const dataURL = await new Promise((res)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file);});
-  const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataURL; });
-  const preds = await model.classify(img);
-  const score = {Sexy:0,Porn:0,Hentai:0};
-  preds.forEach(p=>{ if(score[p.className]!=null) score[p.className]=p.probability; });
-  if (score.Porn + score.Hentai >= 0.2) return false;
-  if (score.Sexy >= 0.5) return false;
-  return true;
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+    const blob = await new Promise((res) => canvas.toBlob(res, mime, quality));
+    if (!blob || !blob.size) return file; // fallback
+    return new File([blob], "pfp.jpg", { type: mime });
+  } catch (e) {
+    console.warn("Downscale failed, using original file:", e);
+    return file;
+  }
 }
 
 async function getSignature(params){
+  console.log("[pfp] requesting signature…", params);
   try {
     const r = await fetch(SIGNER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params)
     });
+    const txt = await r.text().catch(()=>"(no body)");
     if (!r.ok) {
-      const txt = await r.text().catch(()=>"(no body)");
       console.error("Signer HTTP error:", r.status, txt);
-      throw new Error(`Signer HTTP ${r.status}`);
+      throw new Error(`Signer HTTP ${r.status}: ${txt}`);
     }
-    return r.json(); // { signature, apiKey }
+    const json = JSON.parse(txt);
+    console.log("[pfp] signature ok");
+    return json; // { signature, apiKey }
   } catch (e) {
     console.error("Signer fetch failed:", e);
     throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker).");
@@ -212,8 +208,9 @@ async function uploadPfpSigned({ file, uid }){
   const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
 
   // 2) Upload to Cloudinary
+  console.log("[pfp] uploading to Cloudinary…");
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", file, "pfp.jpg");
   formData.append("api_key", apiKey);
   formData.append("timestamp", String(timestamp));
   formData.append("public_id", public_id);
@@ -229,12 +226,14 @@ async function uploadPfpSigned({ file, uid }){
     console.error("Cloudinary fetch failed (network/CORS):", e);
     throw new Error("Nelze se připojit ke Cloudinary (síť/CORS).");
   }
+  const bodyTxt = await resp.text().catch(()=>"(no body)");
   if (!resp.ok) {
-    const body = await resp.text().catch(()=>"(no body)");
-    console.error("Cloudinary HTTP error:", resp.status, body);
-    throw new Error(`Cloudinary chyba ${resp.status}`);
+    console.error("Cloudinary HTTP error:", resp.status, bodyTxt);
+    throw new Error(`Cloudinary chyba ${resp.status}: ${bodyTxt}`);
   }
-  return resp.json();
+  const json = JSON.parse(bodyTxt);
+  console.log("[pfp] upload ok:", json.secure_url);
+  return json;
 }
 
 // Utility: normalize list coming from DB (array or comma string)
@@ -302,29 +301,34 @@ onAuthStateChanged(auth, (user) => {
     let newUrl = currentUrl;
 
     // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
+    // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
     if (imageInput.files.length > 0) {
-      const file = imageInput.files[0];
-      if (file.size > MAX_FILE_SIZE) {
+      const raw = imageInput.files[0];
+      if (raw.size > MAX_FILE_SIZE) {
         alert("Obrázek je příliš velký.");
         return;
       }
       try {
-        const blob = await downscaleImage(file);
-        const jpg = new File([blob], "pfp.jpg", { type: "image/jpeg" });
+        // Downscale (with fallback to original)
+        const jpg = await downscaleImage(raw);
 
+        // NSFW check
         const safe = await isImageSafe(jpg);
         if (!safe) {
           alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
           return;
         }
 
+        // Signed upload
         const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
         newUrl = secure_url;
       } catch (err) {
+        console.error("[pfp] upload failed:", err);
         alert("Nepodařilo se nahrát obrázek: " + err.message);
         return;
       }
     }
+
 
     // Collect checkbox values
     const selectedSpecializations = Array.from(
