@@ -93,9 +93,9 @@
     </div>
   </div>
 
-  <!-- On-device NSFW filter (free) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/nsfwjs@4.1.0/dist/nsfwjs.min.js"></script>
+  <!-- Load TFJS first, then NSFWJS (global "nsfwjs") -->
+  <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://unpkg.com/nsfwjs@2/dist/nsfwjs.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -125,7 +125,7 @@
 
     const profileImageInput = document.getElementById("profileImage");
 
-    // Size guard
+    // File size guard
     profileImageInput.addEventListener("change", () => {
       const file = profileImageInput.files[0];
       if (file && file.size > MAX_FILE_SIZE) {
@@ -134,7 +134,7 @@
       }
     });
 
-    // --- Helpers: downscale, NSFW, signature, signed upload ---
+    // Helpers: downscale, NSFW, signature, signed upload
     async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
       const img = await new Promise((res, rej) => {
         const i = new Image();
@@ -152,7 +152,12 @@
     }
 
     let nsfwModelPromise;
-    function getNSFWModel(){ return nsfwModelPromise ||= nsfwjs.load(); }
+    function getNSFWModel(){
+      // use the global provided by the script tag
+      const NSFW = window.nsfwjs;
+      if (!NSFW) throw new Error("NSFWJS failed to load");
+      return nsfwModelPromise ||= NSFW.load();
+    }
     async function isImageSafe(file){
       const model = await getNSFWModel();
       const dataURL = await new Promise((res)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file);});
@@ -172,7 +177,7 @@
         body: JSON.stringify(params)
       });
       if (!r.ok) throw new Error("Signature service failed");
-      return r.json(); // { signature, apiKey }
+      return r.json();
     }
 
     async function uploadPfpSigned({ file, uid }){
@@ -192,9 +197,9 @@
       const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
       const resp = await fetch(url, { method: "POST", body: form });
       if (!resp.ok) throw new Error("Cloudinary upload failed");
-      return resp.json(); // { secure_url, public_id, version, ... }
+      return resp.json();
     }
-    // --- end helpers ---
+    // end helpers
 
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -208,11 +213,9 @@
 
         let profilePictureUrl = "";
         if (rawFile && rawFile.size <= MAX_FILE_SIZE) {
-          // Downscale to save quota
           const blob = await downscaleImage(rawFile);
           const jpg = new File([blob], "pfp.jpg", { type: "image/jpeg" });
 
-          // Local NSFW check
           const safe = await isImageSafe(jpg);
           if (!safe) {
             alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
@@ -220,7 +223,6 @@
             return;
           }
 
-          // Signed upload that always overwrites users/<uid>/pfp
           const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
           profilePictureUrl = secure_url;
         }
