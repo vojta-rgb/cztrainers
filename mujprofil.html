@@ -131,6 +131,10 @@
     const imageInput = document.getElementById("profileImage");
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
+    const NSFW_MODEL_URLS = [
+      "https://cdn.jsdelivr.net/npm/nsfwjs@2/dist/model/",   // primary
+      "https://unpkg.com/nsfwjs@2/dist/model/"               // fallback
+    ];
 
     // Preview on choose
     imageInput.addEventListener("change", () => {
@@ -177,28 +181,30 @@
       }
     }
 
-    // NSFW helpers (these were missing)
     let nsfwModelPromise;
     function getNSFWModel(){
+      if (nsfwModelPromise) return nsfwModelPromise;
+
       const NSFW = window.nsfwjs;
       if (!NSFW) throw new Error("NSFWJS failed to load");
-      return nsfwModelPromise ||= NSFW.load();
-    }
-    async function isImageSafe(file){
-      const model = await getNSFWModel();
-      const dataURL = await new Promise((res)=>{ 
-        const r=new FileReader(); 
-        r.onload=()=>res(r.result); 
-        r.readAsDataURL(file);
-      });
-      const img = new Image(); 
-      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataURL; });
-      const preds = await model.classify(img);
-      const score = {Sexy:0,Porn:0,Hentai:0};
-      preds.forEach(p=>{ if(score[p.className]!=null) score[p.className]=p.probability; });
-      if (score.Porn + score.Hentai >= 0.2) return false;
-      if (score.Sexy >= 0.5) return false;
-      return true;
+
+      nsfwModelPromise = (async () => {
+        let lastErr;
+        for (const base of NSFW_MODEL_URLS) {
+          try {
+            console.log("[nsfw] loading model from:", base);
+            const m = await NSFW.load(base);     // tries to fetch model.json + weights
+            console.log("[nsfw] model loaded");
+            return m;
+          } catch (e) {
+            console.warn("[nsfw] model load failed from", base, e);
+            lastErr = e;
+          }
+        }
+        throw new Error("NSFW model download blocked (CDN/network).");
+      })();
+
+      return nsfwModelPromise;
     }
 
     async function getSignature(params){
@@ -344,6 +350,8 @@
             return;
           }
         }
+        // Preload so uploads don't fail on first use
+        getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
 
         // Collect checkbox values
         const selectedSpecializations = Array.from(
