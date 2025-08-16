@@ -34,13 +34,14 @@
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Heslo" required />
       <button id="loginFormBtn">Přihlásit se</button>
+      <button id="resendBtn" style="display:none;margin-top:8px;">Znovu poslat ověřovací e-mail</button>
       <div class="message" id="messageBox"></div>
     </div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -57,54 +58,97 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    document.getElementById("loginFormBtn").addEventListener("click", () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const messageBox = document.getElementById("messageBox");
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const loginBtn = document.getElementById("loginFormBtn");
+    const resendBtn = document.getElementById("resendBtn");
+    const messageBox = document.getElementById("messageBox");
+
+    function showMsg(text, ok=false) {
+      messageBox.style.color = ok ? "green" : "var(--danger, #ff6b6b)";
+      messageBox.textContent = text;
+    }
+
+    async function migrateIfNeeded(uid) {
+      const unverifiedRef = ref(db, 'unverified-users/' + uid);
+      const verifiedRef   = ref(db, 'users/' + uid);
+
+      const verifiedSnap = await get(verifiedRef);
+      if (verifiedSnap.exists()) return; // already migrated
+
+      const unverifiedSnap = await get(unverifiedRef);
+      if (unverifiedSnap.exists()) {
+        const userData = unverifiedSnap.val();
+        await set(verifiedRef, userData);
+        await remove(unverifiedRef);
+      }
+    }
+
+    async function doLogin() {
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
 
       if (!email || !password) {
-        messageBox.textContent = "Zadejte prosím email a heslo.";
+        showMsg("Zadejte prosím email a heslo.");
         return;
       }
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          if (!user.emailVerified) {
-            messageBox.textContent = "Nejprve prosím ověřte svůj e-mail.";
-            signOut(auth);
-            return;
-          }
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
 
-          const uid = user.uid;
-          const unverifiedRef = ref(db, 'unverified-users/' + uid);
-          const verifiedRef = ref(db, 'users/' + uid);
+        if (!user.emailVerified) {
+          showMsg("Nejprve prosím ověřte svůj e-mail. Zkontrolujte doručenou poštu/spam.");
+          resendBtn.style.display = "inline-block";
+          // Important: sign out so they can click link and sign back in cleanly
+          await signOut(auth);
+          return;
+        }
 
-          get(verifiedRef).then(snapshot => {
-            if (!snapshot.exists()) {
-              get(unverifiedRef).then(dataSnap => {
-                if (dataSnap.exists()) {
-                  const userData = dataSnap.val();
-                  set(verifiedRef, userData).then(() => {
-                    remove(unverifiedRef);
-                    messageBox.style.color = 'green';
-                    messageBox.textContent = "Přihlášení úspěšné. Profil byl aktivován.";
-                    setTimeout(() => window.location.href = "index_main.html", 2000);
-                  });
-                } else {
-                  messageBox.textContent = "Data nebyla nalezena.";
-                }
-              });
-            } else {
-              messageBox.style.color = 'green';
-              messageBox.textContent = "Přihlášení úspěšné.";
-              setTimeout(() => window.location.href = "index_main.html", 2000);
-            }
-          });
-        })
-        .catch((error) => {
-          messageBox.textContent = "Chyba přihlášení: " + error.message;
-        });
+        // If verified, migrate data from "unverified-users" to "users" once
+        await migrateIfNeeded(user.uid);
+
+        showMsg("Přihlášení úspěšné.", true);
+        setTimeout(() => (window.location.href = "index_main.html"), 600);
+      } catch (err) {
+        // Friendlier messages for common auth errors
+        const code = (err && err.code) || "";
+        if (code.includes("auth/invalid-credential") || code.includes("auth/wrong-password")) {
+          showMsg("Nesprávný email nebo heslo.");
+        } else if (code.includes("auth/user-not-found")) {
+          showMsg("Účet s tímto e-mailem neexistuje.");
+        } else if (code.includes("auth/too-many-requests")) {
+          showMsg("Příliš mnoho pokusů. Zkuste to prosím později.");
+        } else {
+          showMsg("Chyba přihlášení: " + err.message);
+        }
+      }
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+
+    // Submit on Enter
+    [emailEl, passwordEl].forEach(el => {
+      el.addEventListener("keyup", (e) => { if (e.key === "Enter") doLogin(); });
+    });
+
+    // Resend verification email
+    resendBtn.addEventListener("click", async () => {
+      // To send a verification email, the user must be signed in.
+      try {
+        const email = emailEl.value.trim();
+        const password = passwordEl.value;
+        if (!email || !password) {
+          showMsg("Zadejte email a heslo, poté zkuste znovu poslat ověření.");
+          return;
+        }
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(cred.user);
+        showMsg("Ověřovací e-mail byl znovu odeslán. Zkontrolujte doručenou poštu/spam.", true);
+        await signOut(auth);
+      } catch (err) {
+        showMsg("Nepodařilo se odeslat ověřovací e-mail: " + err.message);
+      }
     });
   </script>
 
