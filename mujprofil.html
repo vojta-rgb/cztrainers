@@ -206,6 +206,29 @@
 
       return nsfwModelPromise;
     }
+    
+    // --- NSFW check helper ---
+    async function isImageSafe(file){
+      const model = await getNSFWModel();               // loads the model (with CDN fallback)
+      // Turn file into a DataURL for classification
+      const dataURL = await new Promise((res) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.readAsDataURL(file);
+      });
+      // Create an <img> for the model
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataURL; });
+
+      const preds = await model.classify(img);          // [{className, probability}, ...]
+      const score = { Sexy: 0, Porn: 0, Hentai: 0 };
+      preds.forEach(p => { if (score[p.className] != null) score[p.className] = p.probability; });
+
+      // simple thresholds (tune if you want)
+      if (score.Porn + score.Hentai >= 0.2) return false;
+      if (score.Sexy >= 0.5) return false;
+      return true;
+    }
 
     async function getSignature(params){
       console.log("[pfp] requesting signature…", params);
