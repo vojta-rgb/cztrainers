@@ -59,6 +59,7 @@
         <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
       </select>
       <textarea id="bio" placeholder="O mně"></textarea>
+
       <div id="specializationOptions" class="checkbox-group">
         <label><input type="checkbox" name="specializations" value="Fitness" /> Fitness</label><br/>
         <label><input type="checkbox" name="specializations" value="Kondiční trénink" /> Kondiční trénink</label><br/>
@@ -71,8 +72,10 @@
         <label><input type="checkbox" name="specializations" value="Pilates" /> Pilates</label><br/>
         <label><input type="checkbox" name="specializations" value="Skupinové lekce" /> Skupinové lekce</label><br/>
       </div>
+
       <textarea id="pricing" placeholder="cenník" required></textarea>
       <input type="number" id="experience" min="0" max="50" placeholder="Roky zkušeností" />
+
       <div id="languageOptions" class="checkbox-group">
         <label><input type="checkbox" name="languages" value="CZ" /> Čeština (CZ)</label><br/>
         <label><input type="checkbox" name="languages" value="EN" /> Angličtina (EN)</label><br/>
@@ -81,17 +84,24 @@
         <label><input type="checkbox" name="languages" value="RU" /> Ruština (RU)</label><br/>
         <label><input type="checkbox" name="languages" value="FR" /> Francouzština (FR)</label><br/>
       </div>
+
       <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
       <input type="file" id="profileImage" accept="image/*" />
+
       <h3>Sociální sítě (volitelné)</h3>
       <input type="text" id="instagram" placeholder="Instagram (uživatelské jméno nebo odkaz)" />
       <input type="text" id="facebook" placeholder="Facebook (uživatelské jméno nebo odkaz)" />
       <input type="text" id="tiktok" placeholder="TikTok (uživatelské jméno nebo odkaz)" />
+
       <button type="submit">Uložit změny</button>
     </form>
   </div>
 
   <div id="toast" class="toast"></div>
+
+  <!-- Load TFJS then NSFWJS (global window.nsfwjs) -->
+  <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://unpkg.com/nsfwjs@2/dist/nsfwjs.min.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -109,8 +119,9 @@ const firebaseConfig = {
 };
 
 const CLOUD_NAME = "dkt3pdcbe";
-const UPLOAD_PRESET = "cztrainers_unsigned";
+const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
 const MAX_FILE_SIZE = 500 * 1024;
+const MAX_DIM = 800;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -121,33 +132,96 @@ const imageInput = document.getElementById("profileImage");
 const preview = document.getElementById("profilePreview");
 let currentUrl = "";
 
+// Preview on choose
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
-  if (file && file.size <= MAX_FILE_SIZE) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      preview.src = e.target.result;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  } else {
+  if (!file) return;
+  if (file.size > MAX_FILE_SIZE) {
     alert("Obrázek je moc velký (max 500 KB).");
     imageInput.value = "";
     preview.style.display = "none";
+    return;
   }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    preview.src = e.target.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
 });
 
-async function uploadToCloudinary(file) {
+// ---------- helpers: downscale, NSFW, signer, signed upload ----------
+async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = URL.createObjectURL(file);
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+  return new Promise((res) => canvas.toBlob(res, mime, quality));
+}
+
+let nsfwModelPromise;
+function getNSFWModel(){
+  const NSFW = window.nsfwjs;
+  if (!NSFW) throw new Error("NSFWJS failed to load");
+  return nsfwModelPromise ||= NSFW.load();
+}
+async function isImageSafe(file){
+  const model = await getNSFWModel();
+  const dataURL = await new Promise((res)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file);});
+  const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataURL; });
+  const preds = await model.classify(img);
+  const score = {Sexy:0,Porn:0,Hentai:0};
+  preds.forEach(p=>{ if(score[p.className]!=null) score[p.className]=p.probability; });
+  if (score.Porn + score.Hentai >= 0.2) return false;
+  if (score.Sexy >= 0.5) return false;
+  return true;
+}
+
+async function getSignature(params){
+  const r = await fetch(SIGNER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params)
+  });
+  if (!r.ok) throw new Error("Signature service failed");
+  return r.json(); // { signature, apiKey }
+}
+
+async function uploadPfpSigned({ file, uid }){
+  const public_id = `users/${uid}/pfp`;
+  const timestamp = Math.floor(Date.now()/1000);
+  const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
+
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-    method: "POST",
-    body: formData
-  });
-  if (!res.ok) throw new Error("Nahrávání selhalo");
-  const data = await res.json();
-  return data.secure_url;
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", String(timestamp));
+  formData.append("public_id", public_id);
+  formData.append("overwrite", "true");
+  formData.append("invalidate", "true");
+  formData.append("signature", signature);
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+  const resp = await fetch(url, { method: "POST", body: formData });
+  if (!resp.ok) throw new Error("Cloudinary upload failed");
+  return resp.json(); // { secure_url, ... }
+}
+// ---------------------------------------------------------------------
+
+// Utility: normalize list coming from DB (array or comma string)
+function asArray(val){
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
+  return [];
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -160,40 +234,44 @@ onAuthStateChanged(auth, (user) => {
   const userRef = ref(db, "users/" + user.uid);
 
   get(userRef).then((snap) => {
-    if (snap.exists()) {
-      const d = snap.val();
-      form.name.value = d.name || "";
-      form.prijmeni.value = d.prijmeni || "";
-      form.datum.value = d.datum || "";
-      form.phone.value = d.phone || "";
-      form.gender.value = d.gender || "";
-      form.location.value = d.location || "";
-      form.bio.value = d.bio || "";
-      form.pricing.value = d.pricing || "";
-      form.experience.value = d.experience || "";
+    if (!snap.exists()) return;
 
-      // Load socials
-      form.instagram.value = d.instagram || "";
-      form.facebook.value = d.facebook || "";
-      form.tiktok.value = d.tiktok || "";
+    const d = snap.val();
+    form.name.value = d.name || "";
+    form.prijmeni.value = d.prijmeni || "";
+    form.datum.value = d.datum || "";
+    form.phone.value = d.phone || "";
+    form.gender.value = d.gender || "";
+    form.location.value = d.location || "";
+    form.bio.value = d.bio || "";
+    form.pricing.value = d.pricing || "";
+    form.experience.value = d.experience || "";
 
-      // Load specializations checkboxes
-      const specializations = Array.isArray(d.specializations) ? d.specializations : [];
-      document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
-        cb.checked = specializations.includes(cb.value);
-      });
+    // socials (supports both flat and nested under d.socials)
+    const socials = d.socials || {};
+    form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
+    form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
+    form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
 
-      // Load languages checkboxes
-      const languages = Array.isArray(d.languages) ? d.languages : [];
-      document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
-        cb.checked = languages.includes(cb.value);
-      });
+    // checkboxes
+    const specs = asArray(d.specializations);
+    document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
+      cb.checked = specs.includes(cb.value);
+    });
 
-      currentUrl = d.profilePicture || "";
-      if (currentUrl) {
-        preview.src = currentUrl;
-        preview.style.display = "block";
-      }
+    const langs = asArray(d.languages);
+    document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
+      cb.checked = langs.includes(cb.value);
+    });
+
+    currentUrl = d.profilePicture || "";
+    if (currentUrl) {
+      // use a thumb transform if it's a Cloudinary URL
+      const thumb = currentUrl.includes("/image/upload/")
+        ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
+        : currentUrl;
+      preview.src = thumb;
+      preview.style.display = "block";
     }
   });
 
@@ -201,25 +279,42 @@ onAuthStateChanged(auth, (user) => {
     e.preventDefault();
 
     let newUrl = currentUrl;
+
+    // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
     if (imageInput.files.length > 0) {
       const file = imageInput.files[0];
-      if (file.size > MAX_FILE_SIZE) return alert("Obrázek je příliš velký.");
+      if (file.size > MAX_FILE_SIZE) {
+        alert("Obrázek je příliš velký.");
+        return;
+      }
       try {
-        newUrl = await uploadToCloudinary(file);
-      } catch {
-        return alert("Nepodařilo se nahrát obrázek.");
+        const blob = await downscaleImage(file);
+        const jpg = new File([blob], "pfp.jpg", { type: "image/jpeg" });
+
+        const safe = await isImageSafe(jpg);
+        if (!safe) {
+          alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
+          return;
+        }
+
+        const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
+        newUrl = secure_url;
+      } catch (err) {
+        alert("Nepodařilo se nahrát obrázek: " + err.message);
+        return;
       }
     }
 
     // Collect checkbox values
-    const selectedSpecializations = Array.from(document.querySelectorAll("#specializationOptions input[type='checkbox']:checked"))
-      .map(cb => cb.value);
-    const selectedLanguages = Array.from(document.querySelectorAll("#languageOptions input[type='checkbox']:checked"))
-      .map(cb => cb.value);
+    const selectedSpecializations = Array.from(
+      document.querySelectorAll("#specializationOptions input[type='checkbox']:checked")
+    ).map(cb => cb.value);
 
-    // Get socials (username or link)
-    const getSocialValue = (val) => val.trim();
+    const selectedLanguages = Array.from(
+      document.querySelectorAll("#languageOptions input[type='checkbox']:checked")
+    ).map(cb => cb.value);
 
+    // socials (store flat; your listing code can read either flat or nested)
     const updated = {
       name: form.name.value,
       prijmeni: form.prijmeni.value,
@@ -234,19 +329,23 @@ onAuthStateChanged(auth, (user) => {
       languages: selectedLanguages,
       email: user.email,
       profilePicture: newUrl,
-      instagram: getSocialValue(form.instagram.value),
-      facebook: getSocialValue(form.facebook.value),
-      tiktok: getSocialValue(form.tiktok.value)
+      instagram: form.instagram.value.trim(),
+      facebook: form.facebook.value.trim(),
+      tiktok: form.tiktok.value.trim()
     };
 
     set(userRef, updated).then(() => {
       alert("Profil uložen.");
-      window.location.href = "index_main.html";
       currentUrl = newUrl;
       if (currentUrl) {
-        preview.src = currentUrl;
+        const thumb = currentUrl.includes("/image/upload/")
+          ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
+          : currentUrl;
+        preview.src = thumb;
         preview.style.display = "block";
       }
+      // optional: redirect
+      // window.location.href = "index_main.html";
     }).catch((err) => alert("Chyba: " + err.message));
   });
 });
