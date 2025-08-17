@@ -99,7 +99,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- TFJS + NSFWJS (v4.1.0 bundles the model; no model.json needed) -->
+  <!-- TFJS + NSFWJS (try global UMD first) -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
   <script src="vendor/model.min.js"></script>
 
@@ -108,7 +108,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // --- Firebase ---
+    // ---------- Firebase ----------
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -118,23 +118,22 @@
       messagingSenderId: "369200533487",
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
-    const app = initializeApp(firebaseConfig);
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getDatabase(app);
+    const db   = getDatabase(app);
 
-    // --- Cloudinary/Worker ---
-    const CLOUD_NAME = "dkt3pdcbe";
-    const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
+    // ---------- Cloudinary / Worker ----------
+    const CLOUD_NAME   = "dkt3pdcbe";
+    const SIGNER_URL   = "https://wandering-sunset-c489.aiman18192.workers.dev/";
     const MAX_FILE_SIZE = 500 * 1024;
-    const MAX_DIM = 800;
+    const MAX_DIM       = 800;
 
-    // --- DOM ---
-    const form = document.getElementById("profileForm");
+    // ---------- DOM ----------
+    const form       = document.getElementById("profileForm");
     const imageInput = document.getElementById("profileImage");
-    const preview = document.getElementById("profilePreview");
-    let currentUrl = "";
+    const preview    = document.getElementById("profilePreview");
+    let currentUrl   = "";
 
-    // Preview chosen image
     imageInput.addEventListener("change", () => {
       const file = imageInput.files[0];
       if (!file) return;
@@ -149,7 +148,7 @@
       reader.readAsDataURL(file);
     });
 
-    // ---------- helpers ----------
+    // ---------- Utils ----------
     function asArray(val){
       if (!val) return [];
       if (Array.isArray(val)) return val;
@@ -207,22 +206,31 @@
       } catch { return file; }
     }
 
-    // NSFWJS (v4.1.0 bundles model)
-
-    // Try global first; if not present, fall back to local ESM build
-    let NSFW = window.nsfwjs;
-    if (!NSFW) {
-      // important: path relative to mujprofil.html
-      NSFW = await import('./vendor/index.js');
+    // ---------- NSFWJS: robust loader (global ➜ ESM fallback) ----------
+    let NSFW = window.nsfwjs || window.NSFWJS || null;
+    if (NSFW) {
+      console.log("[nsfw] using global bundle (vendor/model.min.js)");
+    } else {
+      try {
+        // ESM build fallback (make sure /vendor/index.js exists)
+        const mod = await import('./vendor/index.js');
+        NSFW = mod?.default || mod;
+        console.log("[nsfw] using ESM bundle (vendor/index.js)");
+      } catch (e) {
+        console.error("[nsfw] dynamic import failed:", e);
+      }
     }
+    if (!NSFW) throw new Error("NSFWJS failed to load");
 
     let nsfwModelPromise;
     function getNSFWModel() {
       if (nsfwModelPromise) return nsfwModelPromise;
-      if (!NSFW) throw new Error('NSFWJS failed to load');
-      nsfwModelPromise = (NSFW.loadBundled ? NSFW.loadBundled() : NSFW.load());
+      // Some builds expose loadBundled(); others just load()
+      nsfwModelPromise = (typeof NSFW.loadBundled === "function" ? NSFW.loadBundled() : NSFW.load());
       return nsfwModelPromise;
     }
+    // Preload once (non-blocking)
+    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
 
     async function isImageSafe(file){
       const model = await getNSFWModel();
@@ -236,16 +244,13 @@
       if (score.Sexy >= 0.5) return false;
       return true;
     }
-    // Preload once
-    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
 
+    // ---------- Cloudinary signed upload ----------
     async function getSignature(params){
-      try {
-        const r = await fetch(SIGNER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) });
-        const txt = await r.text().catch(()=>"(no body)");
-        if (!r.ok) throw new Error(`Signer HTTP ${r.status}: ${txt}`);
-        return JSON.parse(txt); // { signature, apiKey }
-      } catch (e) { throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker)."); }
+      const r = await fetch(SIGNER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) });
+      const txt = await r.text().catch(()=>"(no body)");
+      if (!r.ok) throw new Error(`Signer HTTP ${r.status}: ${txt}`);
+      return JSON.parse(txt); // { signature, apiKey }
     }
 
     async function uploadPfpSigned({ file, uid }){
@@ -265,10 +270,10 @@
       const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
       const txt = await resp.text().catch(()=>"(no body)");
       if (!resp.ok) throw new Error(`Cloudinary chyba ${resp.status}: ${txt}`);
-      return JSON.parse(txt); // includes secure_url
+      return JSON.parse(txt); // { secure_url, ... }
     }
 
-    // ---------- load + submit ----------
+    // ---------- Load + Submit ----------
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         alert("Nejste přihlášen.");
