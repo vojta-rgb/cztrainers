@@ -10,7 +10,7 @@
   <!-- TFJS must load before nsfwjs -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 
-  <!-- IMPORTANT: use your local, browser (UMD) build that exposes window.nsfwjs -->
+  <!-- UMD build that exposes window.nsfwjs -->
   <script src="vendor/nsfwjs.min.js"></script>
 </head>
 <body>
@@ -211,16 +211,18 @@
 
     // ---------- NSFWJS (LOCAL MODEL) ----------
     const NSFW_MODEL_PATH = "./vendor/nsfw-model/";
-    nsfwjs.load(NSFW_MODEL_PATH).then(model => {
-      // ready to classify
-    });
+    let nsfwModelPromise = null;                   // <-- define it!
 
     function getNSFWModel(){
       if (nsfwModelPromise) return nsfwModelPromise;
       const NS = window.nsfwjs;
       if (!NS) throw new Error("NSFWJS failed to load (check vendor/nsfwjs.min.js)");
-      // v2 browser bundle expects a base path with model.json + shards
-      nsfwModelPromise = NS.load(NSFW_MODEL_PATH);
+      // Loads model.json + .bin shards from NSFW_MODEL_PATH
+      nsfwModelPromise = NS.load(NSFW_MODEL_PATH)
+        .catch(err => {
+          console.error("[nsfw] load failed:", err);
+          throw err;
+        });
       return nsfwModelPromise;
     }
 
