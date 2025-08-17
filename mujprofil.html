@@ -99,7 +99,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- Load TFJS then NSFWJS (global window.nsfwjs) -->
+  <!-- TFJS + NSFWJS (v4.1.0 bundles the model; no model.json needed) -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
   <script src="https://unpkg.com/nsfwjs@4.1.0/dist/nsfwjs.min.js"></script>
 
@@ -108,6 +108,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+    // --- Firebase ---
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -117,22 +118,23 @@
       messagingSenderId: "369200533487",
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
+    // --- Cloudinary/Worker ---
     const CLOUD_NAME = "dkt3pdcbe";
     const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
     const MAX_FILE_SIZE = 500 * 1024;
     const MAX_DIM = 800;
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
+    // --- DOM ---
     const form = document.getElementById("profileForm");
     const imageInput = document.getElementById("profileImage");
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
 
-    // Preview on choose
+    // Preview chosen image
     imageInput.addEventListener("change", () => {
       const file = imageInput.files[0];
       if (!file) return;
@@ -143,104 +145,106 @@
         return;
       }
       const reader = new FileReader();
-      reader.onload = (e) => {
-        preview.src = e.target.result;
-        preview.style.display = "block";
-      };
+      reader.onload = (e) => { preview.src = e.target.result; preview.style.display = "block"; };
       reader.readAsDataURL(file);
     });
 
-    // ---------- helpers: downscale, NSFW, signer, signed upload ----------
-    async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
-      try {
-        const img = await new Promise((res, rej) => {
-          const i = new Image();
-          i.onload = () => res(i);
-          i.onerror = rej;
-          i.src = URL.createObjectURL(file);
-        });
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        if (!isFinite(scale) || scale <= 0) return file;
+    // ---------- helpers ----------
+    function asArray(val){
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
+      return [];
+    }
 
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    function fillForm(d) {
+      form.name.value       = d.name || "";
+      form.prijmeni.value   = d.prijmeni || "";
+      form.datum.value      = d.datum || "";
+      form.phone.value      = d.phone || "";
+      form.gender.value     = d.gender || "";
+      form.location.value   = d.location || "";
+      form.bio.value        = d.bio || "";
+      form.pricing.value    = d.pricing || "";
+      form.experience.value = d.experience || "";
 
-        const blob = await new Promise((res) => canvas.toBlob(res, mime, quality));
-        if (!blob || !blob.size) return file; // fallback
-        return new File([blob], "pfp.jpg", { type: mime });
-      } catch (e) {
-        console.warn("Downscale failed, using original file:", e);
-        return file;
+      const socials = d.socials || {};
+      form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
+      form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
+      form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
+
+      const specs = asArray(d.specializations);
+      document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
+        cb.checked = specs.includes(cb.value);
+      });
+
+      const langs = asArray(d.languages);
+      document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
+        cb.checked = langs.includes(cb.value);
+      });
+
+      currentUrl = d.profilePicture || "";
+      if (currentUrl) {
+        const thumb = currentUrl.includes("/image/upload/")
+          ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
+          : currentUrl;
+        preview.src = thumb;
+        preview.style.display = "block";
       }
     }
 
+    async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
+      try {
+        const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        if (!isFinite(scale) || scale <= 0) return file;
+        const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const blob = await new Promise((res) => canvas.toBlob(res, mime, quality));
+        if (!blob || !blob.size) return file;
+        return new File([blob], "pfp.jpg", { type: mime });
+      } catch { return file; }
+    }
+
+    // NSFWJS (v4.1.0 bundles model)
     let nsfwModelPromise;
     function getNSFWModel() {
       if (nsfwModelPromise) return nsfwModelPromise;
       const NSFW = window.nsfwjs;
       if (!NSFW) throw new Error("NSFWJS failed to load");
-      // v4 bundles the model; no URL needed
       nsfwModelPromise = NSFW.load();
       return nsfwModelPromise;
     }
-    
-    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
-
-    // --- NSFW check helper ---
     async function isImageSafe(file){
-      const model = await getNSFWModel();               // loads the model (with CDN fallback)
-      // Turn file into a DataURL for classification
-      const dataURL = await new Promise((res) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result);
-        r.readAsDataURL(file);
-      });
-      // Create an <img> for the model
+      const model = await getNSFWModel();
+      const dataURL = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
       const img = new Image();
       await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataURL; });
-
-      const preds = await model.classify(img);          // [{className, probability}, ...]
+      const preds = await model.classify(img);
       const score = { Sexy: 0, Porn: 0, Hentai: 0 };
       preds.forEach(p => { if (score[p.className] != null) score[p.className] = p.probability; });
-
-      // simple thresholds (tune if you want)
       if (score.Porn + score.Hentai >= 0.2) return false;
       if (score.Sexy >= 0.5) return false;
       return true;
     }
+    // Preload once
+    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
 
     async function getSignature(params){
-      console.log("[pfp] requesting signature…", params);
       try {
-        const r = await fetch(SIGNER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params)
-        });
+        const r = await fetch(SIGNER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) });
         const txt = await r.text().catch(()=>"(no body)");
-        if (!r.ok) {
-          console.error("Signer HTTP error:", r.status, txt);
-          throw new Error(`Signer HTTP ${r.status}: ${txt}`);
-        }
-        const json = JSON.parse(txt);
-        console.log("[pfp] signature ok");
-        return json; // { signature, apiKey }
-      } catch (e) {
-        console.error("Signer fetch failed:", e);
-        throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker).");
-      }
+        if (!r.ok) throw new Error(`Signer HTTP ${r.status}: ${txt}`);
+        return JSON.parse(txt); // { signature, apiKey }
+      } catch (e) { throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker)."); }
     }
 
     async function uploadPfpSigned({ file, uid }){
       const public_id = `users/${uid}/pfp`;
       const timestamp = Math.floor(Date.now()/1000);
-
       const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
 
-      console.log("[pfp] uploading to Cloudinary…");
       const formData = new FormData();
       formData.append("file", file, "pfp.jpg");
       formData.append("api_key", apiKey);
@@ -250,115 +254,64 @@
       formData.append("invalidate", "true");
       formData.append("signature", signature);
 
-      const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-      let resp;
-      try {
-        resp = await fetch(url, { method: "POST", body: formData });
-      } catch (e) {
-        console.error("Cloudinary fetch failed (network/CORS):", e);
-        throw new Error("Nelze se připojit ke Cloudinary (síť/CORS).");
-      }
-      const bodyTxt = await resp.text().catch(()=>"(no body)");
-      if (!resp.ok) {
-        console.error("Cloudinary HTTP error:", resp.status, bodyTxt);
-        throw new Error(`Cloudinary chyba ${resp.status}: ${bodyTxt}`);
-      }
-      const json = JSON.parse(bodyTxt);
-      console.log("[pfp] upload ok:", json.secure_url);
-      return json;
+      const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+      const txt = await resp.text().catch(()=>"(no body)");
+      if (!resp.ok) throw new Error(`Cloudinary chyba ${resp.status}: ${txt}`);
+      return JSON.parse(txt); // includes secure_url
     }
 
-    // Utility: normalize list coming from DB (array or comma string)
-    function asArray(val){
-      if (!val) return [];
-      if (Array.isArray(val)) return val;
-      if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
-      return [];
-    }
-
+    // ---------- load + submit ----------
     onAuthStateChanged(auth, (user) => {
-      if (!user || !user.emailVerified) {
-        alert("Nejste přihlášen nebo nemáte ověřený email.");
+      if (!user) {
+        alert("Nejste přihlášen.");
         window.location.href = "login.html";
         return;
       }
 
       const userRef = ref(db, "users/" + user.uid);
-
-      get(userRef).then((snap) => {
-        if (!snap.exists()) return;
-
-        const d = snap.val();
-        form.name.value = d.name || "";
-        form.prijmeni.value = d.prijmeni || "";
-        form.datum.value = d.datum || "";
-        form.phone.value = d.phone || "";
-        form.gender.value = d.gender || "";
-        form.location.value = d.location || "";
-        form.bio.value = d.bio || "";
-        form.pricing.value = d.pricing || "";
-        form.experience.value = d.experience || "";
-
-        // socials (supports both flat and nested under d.socials)
-        const socials = d.socials || {};
-        form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
-        form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
-        form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
-
-        // checkboxes
-        const specs = asArray(d.specializations);
-        document.querySelectorAll("#specializationOptions input[type='checkbox']").forEach(cb => {
-          cb.checked = specs.includes(cb.value);
+      get(userRef)
+        .then(async (snap) => {
+          if (snap.exists()) {
+            fillForm(snap.val());
+            return;
+          }
+          // fallback to unverified-users
+          const uvRef = ref(db, "unverified-users/" + user.uid);
+          try {
+            const uvSnap = await get(uvRef);
+            if (uvSnap.exists()) fillForm(uvSnap.val());
+            else alert("Vaše data nebyla nalezena. Přihlaste se znovu, aby se profil aktivoval.");
+          } catch (err) {
+            console.error("[profile] read error (unverified-users):", err);
+            alert("Nedaří se načíst profilová data (oprávnění).");
+          }
+        })
+        .catch((err) => {
+          console.error("[profile] read error (/users):", err);
+          alert("Chyba při načítání profilu: " + err.message);
         });
-
-        const langs = asArray(d.languages);
-        document.querySelectorAll("#languageOptions input[type='checkbox']").forEach(cb => {
-          cb.checked = langs.includes(cb.value);
-        });
-
-        currentUrl = d.profilePicture || "";
-        if (currentUrl) {
-          const thumb = currentUrl.includes("/image/upload/")
-            ? currentUrl.replace("/image/upload/", "/image/upload/c_fill,w_320,h_320,q_auto,f_auto/")
-            : currentUrl;
-          preview.src = thumb;
-          preview.style.display = "block";
-        }
-      });
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         let newUrl = currentUrl;
 
-        // If user picked a new image, validate + upload signed to overwrite users/<uid>/pfp
         if (imageInput.files.length > 0) {
           const raw = imageInput.files[0];
-          if (raw.size > MAX_FILE_SIZE) {
-            alert("Obrázek je příliš velký.");
-            return;
-          }
+          if (raw.size > MAX_FILE_SIZE) { alert("Obrázek je příliš velký."); return; }
+
           try {
             const jpg = await downscaleImage(raw);
-
             const safe = await isImageSafe(jpg);
-            if (!safe) {
-              alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
-              return;
-            }
-
+            if (!safe) { alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný."); return; }
             const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
             newUrl = secure_url;
           } catch (err) {
-            console.error("[pfp] upload failed:", err);
             alert("Nepodařilo se nahrát obrázek: " + err.message);
             return;
           }
         }
-        // Preload so uploads don't fail on first use
-        getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
 
-        // Collect checkbox values
         const selectedSpecializations = Array.from(
           document.querySelectorAll("#specializationOptions input[type='checkbox']:checked")
         ).map(cb => cb.value);
@@ -386,7 +339,8 @@
           tiktok: form.tiktok.value.trim()
         };
 
-        set(userRef, updated).then(() => {
+        const userRef2 = ref(db, "users/" + user.uid);
+        set(userRef2, updated).then(() => {
           alert("Profil uložen.");
           currentUrl = newUrl;
           if (currentUrl) {
@@ -396,8 +350,6 @@
             preview.src = thumb;
             preview.style.display = "block";
           }
-          // optional redirect:
-          // window.location.href = "index_main.html";
         }).catch((err) => alert("Chyba: " + err.message));
       });
     });
