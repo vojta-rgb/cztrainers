@@ -100,8 +100,8 @@
   <div id="toast" class="toast"></div>
 
   <!-- TFJS + NSFWJS (v4.1.0 bundles the model; no model.json needed) -->
-    <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-    <script src="vendor/nsfwjs.min.js"></script>
+  <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="vendor/model.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -211,11 +211,14 @@
     let nsfwModelPromise;
     function getNSFWModel() {
       if (nsfwModelPromise) return nsfwModelPromise;
-      const NSFW = window.nsfwjs;
-      if (!NSFW) throw new Error("NSFWJS failed to load");
-      nsfwModelPromise = NSFW.load();
+      const NS = window.nsfwjs;
+      if (!NS) throw new Error("NSFWJS failed to load");
+      // Bundled build exposes load() that uses the embedded model.
+      // Some builds expose loadBundled(); support both.
+      nsfwModelPromise = (NS.loadBundled ? NS.loadBundled() : NS.load());
       return nsfwModelPromise;
     }
+
     async function isImageSafe(file){
       const model = await getNSFWModel();
       const dataURL = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
