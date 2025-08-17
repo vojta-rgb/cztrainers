@@ -362,6 +362,7 @@
               preview.src = thumb;
               preview.style.display = "block";
             }
+            setTimeout(() => (window.location.href = "index_main.html"), 600);
           })
           .catch((err) => alert("Chyba: " + err.message));
       });
