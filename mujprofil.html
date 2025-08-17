@@ -101,7 +101,7 @@
 
   <!-- Load TFJS then NSFWJS (global window.nsfwjs) -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <script src="https://unpkg.com/nsfwjs@2/dist/nsfwjs.min.js"></script>
+  <script src="https://unpkg.com/nsfwjs@4.1.0/dist/nsfwjs.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -131,10 +131,6 @@
     const imageInput = document.getElementById("profileImage");
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
-    const NSFW_MODEL_URLS = [
-      "https://cdn.jsdelivr.net/npm/nsfwjs@2/dist/model/",   // primary
-      "https://unpkg.com/nsfwjs@2/dist/model/"               // fallback
-    ];
 
     // Preview on choose
     imageInput.addEventListener("change", () => {
@@ -182,31 +178,17 @@
     }
 
     let nsfwModelPromise;
-    function getNSFWModel(){
+    function getNSFWModel() {
       if (nsfwModelPromise) return nsfwModelPromise;
-
       const NSFW = window.nsfwjs;
       if (!NSFW) throw new Error("NSFWJS failed to load");
-
-      nsfwModelPromise = (async () => {
-        let lastErr;
-        for (const base of NSFW_MODEL_URLS) {
-          try {
-            console.log("[nsfw] loading model from:", base);
-            const m = await NSFW.load(base);     // tries to fetch model.json + weights
-            console.log("[nsfw] model loaded");
-            return m;
-          } catch (e) {
-            console.warn("[nsfw] model load failed from", base, e);
-            lastErr = e;
-          }
-        }
-        throw new Error("NSFW model download blocked (CDN/network).");
-      })();
-
+      // v4 bundles the model; no URL needed
+      nsfwModelPromise = NSFW.load();
       return nsfwModelPromise;
     }
     
+    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
+
     // --- NSFW check helper ---
     async function isImageSafe(file){
       const model = await getNSFWModel();               // loads the model (with CDN fallback)
