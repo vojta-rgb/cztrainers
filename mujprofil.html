@@ -208,14 +208,19 @@
     }
 
     // NSFWJS (v4.1.0 bundles model)
+
+    // Try global first; if not present, fall back to local ESM build
+    let NSFW = window.nsfwjs;
+    if (!NSFW) {
+      // important: path relative to mujprofil.html
+      NSFW = await import('./vendor/index.js');
+    }
+
     let nsfwModelPromise;
     function getNSFWModel() {
       if (nsfwModelPromise) return nsfwModelPromise;
-      const NS = window.nsfwjs;
-      if (!NS) throw new Error("NSFWJS failed to load");
-      // Bundled build exposes load() that uses the embedded model.
-      // Some builds expose loadBundled(); support both.
-      nsfwModelPromise = (NS.loadBundled ? NS.loadBundled() : NS.load());
+      if (!NSFW) throw new Error('NSFWJS failed to load');
+      nsfwModelPromise = (NSFW.loadBundled ? NSFW.loadBundled() : NSFW.load());
       return nsfwModelPromise;
     }
 
