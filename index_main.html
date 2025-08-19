@@ -6,6 +6,25 @@
   <title>CZTRAINERS</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <link rel="stylesheet" href="style_main.css" />
+  <style>
+    /* Minimal styling (you can replace later) */
+    .toolbar { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin:1rem 0; }
+    .filters-toggle { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
+    .filters-panel { display:none; border:1px solid #e5e7eb; border-radius:12px; padding:1rem; margin:.5rem 0 1rem; background:rgba(0,0,0,0.02); }
+    .filters-panel.open { display:block; }
+    .filters-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+    fieldset { border:0; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.05); }
+    fieldset legend { font-weight:600; margin-bottom:.5rem; }
+    .chips { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .chip { display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .6rem; border-radius:999px; background:#eef2ff; font-size:.9rem; }
+    .chip button { border:0; background:transparent; cursor:pointer; font-weight:700; }
+    .filters-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:.5rem; }
+    .btn { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
+    .btn.primary { background:#111827; color:#fff; border-color:#111827; }
+    .number-row { display:flex; gap:.5rem; }
+    .number-row input { width:100%; }
+    .small { font-size:.85rem; color:#6b7280; }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -30,7 +49,48 @@
 
   <div class="container">
     <h1>PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
-    <input type="text" id="search" placeholder="Hledat jméno, specializace, lokalita..." />
+
+    <!-- Toolbar: search + filters button + active chips -->
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Hledat jméno, specializace, lokalita..." />
+      <button id="filtersToggle" class="filters-toggle">Filtry</button>
+      <div id="activeChips" class="chips"></div>
+    </div>
+
+    <!-- Filters panel (built dynamically from data) -->
+    <div id="filtersPanel" class="filters-panel">
+      <div class="filters-grid">
+        <fieldset>
+          <legend>Lokalita</legend>
+          <div id="f-locations"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Specializace</legend>
+          <div id="f-specs" class="small">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Jazyky</legend>
+          <div id="f-langs" class="small">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Pohlaví</legend>
+          <div id="f-genders" class="small">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Zkušenosti (roky)</legend>
+          <div class="number-row">
+            <input type="number" id="f-exp-min" min="0" placeholder="Min" />
+            <input type="number" id="f-exp-max" min="0" placeholder="Max" />
+          </div>
+          <div id="f-exp-hint" class="small"></div>
+        </fieldset>
+      </div>
+      <div class="filters-actions">
+        <button id="filtersClear" class="btn">Vymazat vše</button>
+        <button id="filtersApply" class="btn primary">Použít</button>
+      </div>
+    </div>
+
     <div id="loader" class="loader">Načítám uživatele...</div>
     <div id="userList" class="cards"></div>
   </div>
@@ -56,9 +116,7 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
       }
 
-      if (localStorage.getItem('theme') === 'dark') {
-        updateThemeUI(true);
-      }
+      if (localStorage.getItem('theme') === 'dark') updateThemeUI(true);
 
       themeToggle.addEventListener('click', () => {
         const isDark = !document.body.classList.contains('dark');
@@ -86,11 +144,10 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    // 👇 Cloudinary thumb helper (uses deterministic public_id users/<uid>/pfp)
+    // Cloudinary thumb helper
     const CLOUD_NAME = "dkt3pdcbe";
-    function clThumb(uid) {
-      return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
-    }
+    const clThumb = (uid) =>
+      `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -120,20 +177,207 @@
       signOut(auth).then(() => window.location.reload());
     });
 
+    // --- DOM hooks ---
     const userList = document.getElementById("userList");
     const searchInput = document.getElementById("search");
     const loader = document.getElementById("loader");
-    let allUsers = [];
 
+    const filtersToggle = document.getElementById("filtersToggle");
+    const filtersPanel  = document.getElementById("filtersPanel");
+    const chipsWrap     = document.getElementById("activeChips");
+
+    const boxLocations = document.getElementById("f-locations");
+    const boxSpecs     = document.getElementById("f-specs");
+    const boxLangs     = document.getElementById("f-langs");
+    const boxGenders   = document.getElementById("f-genders");
+    const expMinInput  = document.getElementById("f-exp-min");
+    const expMaxInput  = document.getElementById("f-exp-max");
+    const expHint      = document.getElementById("f-exp-hint");
+
+    const btnApply = document.getElementById("filtersApply");
+    const btnClear = document.getElementById("filtersClear");
+
+    // --- state ---
+    let allUsers = [];     // [ [uid, user], ... ]
+    let facets   = null;   // {locations:Set, specs:Set, langs:Set, genders:Set, expMin, expMax}
+
+    // --- UI: filters panel toggle ---
+    filtersToggle.addEventListener("click", () => {
+      filtersPanel.classList.toggle("open");
+    });
+
+    // --- helpers ---
+    const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
+
+    function buildFacets(users){
+      const locations = new Set();
+      const specs     = new Set();
+      const langs     = new Set();
+      const genders   = new Set();
+
+      let expMin = Infinity, expMax = -Infinity;
+
+      users.forEach(([_, u]) => {
+        uniqPush(locations, u.location);
+        uniqPush(genders,   u.gender);
+
+        const sArr = Array.isArray(u.specializations) ? u.specializations :
+          (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
+        sArr.forEach(v => uniqPush(specs, v));
+
+        const lArr = Array.isArray(u.languages) ? u.languages :
+          (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
+        lArr.forEach(v => uniqPush(langs, v));
+
+        const e = Number(u.experience || 0);
+        if (Number.isFinite(e)) {
+          expMin = Math.min(expMin, e);
+          expMax = Math.max(expMax, e);
+        }
+      });
+
+      if (!Number.isFinite(expMin)) expMin = 0;
+      if (!Number.isFinite(expMax)) expMax = 0;
+
+      return { locations, specs, langs, genders, expMin, expMax };
+    }
+
+    function checkboxList(container, name, values){
+      const arr = [...values].sort((a,b)=>a.localeCompare(b,'cs'));
+      container.innerHTML = arr.map(v => `
+        <label style="display:block; margin:.25rem 0;">
+          <input type="checkbox" name="${name}" value="${v}"> ${v}
+        </label>
+      `).join("") || "<span class='small'>Žádné položky</span>";
+    }
+
+    function populateFilters(){
+      checkboxList(boxLocations, "loc",    facets.locations);
+      checkboxList(boxSpecs,     "spec",   facets.specs);
+      checkboxList(boxLangs,     "lang",   facets.langs);
+      checkboxList(boxGenders,   "gender", facets.genders);
+
+      expMinInput.placeholder = String(facets.expMin);
+      expMaxInput.placeholder = String(facets.expMax);
+      expHint.textContent = `Rozsah v datech: ${facets.expMin} – ${facets.expMax} let`;
+    }
+
+    function getFiltersFromUI(){
+      const checked = (sel) => [...document.querySelectorAll(sel+':checked')].map(i=>i.value);
+
+      const f = {
+        q: searchInput.value.trim().toLowerCase(),
+        loc:  checked('input[name="loc"]'),
+        spec: checked('input[name="spec"]'),
+        lang: checked('input[name="lang"]'),
+        gender: checked('input[name="gender"]'),
+        expMin: expMinInput.value ? Number(expMinInput.value) : null,
+        expMax: expMaxInput.value ? Number(expMaxInput.value) : null,
+      };
+      return f;
+    }
+
+    function applyFilters(users, f){
+      const q = f.q;
+      let out = users.filter(([_, u]) => {
+        // search text
+        if (q) {
+          const hay = [
+            u.name, u.prijmeni, u.bio,
+            Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
+            u.location
+          ].filter(Boolean).join(" ").toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+
+        if (f.loc.length && !f.loc.includes(u.location)) return false;
+
+        if (f.spec.length) {
+          const sArr = Array.isArray(u.specializations) ? u.specializations :
+            (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
+          // require ALL selected specs
+          if (!f.spec.every(s => sArr.includes(s))) return false;
+        }
+
+        if (f.lang.length) {
+          const lArr = Array.isArray(u.languages) ? u.languages :
+            (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
+          // at least ONE language matches
+          if (!f.lang.some(l => lArr.includes(l))) return false;
+        }
+
+        if (f.gender.length && !f.gender.includes(u.gender)) return false;
+
+        const e = Number(u.experience || 0);
+        if (f.expMin != null && e < f.expMin) return false;
+        if (f.expMax != null && e > f.expMax) return false;
+
+        return true;
+      });
+
+      return out;
+    }
+
+    function renderChips(f){
+      const chips = [];
+      const add = (label, value, clearKey, clearVal) => {
+        chips.push(`<span class="chip">${label}: ${value} <button data-k="${clearKey}" data-v="${encodeURIComponent(clearVal || '')}">×</button></span>`);
+      };
+
+      if (f.q) add("Hledat", f.q, "q");
+      f.loc.forEach(v => add("Lokalita", v, "loc", v));
+      f.spec.forEach(v => add("Specializace", v, "spec", v));
+      f.lang.forEach(v => add("Jazyk", v, "lang", v));
+      f.gender.forEach(v => add("Pohlaví", v, "gender", v));
+      if (f.expMin != null) add("Zkušenost ≥", f.expMin, "expMin");
+      if (f.expMax != null) add("Zkušenost ≤", f.expMax, "expMax");
+
+      chipsWrap.innerHTML = chips.join("") || "";
+      chipsWrap.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const k = btn.dataset.k;
+          const v = decodeURIComponent(btn.dataset.v||"");
+          clearOneFilter(k, v);
+          doFilter(); // reapply
+        });
+      });
+    }
+
+    function clearOneFilter(key, value){
+      switch (key) {
+        case "q": searchInput.value = ""; break;
+        case "loc":
+        case "spec":
+        case "lang":
+        case "gender": {
+          const name = key === "loc" ? "loc" : key;
+          const selector = `input[name="${name}"][value="${CSS.escape(value)}"]`;
+          const el = document.querySelector(selector);
+          if (el) el.checked = false;
+          break;
+        }
+        case "expMin": expMinInput.value = ""; break;
+        case "expMax": expMaxInput.value = ""; break;
+      }
+    }
+
+    function clearAllFilters(){
+      searchInput.value = "";
+      expMinInput.value = "";
+      expMaxInput.value = "";
+      document.querySelectorAll('#filtersPanel input[type="checkbox"]').forEach(cb => cb.checked = false);
+      doFilter();
+    }
+
+    // --- rendering users ---
     function renderUsers(users) {
       userList.innerHTML = "";
-      if (users.length === 0) {
+      if (!users.length) {
         userList.innerHTML = "<p>Žádní uživatelé nebyli nalezeni.</p>";
         return;
       }
 
       users.forEach(([id, user]) => {
-        // Prefer stored full URL; otherwise build Cloudinary thumb for this uid
         const photoURL =
           (typeof user.profilePicture === "string" && user.profilePicture.startsWith("http"))
             ? user.profilePicture
@@ -165,32 +409,43 @@
       });
     }
 
-    function filterUsers() {
-      const query = searchInput.value.trim().toLowerCase();
-      const filtered = allUsers.filter(([_, user]) =>
-        (user.name && user.name.toLowerCase().includes(query)) ||
-        (user.prijmeni && user.prijmeni.toLowerCase().includes(query)) ||
-        (user.experience && user.experience.toString().includes(query)) ||
-        (user.specializations &&(
-          Array.isArray(user.specializations)
-            ? user.specializations.join(", ").toLowerCase().includes(query)
-            : user.specializations.toLowerCase().includes(query)
-        )) ||
-        (user.location && user.location.toLowerCase().includes(query))
-      );
-      renderUsers(filtered);
-    }
+    // --- filter execution ---
+    const doFilter = (() => {
+      let t;
+      return function trigger(){
+        clearTimeout(t);
+        t = setTimeout(() => {
+          const f = getFiltersFromUI();
+          renderChips(f);
+          const list = applyFilters(allUsers, f);
+          renderUsers(list);
+        }, 150); // debounce
+      };
+    })();
 
+    // --- wire up apply/clear + search ---
+    btnApply.addEventListener("click", () => { doFilter(); filtersPanel.classList.remove("open"); });
+    btnClear.addEventListener("click", clearAllFilters);
+    searchInput.addEventListener("input", doFilter);
+    // Also respond to any checkbox/number change immediately:
+    filtersPanel.addEventListener("change", (e) => {
+      if (e.target.matches('input[type="checkbox"], input[type="number"]')) doFilter();
+    });
+
+    // --- load trainers ---
     const usersRef = ref(db, "users/");
     onValue(usersRef, (snapshot) => {
       loader.style.display = "none";
-      const data = snapshot.val();
-      allUsers = Object.entries(data || {}).filter(([_, user]) => user.email);
-      renderUsers(allUsers);
+      const data = snapshot.val() || {};
+      allUsers = Object.entries(data).filter(([_, user]) => user.email);
+
+      facets = buildFacets(allUsers);
+      populateFilters();
+
+      // initial render
+      doFilter();
       console.log("Loaded users:", data);
     });
-
-    searchInput.addEventListener("input", filterUsers);
   </script>
 </body>
 </html>
