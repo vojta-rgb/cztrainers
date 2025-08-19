@@ -138,51 +138,6 @@ h1 {
   color: var(--primary);
 }
 
-/* SEARCH + FILTRY */
-.search-wrap {
-  position: relative;
-  max-width: 820px;
-  margin: 0 auto 1.25rem;
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-}
-
-.search-wrap #search {
-  flex: 1 1 auto;
-  height: 48px;
-  padding: 0.7rem 1rem;
-  padding-right: 120px; /* space for button */
-  border-radius: var(--radius);
-  border: 1px solid #ccc;
-  box-shadow: var(--shadow);
-}
-
-.filters-toggle {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 9999px;
-  border: 1px solid #e5e7eb;
-  background: var(--white);
-  font-weight: 600;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: transform .15s ease, background .2s ease, color .2s ease;
-}
-
-.filters-toggle:hover { transform: translateY(-50%) scale(1.03); }
-.filters-toggle:active { transform: translateY(-50%) scale(0.98); }
-
-body.dark .filters-toggle {
-  background: #181818;
-  color: var(--light);
-  border-color: #2b2b2b;
-}
-
 /* Cards */
 .cards {
   display: grid;
@@ -493,32 +448,69 @@ body.dark .range-inline input[type="number"] {
 .btn-primary:hover { filter: brightness(1.05); }
 
 body.dark .btn-soft { background: #181818; color: var(--light); border-color: #2a2a2a; }
+/* SEARCH + FILTRY — REPLACEMENT */
+.search-wrap{
+  /* sizing tokens */
+  --filtry-w: 112px;      /* pill width on desktop */
+  --filtry-gap: 10px;
 
-/* Wider search on desktops, compact on phones */
-
-/* default stays as you have: .search-wrap { max-width: 820px } */
-
-/* tablets / small desktops */
-@media (min-width: 900px) and (max-width: 1199px) {
-  .search-wrap { max-width: 960px; }
+  width: clamp(280px, 88vw, 1100px);   /* wider on desktop, bounded on small */
+  margin: 0 auto 1.25rem;
+  position: relative;
+  display: flex;
+  align-items: stretch;
 }
 
-/* large desktops */
-@media (min-width: 1200px) {
-  .search-wrap { max-width: 1100px; }
+.search-wrap #search{
+  flex: 1 1 auto;
+  height: 48px;
+  padding: 0.7rem 1rem;
+  /* space so the Filtry pill can sit inside the right edge */
+  padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 12px);
+  border-radius: var(--radius);
+  border: 1px solid #ccc;
+  box-shadow: var(--shadow);
 }
 
-/* phones: keep it compact and prevent overlap with the Filtry button */
-@media (max-width: 599px) {
-  .search-wrap { max-width: 100%; }        /* fill container but not beyond it */
-  .search-wrap #search {
-    height: 44px;
-    font-size: 16px;                       /* avoids iOS zoom */
-    padding-right: 96px;                   /* room for the Filtry pill */
+.filters-toggle{
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: var(--filtry-w);
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  background: var(--white);
+  font-weight: 600;
+  text-align: center;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform .15s ease, background .2s ease, color .2s ease;
+}
+.filters-toggle:hover{ transform: translateY(-50%) scale(1.03); }
+.filters-toggle:active{ transform: translateY(-50%) scale(.98); }
+body.dark .filters-toggle{ background:#181818; color:var(--light); border-color:#2b2b2b; }
+
+/* keep it roomy on tablets */
+@media (max-width: 1000px){
+  .search-wrap{ width: calc(100% - 32px); } /* respects page padding on narrow screens */
+}
+
+/* phones: shrink pill + input height so it isn't oversized */
+@media (max-width: 600px){
+  .search-wrap{
+    --filtry-w: 86px;
+    --filtry-gap: 8px;
   }
-  .filters-toggle {
+  .search-wrap #search{
+    height: 44px;
+    font-size: 16px; /* avoids iOS zoom */
+    padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 10px);
+  }
+  .filters-toggle{
     height: 36px;
-    padding: 0 12px;
-    right: 6px;                            /* stays attached to the input */
+    padding: 0 10px;
   }
 }
