@@ -52,8 +52,10 @@
 
     <!-- Toolbar: search + filters button + active chips -->
     <div class="toolbar">
-      <input type="text" id="search" placeholder="Hledat jméno, specializace, lokalita..." />
-      <button id="filtersToggle" class="filters-toggle">Filtry</button>
+      <div class="search-wrap">
+        <input type="text" id="search" placeholder="Hledat jméno, specializace, lokalita..." />
+        <button id="filtersToggle" type="button" class="filters-toggle">Filtry</button>
+      </div>
       <div id="activeChips" class="chips"></div>
     </div>
 
