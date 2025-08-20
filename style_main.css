@@ -463,7 +463,7 @@ body.dark .btn-soft { background: #181818; color: var(--light); border-color: #2
 
 .search-wrap #search{
   flex: 1 1 auto;
-  height: 48px;
+  height: 36px;
   padding: 0.7rem 1rem;
   /* space so the Filtry pill can sit inside the right edge */
   padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 12px);
@@ -499,7 +499,7 @@ body.dark .filters-toggle{ background:#181818; color:var(--light); border-color:
 }
 
 /* phones: shrink pill + input height so it isn't oversized */
-@media (max-width: 600px){
+@media (max-width: 400px){
   .search-wrap{
     --filtry-w: 86px;
     --filtry-gap: 8px;
