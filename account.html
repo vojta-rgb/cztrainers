@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CZTRAINERS | Účet & Zabezpečení</title>
+  <link rel="stylesheet" href="account.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getAuth, onAuthStateChanged, reauthenticateWithPopup, EmailAuthProvider, 
+      updateEmail, sendEmailVerification, updatePassword, deleteUser, GoogleAuthProvider 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const functions = getFunctions(app);
+
+    // Toast helper
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "show";
+      setTimeout(() => (t.className = t.className.replace("show", "")), 3000);
+    }
+
+    // Reauth helper (Google or password popup)
+    async function reauth(user) {
+      try {
+        if (user.providerData[0]?.providerId === "password") {
+          const email = prompt("Pro potvrzení zadejte svůj e-mail:");
+          const pass = prompt("Zadejte své heslo:");
+          if (!email || !pass) throw new Error("Chybí údaje.");
+          const cred = EmailAuthProvider.credential(email, pass);
+          await reauthenticateWithPopup(user, cred);
+        } else {
+          const provider = new GoogleAuthProvider();
+          await reauthenticateWithPopup(user, provider);
+        }
+        return true;
+      } catch (err) {
+        toast("Reautentizace selhala: " + err.message);
+        return false;
+      }
+    }
+
+    // Change email
+    document.addEventListener("DOMContentLoaded", () => {
+      const btnEmail = document.getElementById("btnChangeEmail");
+      const btnPassword = document.getElementById("btnChangePassword");
+      const btnDelete = document.getElementById("btnDeleteAccount");
+
+      btnEmail.addEventListener("click", async () => {
+        const user = auth.currentUser;
+        if (!user) return toast("Nejste přihlášen.");
+        const newEmail = document.getElementById("newEmail").value.trim();
+        if (!newEmail) return toast("Zadejte e-mail.");
+
+        if (!(await reauth(user))) return;
+
+        try {
+          await updateEmail(user, newEmail);
+          await sendEmailVerification(user);
+          toast("E-mail změněn, ověřte prosím novou adresu.");
+        } catch (e) {
+          toast("Chyba: " + e.message);
+        }
+      });
+
+      // Change password
+      btnPassword.addEventListener("click", async () => {
+        const user = auth.currentUser;
+        if (!user) return toast("Nejste přihlášen.");
+        const newPass = document.getElementById("newPassword").value.trim();
+        if (!newPass) return toast("Zadejte nové heslo.");
+
+        if (!(await reauth(user))) return;
+
+        try {
+          await updatePassword(user, newPass);
+          toast("Heslo změněno.");
+        } catch (e) {
+          toast("Chyba: " + e.message);
+        }
+      });
+
+      // Delete account
+      btnDelete.addEventListener("click", async () => {
+        const user = auth.currentUser;
+        if (!user) return toast("Nejste přihlášen.");
+        if (!confirm("Opravdu chcete smazat účet? Tuto akci nelze vrátit.")) return;
+
+        if (!(await reauth(user))) return;
+
+        try {
+          const uid = user.uid;
+          const userRef = ref(db, "users/" + uid);
+          const snapshot = await get(userRef);
+          const data = snapshot.val();
+
+          // Cloudinary cleanup if avatarPublicId exists
+          if (data?.avatarPublicId) {
+            const delFn = httpsCallable(functions, "deleteCloudinaryImage");
+            await delFn({ publicId: data.avatarPublicId });
+            toast("Profilová fotka smazána z Cloudinary.");
+          }
+
+          // Firebase DB cleanup
+          await Promise.allSettled([
+            remove(ref(db, "users/" + uid)),
+            remove(ref(db, "unverified-users/" + uid))
+          ]);
+
+          // Auth account removal
+          await deleteUser(user);
+
+          toast("Účet byl úspěšně smazán.");
+          setTimeout(() => (window.location.href = "index_main.html"), 1500);
+        } catch (e) {
+          toast("Chyba při mazání účtu: " + e.message);
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Účet & Zabezpečení</h1>
+
+    <section class="panel">
+      <h2>Změnit e-mail</h2>
+      <input type="email" id="newEmail" placeholder="Nový e-mail" />
+      <button id="btnChangeEmail" class="btn-primary">Změnit e-mail</button>
+    </section>
+
+    <section class="panel">
+      <h2>Změnit heslo</h2>
+      <input type="password" id="newPassword" placeholder="Nové heslo" />
+      <button id="btnChangePassword" class="btn-primary">Změnit heslo</button>
+    </section>
+
+    <section class="panel danger">
+      <h2>Smazat účet</h2>
+      <p>Tato akce je nevratná. Všechny údaje budou odstraněny.</p>
+      <button id="btnDeleteAccount" class="btn-danger">Smazat účet</button>
+    </section>
+  </div>
+
+  <div id="toast"></div>
+</body>
+</html>

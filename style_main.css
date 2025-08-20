@@ -1,4 +1,4 @@
-:root { 
+:root {
   --primary: #0072CE;
   --dark: #111;
   --light: #f4f4f4;
@@ -7,6 +7,7 @@
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Body + background */
 body {
   font-family: 'Inter', sans-serif;
   background: var(--light);
@@ -39,29 +40,34 @@ body.dark::before {
   opacity: 0.04;
 }
 
-/* NAVBAR */
+/* ================= NAVBAR ================= */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: .8rem 1.2rem;
   background: var(--primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
   color: white;
-  padding: 1rem 2rem;
-  flex-wrap: wrap;
 }
 
 .nav-logo img {
-  height: 60px;
+  height: 50px;
 }
 
+/* Links hidden by default */
 .nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  display: none;
+  flex-direction: column;
+  gap: .8rem;
+  margin-top: 1rem;
 }
 
+.nav-links.active {
+  display: flex;
+}
+
+/* Nav buttons */
 .nav-button {
   color: white;
   text-decoration: none;
@@ -78,6 +84,7 @@ body.dark::before {
   color: var(--primary);
 }
 
+/* Theme toggle */
 .theme-toggle {
   font-size: 1rem;
   background: none;
@@ -88,44 +95,41 @@ body.dark::before {
   line-height: 1;
 }
 
-/* Hamburger */
+/* Hamburger icon */
 .hamburger {
-  display: none;
+  display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  background: transparent;
+  justify-content: space-around;
+  width: 28px;
+  height: 22px;
+  background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 0;
 }
 
 .hamburger span {
-  width: 28px;
   height: 3px;
   background: white;
-  border-radius: 2px;
+  border-radius: 3px;
+  transition: all .3s ease;
 }
 
-/* Responsive nav */
-@media (max-width: 768px) {
-  .hamburger {
-    display: flex;
-  }
-
+/* Desktop breakpoint */
+@media (min-width: 768px) {
   .nav-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
+    display: none; /* still hidden until active */
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0;
   }
-
   .nav-links.active {
     display: flex;
   }
 }
 
-/* Content */
+/* ================= CONTENT ================= */
 .container {
   padding: 2rem;
   max-width: 1200px;
@@ -138,7 +142,7 @@ h1 {
   color: var(--primary);
 }
 
-/* Cards */
+/* ================= CARDS ================= */
 .cards {
   display: grid;
   gap: 1.5rem;
@@ -198,6 +202,7 @@ body.dark .card {
   color: var(--primary);
 }
 
+/* ================= TOAST ================= */
 .toast {
   position: fixed;
   bottom: 20px;
@@ -217,7 +222,7 @@ body.dark .card {
   transform: translateY(0);
 }
 
-/* Profile layout */
+/* ================= PROFILE ================= */
 .profile-container {
   display: flex;
   flex-wrap: wrap;
@@ -255,7 +260,26 @@ body.dark .profile-container {
   gap: 1rem;
 }
 
-/* Tags / Chips */
+@media (max-width: 768px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .profile-left, .profile-right {
+    max-width: 100%;
+  }
+
+  .profile-right {
+    align-items: flex-start;
+  }
+}
+
+.pricing-text, .bio-text {
+  white-space: pre-line;
+}
+
+/* Tags */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -277,25 +301,7 @@ body.dark .tag {
   color: var(--light);
 }
 
-@media (max-width: 768px) {
-  .profile-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .profile-left, .profile-right {
-    max-width: 100%;
-  }
-
-  .profile-right {
-    align-items: flex-start;
-  }
-}
-
-.pricing-text, .bio-text {
-  white-space: pre-line;
-}
-
+/* Social tags */
 .socials-container {
   display: flex;
   flex-wrap: wrap;
@@ -311,11 +317,12 @@ body.dark .tag {
   font-size: 0.9rem;
   text-decoration: none;
 }
+
 .social-tag:hover {
   background: #005fd1;
 }
 
-/* --- Filters panel polish --- */
+/* ================= FILTERS ================= */
 #filtersPanel {
   margin: 1rem auto 2rem;
   padding: 1rem;
@@ -353,14 +360,11 @@ body.dark .filter-group { background: #181818; }
   margin-bottom: 10px;
 }
 
-/* The options list: chips in a row */
+/* Chips */
 .filter-scroll {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 10px;
-  max-height: none;
-  overflow: visible;
-  padding-right: 0;
 }
 
 .filter-scroll label {
@@ -399,7 +403,7 @@ body.dark .filter-scroll label:has(input[type="checkbox"]:checked) {
   border-color: #2979ff;
 }
 
-/* Experience inputs */
+/* Range inputs */
 .range-inline {
   display: flex;
   align-items: center;
@@ -419,7 +423,7 @@ body.dark .range-inline input[type="number"] {
   background: #181818; color: var(--light); border-color: #2a2a2a;
 }
 
-/* Footer buttons */
+/* Filter buttons */
 .filter-actions {
   display: flex;
   gap: 10px;
@@ -448,31 +452,29 @@ body.dark .range-inline input[type="number"] {
 .btn-primary:hover { filter: brightness(1.05); }
 
 body.dark .btn-soft { background: #181818; color: var(--light); border-color: #2a2a2a; }
-/* SEARCH + FILTRY — REPLACEMENT */
-.search-wrap{
-  /* sizing tokens */
-  --filtry-w: 112px;      /* pill width on desktop */
-  --filtry-gap: 10px;
 
-  width: clamp(280px, 88vw, 1100px);   /* wider on desktop, bounded on small */
+/* ================= SEARCH ================= */
+.search-wrap {
+  --filtry-w: 112px;
+  --filtry-gap: 10px;
+  width: clamp(280px, 88vw, 1100px);
   margin: 0 auto 1.25rem;
   position: relative;
   display: flex;
   align-items: stretch;
 }
 
-.search-wrap #search{
+.search-wrap #search {
   flex: 1 1 auto;
   height: 36px;
   padding: 0.7rem 1rem;
-  /* space so the Filtry pill can sit inside the right edge */
   padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 12px);
   border-radius: var(--radius);
   border: 1px solid #ccc;
   box-shadow: var(--shadow);
 }
 
-.filters-toggle{
+.filters-toggle {
   position: absolute;
   top: 50%;
   right: 6px;
@@ -489,24 +491,19 @@ body.dark .btn-soft { background: #181818; color: var(--light); border-color: #2
   cursor: pointer;
   transition: transform .15s ease, background .2s ease, color .2s ease;
 }
-.filters-toggle:hover{ transform: translateY(-50%) scale(1.03); }
-.filters-toggle:active{ transform: translateY(-50%) scale(.98); }
-body.dark .filters-toggle{ background:#181818; color:var(--light); border-color:#2b2b2b; }
+.filters-toggle:hover { transform: translateY(-50%) scale(1.03); }
+.filters-toggle:active { transform: translateY(-50%) scale(.98); }
+body.dark .filters-toggle { background:#181818; color:var(--light); border-color:#2b2b2b; }
 
-/* keep it roomy on tablets */
 @media (max-width: 1000px){
-  .search-wrap{ width: calc(100% - 32px); } /* respects page padding on narrow screens */
+  .search-wrap{ width: calc(100% - 32px); }
 }
 
-/* phones: shrink pill + input height so it isn't oversized */
 @media (max-width: 400px){
-  .search-wrap{
-    --filtry-w: 86px;
-    --filtry-gap: 8px;
-  }
+  .search-wrap{ --filtry-w: 86px; --filtry-gap: 8px; }
   .search-wrap #search{
     height: 44px;
-    font-size: 16px; /* avoids iOS zoom */
+    font-size: 16px;
     padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 10px);
   }
   .filters-toggle{

@@ -11,35 +11,50 @@ const firebaseConfig = {
   appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
 };
 
-// ✅ Avoid duplicate Firebase app initialization
+// ✅ Prevent duplicate Firebase init
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ✅ Navbar element references
+// ✅ Navbar element refs
 const registerBtn = document.getElementById("registerBtn");
 const loginBtn = document.getElementById("loginBtn");
 const profileBtn = document.getElementById("profileBtn");
+const accountBtn = document.getElementById("accountBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
+// ✅ Auth state listener
 onAuthStateChanged(auth, (user) => {
   if (user && user.emailVerified) {
     if (registerBtn) registerBtn.style.display = "none";
     if (loginBtn) loginBtn.style.display = "none";
     if (profileBtn) profileBtn.style.display = "inline-block";
+    if (accountBtn) accountBtn.style.display = "inline-block";
     if (logoutBtn) logoutBtn.style.display = "inline-block";
   } else {
     if (registerBtn) registerBtn.style.display = "inline-block";
     if (loginBtn) loginBtn.style.display = "inline-block";
     if (profileBtn) profileBtn.style.display = "none";
+    if (accountBtn) accountBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "none";
   }
 });
 
+// ✅ Logout handler
 if (logoutBtn) {
   logoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
     signOut(auth)
       .then(() => window.location.href = "index_main.html")
-      .catch((error) => alert("Chyba při odhlášení: " + error.message));
+      .catch((error) => alert("Error signing out: " + error.message));
+  });
+}
+
+// ✅ Hamburger toggle
+const hamburger = document.getElementById("hamburger");
+const navLinks = document.getElementById("navLinks");
+
+if (hamburger && navLinks) {
+  hamburger.addEventListener("click", () => {
+    navLinks.classList.toggle("active");
   });
 }
