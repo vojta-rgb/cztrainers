@@ -512,100 +512,82 @@ body.dark .filters-toggle { background:#181818; color:var(--light); border-color
   }
 }
 
-  /* --- Only navbar dropdown tweaks (rest is in style_main.css) --- */
+/* --- Only navbar dropdown tweaks (kept minimal) --- */
+.navbar { position: relative; }
+.nav-right { position: relative; margin-left: auto; }
 
-    .navbar { position: relative; }
+/* keep hamburger fixed */
+.hamburger {
+  margin-left: .75rem;
+}
 
-    .nav-right { position: relative; margin-left: auto; }
+/* dropdown menu under the hamburger */
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  padding: .6rem;
+  display: none;                 /* CHANGED: hidden by default */
+  flex-direction: column;
+  gap: .6rem;
+  z-index: 1000;
+}
+.nav-dropdown.open { display: flex; }   /* NEW: show when .open is toggled */
+.nav-dropdown[hidden] { display: none !important; }
 
-    /* Keep hamburger fixed in place */
-    .hamburger {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      width: 28px;
-      height: 22px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      margin-left: .75rem;
-    }
-    .hamburger span {
-      height: 3px;
-      background: #fff;
-      border-radius: 3px;
-      transition: all .3s ease;
-    }
+/* buttons inside dropdown */
+.nav-dropdown .nav-button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: #111;
+  background: #fff;
+  border-color: #e5e7eb;
+}
+.nav-dropdown .nav-button:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
 
-    /* The dropdown panel that appears under the hamburger */
-    .nav-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      min-width: 220px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      padding: .6rem;
-      display: flex;
-      flex-direction: column;
-      gap: .6rem;
-      z-index: 1000;
-    }
-    .nav-dropdown[hidden] { display: none !important; }
+/* theme toggle inside dropdown */
+.nav-dropdown .theme-toggle {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #111;
+  padding: .5rem .75rem;
+}
 
-    /* Buttons inside dropdown look good on white */
-    .nav-dropdown .nav-button {
-      display: block;
-      width: 100%;
-      text-align: left;
-      color: #111;
-      background: #fff;
-      border-color: #e5e7eb;
-    }
-    .nav-dropdown .nav-button:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
+/* dark mode for dropdown */
+body.dark .nav-dropdown { background:#1b1b1b; border-color:#2a2a2a; }
+body.dark .nav-dropdown .nav-button { color: var(--light); background:#202020; border-color:#2a2a2a; }
+body.dark .nav-dropdown .nav-button:hover { background:#2c72cc; border-color:#2c72cc; }
+body.dark .nav-dropdown .theme-toggle { background:#202020; color:var(--light); border-color:#2a2a2a; }
 
-    /* Theme toggle styled as a full-width chip in the dropdown */
-    .nav-dropdown .theme-toggle {
-      width: 100%;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      background: #f9fafb;
-      color: #111;
-      padding: .5rem .75rem;
-    }
+/* hide old inline links row globally for dropdown-only nav */
+.nav-links { display: none !important; }
 
-    /* Dark mode for dropdown */
-    body.dark .nav-dropdown { background:#1b1b1b; border-color:#2a2a2a; }
-    body.dark .nav-dropdown .nav-button {
-      color: var(--light); background:#202020; border-color:#2a2a2a;
-    }
-    body.dark .nav-dropdown .nav-button:hover { background:#2c72cc; border-color:#2c72cc; }
-    body.dark .nav-dropdown .theme-toggle { background:#202020; color:var(--light); border-color:#2a2a2a; }
-
-    /* Hide the old inline links row everywhere; we only use dropdown now */
-    .nav-links { display: none !important; }
-
-    /* Minimal page-local styles you already had for filters demo */
-    .toolbar { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin:1rem 0; }
-    .filters-toggle { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
-    .filters-panel { display:none; border:1px solid #e5e7eb; border-radius:12px; padding:1rem; margin:.5rem 0 1rem; background:rgba(0,0,0,0.02); }
-    .filters-panel.open { display:block; }
-    .filters-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
-    fieldset { border:0; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.05); }
-    fieldset legend { font-weight:600; margin-bottom:.5rem; }
-    .chips { display:flex; gap:.5rem; flex-wrap:wrap; }
-    .chip { display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .6rem; border-radius:999px; background:#eef2ff; font-size:.9rem; }
-    .chip button { border:0; background:transparent; cursor:pointer; font-weight:700; }
-    .filters-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:.5rem; }
-    .btn { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
-    .btn.primary { background:#111827; color:#fff; border-color:#111827; }
-    .number-row { display:flex; gap:.5rem; }
-    .number-row input { width:100%; }
-    .small { font-size:.85rem; color:#6b7280; }
+/* Minimal page-local styles preserved for filters demo */
+.toolbar { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin:1rem 0; }
+.filters-toggle { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
+.filters-panel { display:none; border:1px solid #e5e7eb; border-radius:12px; padding:1rem; margin:.5rem 0 1rem; background:rgba(0,0,0,0.02); }
+.filters-panel.open { display:block; }
+.filters-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+fieldset { border:0; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 1px 0 rgba(0,0,0,.05); }
+fieldset legend { font-weight:600; margin-bottom:.5rem; }
+.chips { display:flex; gap:.5rem; flex-wrap:wrap; }
+.chip { display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .6rem; border-radius:999px; background:#eef2ff; font-size:.9rem; }
+.chip button { border:0; background:transparent; cursor:pointer; font-weight:700; }
+.filters-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:.5rem; }
+.btn { padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
+.btn.primary { background:#111827; color:#fff; border-color:#111827; }
+.number-row { display:flex; gap:.5rem; }
+.number-row input { width:100%; }
+.small { font-size:.85rem; color:#6b7280; }
