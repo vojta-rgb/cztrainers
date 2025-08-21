@@ -10,39 +10,37 @@
   <link rel="stylesheet" href="style_main.css" />
 </head>
 <body>
-  <!-- NAVBAR (dropdown hamburger; no inline CSS) -->
+  <!-- NAVBAR (dropdown controlled by auth-navbar.js) -->
   <nav class="navbar">
     <a class="nav-logo" href="index_main.html" aria-label="CZTRAINERS">
       <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
     </a>
 
-    <div class="nav-right">
-      <!-- Hamburger stays fixed; dropdown opens beneath -->
-      <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="navDropdown">
-        <span></span><span></span><span></span>
-      </button>
+    <!-- Hamburger is always visible; dropdown opens underneath -->
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="navDropdown">
+      <span></span><span></span><span></span>
+    </button>
 
-      <!-- Dropdown menu (CSS hides by default; navbar.js toggles .open) -->
-      <div class="nav-dropdown" id="navDropdown" role="menu">
-        <a href="index_main.html" class="nav-button" data-nav>Domů</a>
+    <!-- Dropdown menu -->
+    <div class="nav-dropdown" id="navDropdown" role="menu" hidden>
+      <a href="index_main.html" class="nav-button" data-nav>Domů</a>
 
-        <div class="nav-section" id="authPublic">
-          <a href="index.html" class="nav-button" id="registerBtn" data-nav>Registrace</a>
-          <a href="login.html" class="nav-button" id="loginBtn" data-nav>Přihlášení</a>
-        </div>
-
-        <div class="nav-section" id="authPrivate">
-          <a href="mujprofil.html" class="nav-button" id="profileBtn" data-nav style="display:none">Můj profil</a>
-          <a href="account.html" class="nav-button" id="accountBtn" data-nav style="display:none">Účet &amp; Zabezpečení</a>
-          <a href="#" class="nav-button" id="logoutBtn" data-nav style="display:none">Odhlásit se</a>
-        </div>
-
-        <a href="o-nas.html" class="nav-button" data-nav>O nás</a>
-
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
-          <span id="themeIcon">☀️</span>
-        </button>
+      <div class="nav-section" id="authPublic">
+        <a href="index.html" class="nav-button" id="registerBtn" data-nav>Registrace</a>
+        <a href="login.html" class="nav-button" id="loginBtn" data-nav>Přihlášení</a>
       </div>
+
+      <div class="nav-section" id="authPrivate">
+        <a href="mujprofil.html" class="nav-button" id="profileBtn" data-nav style="display:none">Můj profil</a>
+        <a href="account.html" class="nav-button" id="accountBtn" data-nav style="display:none">Účet &amp; Zabezpečení</a>
+        <a href="#" class="nav-button" id="logoutBtn" data-nav style="display:none">Odhlásit se</a>
+      </div>
+
+      <a href="o-nas.html" class="nav-button" data-nav>O nás</a>
+
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
+        <span id="themeIcon">☀️</span>
+      </button>
     </div>
   </nav>
 
@@ -59,29 +57,25 @@
       <div id="activeChips" class="chips"></div>
     </div>
 
-    <!-- Filters panel (kept intact; shown by adding .open) -->
-    <div id="filtersPanel" class="filters-panel">
+    <!-- Filters panel -->
+    <div id="filtersPanel" class="filters-panel" hidden>
       <div class="filters-grid">
         <fieldset>
           <legend>Lokalita</legend>
           <div id="f-locations"></div>
         </fieldset>
-
         <fieldset>
           <legend>Specializace</legend>
-          <div id="f-specs" class="small">Načítám…</div>
+          <div id="f-specs">Načítám…</div>
         </fieldset>
-
         <fieldset>
           <legend>Jazyky</legend>
-          <div id="f-langs" class="small">Načítám…</div>
+          <div id="f-langs">Načítám…</div>
         </fieldset>
-
         <fieldset>
           <legend>Pohlaví</legend>
-          <div id="f-genders" class="small">Načítám…</div>
+          <div id="f-genders">Načítám…</div>
         </fieldset>
-
         <fieldset>
           <legend>Zkušenosti (roky)</legend>
           <div class="number-row">
@@ -91,7 +85,6 @@
           <div id="f-exp-hint" class="small"></div>
         </fieldset>
       </div>
-
       <div class="filters-actions">
         <button id="filtersClear" class="btn">Vymazat vše</button>
         <button id="filtersApply" class="btn primary">Použít</button>
@@ -104,7 +97,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- Shared navbar logic for ALL pages (dropdown-aware version) -->
+  <!-- Shared navbar logic for ALL pages -->
   <script type="module" src="auth-navbar.js"></script>
 
   <!-- Page-specific logic (trainers list + filters) -->
@@ -112,7 +105,7 @@
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    /* ========= Firebase ========= */
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -123,16 +116,17 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    // Safe init alongside navbar.js
+    // Safe initialize
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    /* ========= Cloudinary helper ========= */
+    // Cloudinary thumb helper (clean template literal)
     const CLOUD_NAME = "dkt3pdcbe";
-    const clThumb = (uid) =>
-      `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
+    function clThumb(uid) {
+      return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
+    }
 
-    /* ========= DOM ========= */
+    // DOM
     const userList      = document.getElementById("userList");
     const searchInput   = document.getElementById("search");
     const loader        = document.getElementById("loader");
@@ -151,16 +145,18 @@
     const btnApply = document.getElementById("filtersApply");
     const btnClear = document.getElementById("filtersClear");
 
-    /* ========= State ========= */
-    let allUsers = [];   // [ [uid, user], ... ]
-    let facets   = null; // sets for locations/specs/langs/genders + exp range
+    // State
+    let allUsers = []; // [ [uid, user], ... ]
+    let facets   = null;
 
-    /* ========= Filters panel toggle (class .open) ========= */
+    // Toggle filters panel
     filtersToggle.addEventListener("click", () => {
-      filtersPanel.classList.toggle("open");
+      const open = filtersPanel.hasAttribute("hidden");
+      if (open) filtersPanel.removeAttribute("hidden");
+      else filtersPanel.setAttribute("hidden", "");
     });
 
-    /* ========= Helpers ========= */
+    // Helpers
     const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
 
     function buildFacets(users){
@@ -172,18 +168,15 @@
         uniqPush(genders,   u.gender);
 
         const sArr = Array.isArray(u.specializations) ? u.specializations :
-          (typeof u.specializations === "string" ? u.specializations.split(",").map(s=>s.trim()) : []);
+          (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
         sArr.forEach(v => uniqPush(specs, v));
 
         const lArr = Array.isArray(u.languages) ? u.languages :
-          (typeof u.languages === "string" ? u.languages.split(",").map(s=>s.trim()) : []);
+          (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
         lArr.forEach(v => uniqPush(langs, v));
 
         const e = Number(u.experience || 0);
-        if (Number.isFinite(e)) {
-          expMin = Math.min(expMin, e);
-          expMax = Math.max(expMax, e);
-        }
+        if (Number.isFinite(e)) { expMin = Math.min(expMin, e); expMax = Math.max(expMax, e); }
       });
 
       if (!Number.isFinite(expMin)) expMin = 0;
@@ -192,7 +185,7 @@
     }
 
     function checkboxList(container, name, values){
-      const arr = [...values].sort((a,b)=>a.localeCompare(b,"cs"));
+      const arr = [...values].sort((a,b)=>a.localeCompare(b,'cs'));
       container.innerHTML = arr.map(v => `
         <label style="display:block; margin:.25rem 0;">
           <input type="checkbox" name="${name}" value="${v}"> ${v}
@@ -208,11 +201,11 @@
 
       expMinInput.placeholder = String(facets.expMin);
       expMaxInput.placeholder = String(facets.expMax);
-      expHint.textContent = `Rozsah v datech: \${facets.expMin} – \${facets.expMax} let`;
+      expHint.textContent     = `Rozsah v datech: ${facets.expMin} – ${facets.expMax} let`;
     }
 
     function getFiltersFromUI(){
-      const checked = (sel) => [...document.querySelectorAll(sel + ":checked")].map(i => i.value);
+      const checked = (sel) => [...document.querySelectorAll(sel+':checked')].map(i=>i.value);
       return {
         q:      searchInput.value.trim().toLowerCase(),
         loc:    checked('input[name="loc"]'),
@@ -227,7 +220,6 @@
     function applyFilters(users, f){
       const q = f.q;
       return users.filter(([_, u]) => {
-        // full-text search across a few fields
         if (q) {
           const hay = [
             u.name, u.prijmeni, u.bio,
@@ -241,16 +233,14 @@
 
         if (f.spec.length) {
           const sArr = Array.isArray(u.specializations) ? u.specializations :
-            (typeof u.specializations === "string" ? u.specializations.split(",").map(s=>s.trim()) : []);
-          // require ALL selected specs
-          if (!f.spec.every(s => sArr.includes(s))) return false;
+            (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
+          if (!f.spec.every(s => sArr.includes(s))) return false; // require ALL selected specs
         }
 
         if (f.lang.length) {
           const lArr = Array.isArray(u.languages) ? u.languages :
-            (typeof u.languages === "string" ? u.languages.split(",").map(s=>s.trim()) : []);
-          // at least ONE language matches
-          if (!f.lang.some(l => lArr.includes(l))) return false;
+            (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
+          if (!f.lang.some(l => lArr.includes(l))) return false; // at least ONE language
         }
 
         if (f.gender.length && !f.gender.includes(u.gender)) return false;
@@ -266,7 +256,7 @@
     function renderChips(f){
       const chips = [];
       const add = (label, value, clearKey, clearVal) => {
-        chips.push(`<span class="chip">\${label}: \${value} <button data-k="\${clearKey}" data-v="\${encodeURIComponent(clearVal || "")}">×</button></span>`);
+        chips.push(`<span class="chip">${label}: ${value} <button data-k="${clearKey}" data-v="${encodeURIComponent(clearVal || '')}">×</button></span>`);
       };
 
       if (f.q) add("Hledat", f.q, "q");
@@ -281,13 +271,13 @@
       chipsWrap.querySelectorAll("button").forEach(btn => {
         btn.addEventListener("click", () => {
           const k = btn.dataset.k;
-          const v = decodeURIComponent(btn.dataset.v || "");
+          const v = decodeURIComponent(btn.dataset.v||"");
           switch (k) {
             case "q": searchInput.value = ""; break;
             case "expMin": expMinInput.value = ""; break;
             case "expMax": expMaxInput.value = ""; break;
             default: {
-              const selector = `input[name="\${k}"][value="\${CSS.escape(v)}"]`;
+              const selector = `input[name="${k}"][value="${CSS.escape(v)}"]`;
               const el = document.querySelector(selector);
               if (el) el.checked = false;
             }
@@ -295,6 +285,11 @@
           doFilter();
         });
       });
+    }
+
+    function safeProfileUrl(id) {
+      if (!/^[A-Za-z0-9_-]+$/.test(id)) return null;
+      return `profile.html?id=${encodeURIComponent(id)}`;
     }
 
     function renderUsers(users) {
@@ -305,17 +300,20 @@
       }
 
       users.forEach(([id, user]) => {
+        const href = safeProfileUrl(id);
+        if (!href) return;
+
         const photoURL =
           (typeof user.profilePicture === "string" && user.profilePicture.startsWith("http"))
             ? user.profilePicture
             : clThumb(id);
 
-        const name = user.name?.trim() || "Neznámý";
-        const lastName = user.prijmeni?.trim() || "";
+        const name = (user.name || "").trim() || "Neznámý";
+        const lastName = (user.prijmeni || "").trim();
 
         const card = document.createElement("a");
         card.className = "card";
-        card.href = `profile.html?id=${id}`;
+        card.href = href;
         card.innerHTML = `
           <img class="profile-pic"
                src="${photoURL}"
@@ -350,29 +348,25 @@
 
     btnApply.addEventListener("click", () => {
       doFilter();
-      filtersPanel.classList.remove("open");
+      filtersPanel.setAttribute("hidden", "");
     });
-
     btnClear.addEventListener("click", () => {
       searchInput.value = "";
       expMinInput.value = "";
       expMaxInput.value = "";
-      document.querySelectorAll('#filtersPanel input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('#filtersPanel input[type="checkbox"]').forEach(cb => (cb.checked = false));
       doFilter();
     });
-
     searchInput.addEventListener("input", doFilter);
-
-    // react to any checkbox/number changes
     filtersPanel.addEventListener("change", (e) => {
       if (e.target.matches('input[type="checkbox"], input[type="number"]')) doFilter();
     });
 
-    /* ========= Load trainers ========= */
+    // Load trainers
     onValue(ref(db, "users/"), (snapshot) => {
       loader.style.display = "none";
       const data = snapshot.val() || {};
-      allUsers = Object.entries(data).filter(([_, user]) => user.email);
+      allUsers = Object.entries(data).filter(([_, user]) => user && user.email);
       facets = buildFacets(allUsers);
       populateFilters();
       doFilter();
