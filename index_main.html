@@ -10,33 +10,31 @@
   <link rel="stylesheet" href="style_main.css" />
 </head>
 <body>
-  <!-- NAVBAR (dropdown controlled by auth-navbar.js) -->
+  <!-- NAVBAR (desktop = inline links, mobile = hamburger) -->
   <nav class="navbar">
     <a class="nav-logo" href="index_main.html" aria-label="CZTRAINERS">
       <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
     </a>
 
-    <!-- Hamburger is always visible; dropdown opens underneath -->
-    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="navDropdown">
+    <!-- Hamburger (shown on mobile by CSS) -->
+    <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
 
-    <!-- Dropdown menu -->
-    <div class="nav-dropdown" id="navDropdown" role="menu" hidden>
-      <a href="index_main.html" class="nav-button" data-nav>Domů</a>
+    <!-- Inline links container -->
+    <div class="nav-links" id="navLinks">
+      <a href="index_main.html" class="nav-button">Domů</a>
 
-      <div class="nav-section" id="authPublic">
-        <a href="index.html" class="nav-button" id="registerBtn" data-nav>Registrace</a>
-        <a href="login.html" class="nav-button" id="loginBtn" data-nav>Přihlášení</a>
-      </div>
+      <!-- Public -->
+      <a href="index.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
 
-      <div class="nav-section" id="authPrivate">
-        <a href="mujprofil.html" class="nav-button" id="profileBtn" data-nav style="display:none">Můj profil</a>
-        <a href="account.html" class="nav-button" id="accountBtn" data-nav style="display:none">Účet &amp; Zabezpečení</a>
-        <a href="#" class="nav-button" id="logoutBtn" data-nav style="display:none">Odhlásit se</a>
-      </div>
+      <!-- Private (shown when logged in & verified) -->
+      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display:none">Můj profil</a>
+      <a href="account.html" class="nav-button" id="accountBtn" style="display:none">Účet &amp; Zabezpečení</a>
+      <a href="#" class="nav-button" id="logoutBtn" style="display:none">Odhlásit se</a>
 
-      <a href="o-nas.html" class="nav-button" data-nav>O nás</a>
+      <a href="o-nas.html" class="nav-button">O nás</a>
 
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
         <span id="themeIcon">☀️</span>
@@ -120,7 +118,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // Cloudinary thumb helper (clean template literal)
+    // Cloudinary thumb helper
     const CLOUD_NAME = "dkt3pdcbe";
     function clThumb(uid) {
       return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
