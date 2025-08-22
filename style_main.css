@@ -591,3 +591,22 @@ fieldset legend { font-weight:600; margin-bottom:.5rem; }
 .number-row { display:flex; gap:.5rem; }
 .number-row input { width:100%; }
 .small { font-size:.85rem; color:#6b7280; }
+
+/* Mobile-first: hamburger visible, links hidden until .active is toggled */
+@media (max-width: 767.98px) {
+  .hamburger { display: flex; }
+  .nav-links { display: none; flex-direction: column; gap: .8rem; margin-top: 1rem; }
+  .nav-links.active { display: flex; }
+}
+
+/* Desktop: hide hamburger, show inline links */
+@media (min-width: 768px) {
+  .hamburger { display: none; }                           /* hide burger on desktop */
+  .nav-links {
+    display: flex !important;                              /* override old !important */
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0;
+  }
+}
