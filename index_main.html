@@ -95,9 +95,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- js for the filters -->
-  <script type="module" src="filtry.js"></script>
-
   <!-- Shared navbar logic for ALL pages -->
   <script type="module" src="auth-navbar.js"></script>
 
@@ -152,10 +149,17 @@
 
     // Toggle filters panel
     filtersToggle.addEventListener("click", () => {
-      const open = filtersPanel.hasAttribute("hidden");
-      if (open) filtersPanel.removeAttribute("hidden");
-      else filtersPanel.setAttribute("hidden", "");
-    });
+    const isHidden = filtersPanel.hasAttribute("hidden");
+    if (isHidden) {
+      // show
+      filtersPanel.removeAttribute("hidden");
+      filtersPanel.classList.add("open");
+    } else {
+      // hide
+      filtersPanel.setAttribute("hidden", "");
+      filtersPanel.classList.remove("open");
+    }
+  });
 
     // Helpers
     const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
