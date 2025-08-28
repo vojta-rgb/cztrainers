@@ -8,13 +8,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-logo">
       <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo" /></a>
     </div>
+
+    <!-- Hamburger (mobile) -->
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
+
+    <!-- Inline links -->
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
       <a href="register.html" class="nav-button" id="registerBtn">Registrace</a>
@@ -29,16 +34,27 @@
   </nav>
 
   <main class="page-container">
-    <div class="login-wrapper">
-      <h2>Přihlášení</h2>
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Heslo" required />
-      <button id="loginFormBtn">Přihlásit se</button>
-      <button id="resendBtn" style="display:none;margin-top:8px;">Znovu poslat ověřovací e-mail</button>
+    <div class="login-card">
+      <h2 class="title">Přihlášení</h2>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" placeholder="např. jan.novak@email.cz" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Heslo</label>
+        <input type="password" id="password" placeholder="Min. 6 znaků" required />
+      </div>
+
+      <button id="loginFormBtn" class="btn primary">Přihlásit se</button>
+      <button id="resendBtn" class="btn ghost" style="display:none;margin-top:8px;">Znovu poslat ověřovací e-mail</button>
+
       <div class="message" id="messageBox"></div>
     </div>
   </main>
 
+  <!-- --- YOUR ORIGINAL JS (unchanged) --- -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -65,7 +81,7 @@
     const messageBox = document.getElementById("messageBox");
 
     function showMsg(text, ok=false) {
-      messageBox.style.color = ok ? "green" : "var(--danger, #ff6b6b)";
+      messageBox.style.color = ok ? "var(--ok, #22c55e)" : "var(--danger, #ff6b6b)";
       messageBox.textContent = text;
     }
 
@@ -74,7 +90,7 @@
       const verifiedRef   = ref(db, 'users/' + uid);
 
       const verifiedSnap = await get(verifiedRef);
-      if (verifiedSnap.exists()) return; // already migrated
+      if (verifiedSnap.exists()) return;
 
       const unverifiedSnap = await get(unverifiedRef);
       if (unverifiedSnap.exists()) {
@@ -100,18 +116,15 @@
         if (!user.emailVerified) {
           showMsg("Nejprve prosím ověřte svůj e-mail. Zkontrolujte doručenou poštu/spam.");
           resendBtn.style.display = "inline-block";
-          // Important: sign out so they can click link and sign back in cleanly
           await signOut(auth);
           return;
         }
 
-        // If verified, migrate data from "unverified-users" to "users" once
         await migrateIfNeeded(user.uid);
 
         showMsg("Přihlášení úspěšné.", true);
         setTimeout(() => (window.location.href = "index_main.html"), 600);
       } catch (err) {
-        // Friendlier messages for common auth errors
         const code = (err && err.code) || "";
         if (code.includes("auth/invalid-credential") || code.includes("auth/wrong-password")) {
           showMsg("Nesprávný email nebo heslo.");
@@ -126,15 +139,11 @@
     }
 
     loginBtn.addEventListener("click", doLogin);
-
-    // Submit on Enter
     [emailEl, passwordEl].forEach(el => {
       el.addEventListener("keyup", (e) => { if (e.key === "Enter") doLogin(); });
     });
 
-    // Resend verification email
     resendBtn.addEventListener("click", async () => {
-      // To send a verification email, the user must be signed in.
       try {
         const email = emailEl.value.trim();
         const password = passwordEl.value;
