@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registrace – CZTRAINERS</title>
+  <title>Registrace trenéra – CZTRAINERS</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-logo">
       <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo" /></a>
     </div>
-    <button class="hamburger" id="hamburger">&#9776;</button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links" id="navLinks">
       <a href="index_main.html" class="nav-button">Domů</a>
       <div id="authButtons">
@@ -22,59 +25,126 @@
       <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display: none;">Můj profil</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display: none;">Odhlásit se</a>
       <a href="o-nas.html" class="nav-button">O nás</a>
-      <button class="theme-toggle" id="themeToggle"><span id="themeIcon">☀️</span></button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Přepnout téma">
+        <span id="themeIcon">☀️</span>
+      </button>
     </div>
   </nav>
 
-  <div class="page-wrapper">
+  <!-- FORM CARD -->
+  <main class="page-wrapper">
     <div class="form-container">
-      <form id="registerForm">
-        <p>PŘIDEJTE PROFILOVÝ OBRÁZEK</p>
-        <input type="file" id="profileImage" accept="image/*" />
-        <input type="text" id="name" placeholder="Jméno" required />
-        <input type="text" id="prijmeni" placeholder="Příjmení" required />
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Heslo" required />
-        <input type="tel" id="phone" placeholder="+420 123 456 789" required pattern="\+?[0-9\s]{9,15}" />
-        <input type="date" id="datum" required />
-        <select id="gender" required>
-          <option value="">Vyber pohlaví</option>
-          <option value="muz">Muž</option>
-          <option value="zena">Žena</option>
-          <option value="jine">Jiné</option>
-        </select>
-        <select id="location" required>
-          <option value="">Vyber kraj</option>
-          <option value="Hlavní město Praha">Hlavní město Praha</option>
-          <option value="Středočeský kraj">Středočeský kraj</option>
-          <option value="Jihočeský kraj">Jihočeský kraj</option>
-          <option value="Plzeňský kraj">Plzeňský kraj</option>
-          <option value="Karlovarský kraj">Karlovarský kraj</option>
-          <option value="Ústecký kraj">Ústecký kraj</option>
-          <option value="Liberecký kraj">Liberecký kraj</option>
-          <option value="Královéhradecký kraj">Královéhradecký kraj</option>
-          <option value="Pardubický kraj">Pardubický kraj</option>
-          <option value="Vysočina">Vysočina</option>
-          <option value="Jihomoravský kraj">Jihomoravský kraj</option>
-          <option value="Olomoucký kraj">Olomoucký kraj</option>
-          <option value="Zlínský kraj">Zlínský kraj</option>
-          <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
-        </select>
-        <textarea id="bio" placeholder="O mně (krátký popis)" required></textarea>
-        <div id="specializationOptions" class="checkbox-group">
-          <label><input type="checkbox" name="specializations" value="Fitness" /> Fitness</label><br/>
-          <label><input type="checkbox" name="specializations" value="Kondiční trénink" /> Kondiční trénink</label><br/>
-          <label><input type="checkbox" name="specializations" value="Silový trénink" /> Silový trénink</label><br/>
-          <label><input type="checkbox" name="specializations" value="Hubnutí" /> Hubnutí</label><br/>
-          <label><input type="checkbox" name="specializations" value="Výživa" /> Výživa / Nutriční poradenství</label><br/>
-          <label><input type="checkbox" name="specializations" value="Rehabilitace" /> Rehabilitace</label><br/>
-          <label><input type="checkbox" name="specializations" value="Běhání" /> Běhání</label><br/>
-          <label><input type="checkbox" name="specializations" value="Jóga" /> Jóga</label><br/>
-          <label><input type="checkbox" name="specializations" value="Pilates" /> Pilates</label><br/>
-          <label><input type="checkbox" name="specializations" value="Skupinové lekce" /> Skupinové lekce</label><br/>
+      <h1 class="title">Registrace trenéra</h1>
+
+      <form id="registerForm" class="form">
+        <!-- Obrázek -->
+        <div class="field">
+          <label for="profileImage">Přidejte profilový obrázek</label>
+          <input type="file" id="profileImage" accept="image/*" />
         </div>
-        <textarea id="pricing" placeholder="cenník" required></textarea>
-        <input type="number" id="experience" min="0" max="50" placeholder="Roky zkušeností" />
+
+        <!-- Osobní údaje -->
+        <h3 class="section">Osobní údaje</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label for="name">Jméno</label>
+            <input type="text" id="name" placeholder="Jméno" required />
+          </div>
+          <div class="field">
+            <label for="prijmeni">Příjmení</label>
+            <input type="text" id="prijmeni" placeholder="Příjmení" required />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="např. jan.novak@email.cz" required />
+          </div>
+          <div class="field">
+            <label for="password">Heslo</label>
+            <input type="password" id="password" placeholder="Min. 6 znaků" required />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="phone">Telefon</label>
+            <input type="tel" id="phone" placeholder="+420 123 456 789" required pattern="\+?[0-9\s]{9,15}" />
+          </div>
+          <div class="field">
+            <label for="datum">Datum narození</label>
+            <input type="date" id="datum" required />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="gender">Pohlaví</label>
+            <select id="gender" required>
+              <option value="">Vyber pohlaví</option>
+              <option value="muz">Muž</option>
+              <option value="zena">Žena</option>
+              <option value="jine">Jiné</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="location">Kraj</label>
+            <select id="location" required>
+              <option value="">Vyber kraj</option>
+              <option value="Hlavní město Praha">Hlavní město Praha</option>
+              <option value="Středočeský kraj">Středočeský kraj</option>
+              <option value="Jihočeský kraj">Jihočeský kraj</option>
+              <option value="Plzeňský kraj">Plzeňský kraj</option>
+              <option value="Karlovarský kraj">Karlovarský kraj</option>
+              <option value="Ústecký kraj">Ústecký kraj</option>
+              <option value="Liberecký kraj">Liberecký kraj</option>
+              <option value="Královéhradecký kraj">Královéhradecký kraj</option>
+              <option value="Pardubický kraj">Pardubický kraj</option>
+              <option value="Vysočina">Vysočina</option>
+              <option value="Jihomoravský kraj">Jihomoravský kraj</option>
+              <option value="Olomoucký kraj">Olomoucký kraj</option>
+              <option value="Zlínský kraj">Zlínský kraj</option>
+              <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- O mně -->
+        <div class="field">
+          <label for="bio">O mně</label>
+          <textarea id="bio" placeholder="Krátký popis (specializace, zkušenosti…)" required></textarea>
+        </div>
+
+        <!-- Specializace -->
+        <h3 class="section">Specializace</h3>
+        <div id="specializationOptions" class="checkbox-group">
+          <label><input type="checkbox" name="specializations" value="Fitness" /> Fitness</label>
+          <label><input type="checkbox" name="specializations" value="Kondiční trénink" /> Kondiční trénink</label>
+          <label><input type="checkbox" name="specializations" value="Silový trénink" /> Silový trénink</label>
+          <label><input type="checkbox" name="specializations" value="Hubnutí" /> Hubnutí</label>
+          <label><input type="checkbox" name="specializations" value="Výživa" /> Výživa / Nutriční poradenství</label>
+          <label><input type="checkbox" name="specializations" value="Rehabilitace" /> Rehabilitace</label>
+          <label><input type="checkbox" name="specializations" value="Běhání" /> Běhání</label>
+          <label><input type="checkbox" name="specializations" value="Jóga" /> Jóga</label>
+          <label><input type="checkbox" name="specializations" value="Pilates" /> Pilates</label>
+          <label><input type="checkbox" name="specializations" value="Skupinové lekce" /> Skupinové lekce</label>
+        </div>
+
+        <!-- Ceník + Zkušenosti -->
+        <div class="grid-2">
+          <div class="field">
+            <label for="pricing">Ceník</label>
+            <textarea id="pricing" placeholder="Např. 700 Kč/hod · Balíčky…" required></textarea>
+          </div>
+          <div class="field">
+            <label for="experience">Zkušenosti (roky)</label>
+            <input type="number" id="experience" min="0" max="50" placeholder="Roky zkušeností" />
+          </div>
+        </div>
+
+        <!-- Jazyky -->
+        <h3 class="section">Jazyky</h3>
         <div id="languageOptions" class="checkbox-group">
           <label><input type="checkbox" name="languages" value="CZ" /> Čeština (CZ)</label>
           <label><input type="checkbox" name="languages" value="EN" /> Angličtina (EN)</label>
@@ -83,15 +153,32 @@
           <label><input type="checkbox" name="languages" value="RU" /> Ruština (RU)</label>
           <label><input type="checkbox" name="languages" value="FR" /> Francouzština (FR)</label>
         </div>
-        <h3>Sociální sítě (volitelné)</h3>
-        <input type="text" id="instagram" placeholder="Instagram (uživatelské jméno nebo odkaz)" />
-        <input type="text" id="facebook" placeholder="Facebook (uživatelské jméno nebo odkaz)" />
-        <input type="text" id="tiktok" placeholder="TikTok (uživatelské jméno nebo odkaz)" />
-        <button type="submit">Odeslat</button>
-        <button type="button" class="btn-red" onclick="window.location.href='register.html'">Zpět</button>
+
+        <!-- Socials -->
+        <h3 class="section">Sociální sítě (volitelné)</h3>
+        <div class="grid-3">
+          <div class="field">
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram" placeholder="uživatelské jméno nebo odkaz" />
+          </div>
+          <div class="field">
+            <label for="facebook">Facebook</label>
+            <input type="text" id="facebook" placeholder="uživatelské jméno nebo odkaz" />
+          </div>
+          <div class="field">
+            <label for="tiktok">TikTok</label>
+            <input type="text" id="tiktok" placeholder="uživatelské jméno nebo odkaz" />
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button type="submit" class="btn primary">Odeslat</button>
+          <button type="button" class="btn btn-red" onclick="window.location.href='register.html'">Zpět</button>
+        </div>
       </form>
     </div>
-  </div>
+  </main>
 
   <!-- Load TFJS first, then NSFWJS (global "nsfwjs") -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
