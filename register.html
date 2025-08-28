@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registrace | CZTRAINERS</title>
+
+  <!-- Site/global styles (includes navbar) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+  <link rel="stylesheet" href="style_main.css" />
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="register.css" />
+</head>
+<body>
+  <!-- NAVBAR (same structure as your other pages) -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo" /></a>
+    </div>
+
+    <!-- Hamburger (shown on mobile by CSS) -->
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Inline links (desktop), slide-down (mobile) -->
+    <div class="nav-links" id="navLinks">
+      <a href="index_main.html" class="nav-button">Domů</a>
+
+      <!-- Public -->
+      <a href="register.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+
+      <!-- Private (shown when logged & verified by auth-navbar.js) -->
+      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display:none">Můj profil</a>
+      <a href="account.html" class="nav-button" id="accountBtn" style="display:none">Účet &amp; Zabezpečení</a>
+      <a href="#" class="nav-button" id="logoutBtn" style="display:none">Odhlásit se</a>
+
+      <a href="o-nas.html" class="nav-button">O nás</a>
+
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <header class="reg-header">
+    <h1>Registrace</h1>
+    <p class="reg-subtitle">Vyberte, jak se chcete registrovat.</p>
+  </header>
+
+  <main class="reg-container">
+    <section class="reg-grid">
+      <!-- Uživatel -->
+      <article class="reg-card">
+        <div class="reg-card-body">
+          <h2>Registrovat jako uživatel</h2>
+          <p>
+            Vytvořte si účet a snadno vyhledávejte trenéry v celé ČR.
+            Ukládejte si oblíbené profily a kontaktujte trenéry přímo.
+          </p>
+          <ul class="reg-features">
+            <li>Vyhledávání podle lokality a specializace</li>
+            <li>Ukládání oblíbených trenérů</li>
+            <li>Rychlý kontakt</li>
+          </ul>
+        </div>
+        <a class="reg-btn" href="register-user.html">Pokračovat jako uživatel</a>
+      </article>
+
+      <!-- Trenér -->
+      <article class="reg-card">
+        <div class="reg-card-body">
+          <h2>Registrovat jako trenér</h2>
+          <p>
+            Vytvořte si profesionální profil, představte zkušenosti,
+            specializace a získejte nové klienty.
+          </p>
+          <ul class="reg-features">
+            <li>Veřejný profil s fotkou a bio</li>
+            <li>Specializace, jazyky, lokality</li>
+            <li>Ceník a kontaktní údaje</li>
+          </ul>
+        </div>
+        <a class="reg-btn reg-btn-primary" href="index.html">Pokračovat jako trenér</a>
+      </article>
+    </section>
+  </main>
+
+  <footer class="reg-foot">
+    <p>Máte účet? <a href="login.html">Přihlásit se</a></p>
+  </footer>
+
+  <!-- Shared navbar auth logic (handles register/login vs profile/account/logout) -->
+  <script type="module" src="auth-navbar.js"></script>
+
+  <!-- Tiny page-local script: hamburger + theme toggle (same as your other pages) -->
+  <script>
+    // Hamburger
+    document.getElementById("hamburger").addEventListener("click", function () {
+      document.getElementById("navLinks").classList.toggle("active");
+    });
+
+    // Dark/light mode
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function updateTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      updateTheme(true);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = !document.body.classList.contains("dark");
+      updateTheme(isDark);
+    });
+  </script>
+</body>
+</html>
