@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registrace uživatele | CZTRAINERS</title>
+
+  <!-- Global site styles (navbar, tokens, etc.) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+  <link rel="stylesheet" href="style_main.css" />
+  <!-- Page styles -->
+  <link rel="stylesheet" href="register-user.css" />
+</head>
+<body>
+  <!-- NAVBAR (same structure/IDs as your other pages) -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo" /></a>
+    </div>
+
+    <!-- Hamburger (visible on mobile by CSS) -->
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Inline links (desktop), collapsible (mobile) -->
+    <div class="nav-links" id="navLinks">
+      <a href="index_main.html" class="nav-button">Domů</a>
+
+      <!-- Public -->
+      <a href="register.html" class="nav-button" id="registerBtn">Registrace</a>
+      <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
+
+      <!-- Private (shown when logged in & verified by auth-navbar.js) -->
+      <a href="mujprofil.html" class="nav-button" id="profileBtn" style="display:none">Můj profil</a>
+      <a href="account.html" class="nav-button" id="accountBtn" style="display:none">Účet &amp; Zabezpečení</a>
+      <a href="#" class="nav-button" id="logoutBtn" style="display:none">Odhlásit se</a>
+
+      <a href="o-nas.html" class="nav-button">O nás</a>
+
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <header class="ur-header">
+    <h1>Registrace uživatele</h1>
+    <p class="ur-subtitle">Zadejte své jméno, e-mail a heslo. Po registraci vám pošleme ověřovací e-mail.</p>
+  </header>
+
+  <main class="ur-container">
+    <section class="ur-card">
+      <form id="userRegisterForm" novalidate>
+        <label class="ur-field">
+          <span>Jméno</span>
+          <input type="text" id="name" placeholder="Vaše jméno" required />
+        </label>
+
+        <label class="ur-field">
+          <span>E-mail</span>
+          <input type="email" id="email" placeholder="např. jan.novak@email.cz" required />
+        </label>
+
+        <label class="ur-field">
+          <span>Heslo</span>
+          <input type="password" id="password" placeholder="Min. 6 znaků" minlength="6" required />
+        </label>
+
+        <button id="submitBtn" type="submit" class="ur-btn ur-btn-primary">Vytvořit účet</button>
+        <a class="ur-btn ur-btn-ghost" href="register.html">Zpět na výběr registrace</a>
+      </form>
+    </section>
+  </main>
+
+  <footer class="ur-foot">
+    <p>Máte účet? <a href="login.html">Přihlásit se</a></p>
+  </footer>
+
+  <!-- Shared navbar auth logic (toggles register/login vs profile/account/logout) -->
+  <script type="module" src="auth-navbar.js"></script>
+
+  <!-- Firebase: create user + separate under /app-users and /roles -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    // Safe init (won't double-init if auth-navbar.js already did)
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    const form = document.getElementById("userRegisterForm");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = (document.getElementById("name").value || "").trim();
+      const email = (document.getElementById("email").value || "").trim();
+      const password = document.getElementById("password").value;
+
+      if (!name || !email || !password || password.length < 6) {
+        alert("Vyplňte prosím všechny údaje. Heslo musí mít alespoň 6 znaků.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+
+        // Separate bucket for simple users
+        await set(ref(db, "app-users/" + uid), {
+          name,
+          email,
+          role: "user",
+          emailVerified: false,
+          createdAt: Date.now()
+        });
+
+        // Flat roles map for quick checks/rules
+        await set(ref(db, "roles/" + uid), "user");
+
+        await sendEmailVerification(cred.user);
+        alert("Účet byl vytvořen. Poslali jsme vám ověřovací e-mail. Po ověření se přihlaste.");
+        await signOut(auth);
+
+        form.reset();
+        window.location.href = "login.html";
+      } catch (err) {
+        alert("Chyba při registraci: " + (err?.message || err));
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+
+  <!-- Tiny page-local: hamburger + theme (same as elsewhere) -->
+  <script>
+    // Hamburger menu
+    document.getElementById("hamburger").addEventListener("click", function () {
+      document.getElementById("navLinks").classList.toggle("active");
+    });
+
+    // Dark/light mode
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function updateTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      updateTheme(true);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = !document.body.classList.contains("dark");
+      updateTheme(isDark);
+    });
+  </script>
+</body>
+</html>

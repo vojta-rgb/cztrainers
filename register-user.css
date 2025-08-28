@@ -1,0 +1,99 @@
+:root{
+  /* Uses tokens from style_main.css but keeps safe fallbacks here */
+  --primary: #0072CE;
+  --dark: #111;
+  --white: #fff;
+  --radius: 14px;
+  --shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+/* Header */
+.ur-header {
+  max-width: 1100px;
+  margin: 24px auto 8px;
+  padding: 0 18px;
+}
+.ur-header h1 {
+  margin: 0 0 6px;
+  font-size: 2rem;
+  color: var(--primary);
+}
+.ur-subtitle { margin: 0 0 12px; color: #555; }
+
+/* Container */
+.ur-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 18px 40px;
+}
+
+/* Card */
+.ur-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+/* Form fields */
+.ur-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.ur-field span { font-weight: 600; }
+.ur-field input {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+.ur-field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0,114,206,.15);
+}
+
+/* Buttons */
+.ur-btn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #d9d9d9;
+  color: var(--dark);
+  background: #f9fafb;
+  transition: transform .12s ease, filter .12s ease, background .15s ease, color .15s ease;
+  margin-right: 10px;
+}
+.ur-btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
+
+.ur-btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.ur-btn-ghost {
+  background: #fff;
+}
+
+/* Footer */
+.ur-foot {
+  max-width: 1100px;
+  margin: 0 auto 26px;
+  padding: 0 18px;
+  color: #555;
+}
+.ur-foot a { color: var(--primary); text-decoration: none; font-weight: 600; }
+.ur-foot a:hover { text-decoration: underline; }
+
+/* Dark mode (cooperates with body.dark) */
+body.dark .ur-subtitle { color: #cfcfcf; }
+body.dark .ur-card { background: #1e1e1e; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+body.dark .ur-field input { background: #222; border-color: #2b2b2b; color: #eee; }
+body.dark .ur-btn { background: #232323; color: #eaeaea; border-color: #2b2b2b; }
+body.dark .ur-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+body.dark .ur-foot { color: #cfcfcf; }
