@@ -212,15 +212,6 @@
 
     const profileImageInput = document.getElementById("profileImage");
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
-
-    // Add App Check so DB writes pass when enforcement is ON
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_V3_SITE_KEY'),
-      isTokenAutoRefreshEnabled: true
-    });
-    
       // File size guard
     profileImageInput.addEventListener("change", () => {
       const file = profileImageInput.files[0];
