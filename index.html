@@ -318,12 +318,13 @@ async function getSignature(params){
 
       // 2) Send verification email RIGHT AWAY (before any DB writes)
       auth.useDeviceLanguage();
-      const actionCodeSettings = {
-        // builds a full absolute URL to your login page in the same folder/repo
-        url: new URL('login.html', location.href).href,
-        handleCodeInApp: false
-      };
-      await sendEmailVerification(user, actionCodeSettings);
+      try {
+        await sendEmailVerification(user);   // ← no actionCodeSettings
+      } catch (err) {
+        alert("Nepodařilo se odeslat ověřovací e-mail: " + err.code + " — " + err.message);
+        throw err; // stop the flow if email couldn’t be queued
+      }
+
 
       // 3) (Optional) process & upload profile photo
       let profilePictureUrl = "";
