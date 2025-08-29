@@ -305,64 +305,86 @@ async function getSignature(params){
     }
 
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const rawFile = profileImageInput.files[0];
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    e.preventDefault();
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+    const rawFile  = document.getElementById("profileImage").files[0];
+    const email    = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-        let profilePictureUrl = "";
-        if (rawFile && rawFile.size <= MAX_FILE_SIZE) {
-          const blob = await downscaleImage(rawFile);
-          const jpg = new File([blob], "pfp.jpg", { type: "image/jpeg" });
+    try {
+      // 1) Create auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-          const safe = await isImageSafe(jpg);
-          if (!safe) {
-            alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
-            await signOut(auth);
-            return;
-          }
+      // 2) Send verification email RIGHT AWAY (before any DB writes)
+      auth.useDeviceLanguage();
+      const actionCodeSettings = {
+        // builds a full absolute URL to your login page in the same folder/repo
+        url: new URL('login.html', location.href).href,
+        handleCodeInApp: false
+      };
+      await sendEmailVerification(user, actionCodeSettings);
 
-          const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
-          profilePictureUrl = secure_url;
+      // 3) (Optional) process & upload profile photo
+      let profilePictureUrl = "";
+      if (rawFile && rawFile.size <= MAX_FILE_SIZE) {
+        const blob = await downscaleImage(rawFile);
+        const jpg  = new File([blob], "pfp.jpg", { type: "image/jpeg" });
+
+        const safe = await isImageSafe(jpg);
+        if (!safe) {
+          alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
+          await signOut(auth);
+          return;
         }
 
-        const socials = {
-          instagram: document.getElementById("instagram").value.trim(),
-          facebook: document.getElementById("facebook").value.trim(),
-          tiktok: document.getElementById("tiktok").value.trim()
-        };
-
-        const userData = {
-          name: document.getElementById("name").value,
-          prijmeni: document.getElementById("prijmeni").value,
-          email: user.email,
-          datum: document.getElementById("datum").value,
-          phone: document.getElementById("phone").value,
-          gender: document.getElementById("gender").value,
-          location: document.getElementById("location").value,
-          bio: document.getElementById("bio").value,
-          specializations: Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(el => el.value).join(", "),
-          pricing: document.getElementById("pricing").value,
-          experience: document.getElementById("experience").value,
-          languages: Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value).join(", "),
-          profilePicture: profilePictureUrl,
-          socials
-        };
-
-        await set(ref(db, 'unverified-users/' + user.uid), userData);
-        await sendEmailVerification(user);
-        alert("Ověřovací e-mail byl odeslán.");
-        await signOut(auth);
-        this.reset();
-        window.location.href = "login.html";
-      } catch (error) {
-        alert("Chyba při registraci: " + error.message);
+        const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
+        profilePictureUrl = secure_url;
       }
-    });
+
+      // 4) Prepare trainer data
+      const socials = {
+        instagram: document.getElementById("instagram").value.trim(),
+        facebook:  document.getElementById("facebook").value.trim(),
+        tiktok:    document.getElementById("tiktok").value.trim()
+      };
+
+      const userData = {
+        name: document.getElementById("name").value,
+        prijmeni: document.getElementById("prijmeni").value,
+        email: user.email,
+        datum: document.getElementById("datum").value,
+        phone: document.getElementById("phone").value,
+        gender: document.getElementById("gender").value,
+        location: document.getElementById("location").value,
+        bio: document.getElementById("bio").value,
+        specializations: Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(el => el.value).join(", "),
+        pricing: document.getElementById("pricing").value,
+        experience: document.getElementById("experience").value,
+        languages: Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value).join(", "),
+        profilePicture: profilePictureUrl,
+        socials
+      };
+
+      // 5) Write to "unverified-users" (may be blocked if App Check is enforced,
+      //    but the verification email has already been sent)
+      try {
+        await set(ref(db, 'unverified-users/' + user.uid), userData);
+      } catch (dbErr) {
+        console.warn("DB write failed (will still allow email verification):", dbErr);
+        // carry on — they can verify email and you can migrate on first login
+      }
+
+      alert("Ověřovací e-mail byl odeslán. Zkontrolujte prosím doručenou poštu/spam.");
+      await signOut(auth);
+      this.reset();
+      window.location.href = "login.html";
+
+    } catch (error) {
+      alert("Chyba při registraci: " + error.message);
+      try { await signOut(auth); } catch {}
+    }
+  });
   </script>
 
   <script>
