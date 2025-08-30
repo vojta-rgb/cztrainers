@@ -630,9 +630,6 @@ body.dark .nav-links { background:#1b1b1b; border-color:#2a2a2a; }
   body.dark .nav-links { background: transparent; }
 }
 
-/* allow opening the dropdown even if the base rule used !important */
-.nav-links.active { display: flex !important; }
-
 /* Right side cluster: login/profile pill + hamburger */
 .nav-right{
   margin-left: auto;
@@ -644,3 +641,35 @@ body.dark .nav-links { background:#1b1b1b; border-color:#2a2a2a; }
 
 /* final guard — ensure the menu really opens when active */
 .nav-links.active { display: flex !important; }
+
+/* cluster on the right */
+.nav-right{ margin-left:auto; display:flex; align-items:center; gap:.75rem; }
+.profile-pill{ display:inline-flex; align-items:center; }
+
+/* dropdown hidden by default, opens with .active */
+.nav-links{ display:none; }
+.nav-links.active{ display:flex; }
+
+/* desktop: dropdown is a small menu aligned to right */
+@media (min-width:768px){
+  .nav-links{
+    position:absolute; right:1.2rem; top:calc(100% + 8px);
+    flex-direction:column; min-width:220px; gap:.6rem;
+    background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12); padding:.6rem; z-index:1000;
+  }
+  body.dark .nav-links{ background:#1b1b1b; border-color:#2a2a2a; }
+  /* desktop shows the pill + theme on bar, hides mobile theme button */
+  #themeToggle{ display:inline-block; }
+  #themeToggleMobile{ display:none; }
+}
+
+/* mobile: make dropdown full-width under the bar and hide desktop theme btn */
+@media (max-width:767.98px){
+  .nav-links{ position:static; width:100%; margin-top:1rem; flex-direction:column; }
+  #themeToggle{ display:none; }
+  #themeToggleMobile{ display:inline-block; }
+}
+
+/* guarantee the toggle opens even if older rules linger */
+.nav-links.active{ display:flex !important; }
