@@ -673,3 +673,42 @@ body.dark .nav-links { background:#1b1b1b; border-color:#2a2a2a; }
 
 /* guarantee the toggle opens even if older rules linger */
 .nav-links.active{ display:flex !important; }
+
+/* Fix: readable buttons inside the hamburger dropdown */
+.nav-links .nav-button {
+  background: #fff;
+  color: #111;
+  border-color: #e5e7eb;
+}
+.nav-links .nav-button:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* Theme toggle inside dropdown */
+.nav-links .theme-toggle {
+  width: 100%;
+  padding: .5rem .75rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111;
+}
+
+/* Dark mode variants for the dropdown */
+body.dark .nav-links .nav-button {
+  background: #202020;
+  color: var(--light);
+  border-color: #2a2a2a;
+}
+body.dark .nav-links .nav-button:hover {
+  background: #2c72cc;
+  color: #fff;
+  border-color: #2c72cc;
+}
+body.dark .nav-links .theme-toggle {
+  background: #202020;
+  color: var(--light);
+  border-color: #2a2a2a;
+}
