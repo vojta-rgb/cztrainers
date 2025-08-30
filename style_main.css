@@ -592,21 +592,39 @@ fieldset legend { font-weight:600; margin-bottom:.5rem; }
 .number-row input { width:100%; }
 .small { font-size:.85rem; color:#6b7280; }
 
-/* Mobile-first: hamburger visible, links hidden until .active is toggled */
-@media (max-width: 767.98px) {
-  .hamburger { display: flex; }
-  .nav-links { display: none; flex-direction: column; gap: .8rem; margin-top: 1rem; }
-  .nav-links.active { display: flex; }
-}
+/* Hamburger on ALL sizes; dropdown opens when .active is toggled */
+.navbar { position: relative; }
+.hamburger { display: flex; }
 
-/* Desktop: hide hamburger, show inline links */
-@media (min-width: 768px) {
-  .hamburger { display: none; }                           /* hide burger on desktop */
+.nav-links {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  padding: .6rem;
+  flex-direction: column;
+  gap: .6rem;
+  z-index: 1000;
+}
+.nav-links.active { display: flex; }
+
+body.dark .nav-links { background:#1b1b1b; border-color:#2a2a2a; }
+
+/* On mobile, make the dropdown a simple block under the bar */
+@media (max-width: 767.98px) {
   .nav-links {
-    display: flex !important;                              /* override old !important */
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 0;
+    position: static;
+    width: 100%;
+    margin-top: 1rem;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
   }
+  body.dark .nav-links { background: transparent; }
 }
