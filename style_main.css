@@ -572,7 +572,8 @@ body.dark .nav-dropdown .nav-button:hover { background:#2c72cc; border-color:#2c
 body.dark .nav-dropdown .theme-toggle { background:#202020; color:var(--light); border-color:#2a2a2a; }
 
 /* hide old inline links row globally for dropdown-only nav */
-.nav-links { display: none !important; }
+.nav-links { display: none; }
+.nav-links.active { display: flex; }
 
 /* Minimal page-local styles preserved for filters demo */
 .toolbar { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin:1rem 0; }
@@ -628,3 +629,18 @@ body.dark .nav-links { background:#1b1b1b; border-color:#2a2a2a; }
   }
   body.dark .nav-links { background: transparent; }
 }
+
+/* allow opening the dropdown even if the base rule used !important */
+.nav-links.active { display: flex !important; }
+
+/* Right side cluster: login/profile pill + hamburger */
+.nav-right{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.profile-pill{ white-space: nowrap; }
+
+/* final guard — ensure the menu really opens when active */
+.nav-links.active { display: flex !important; }
