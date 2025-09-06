@@ -65,25 +65,6 @@
     <div id="profileCard"></div>
   </main>
 
-  <!-- Theme + burger -->
-  <script>
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-
-    function setTheme(isDark){
-      document.body.classList.toggle('dark', isDark);
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      const icon = document.getElementById('themeIcon');
-      if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-    }
-    document.getElementById('themeToggle')?.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark')));
-    document.getElementById('themeToggleMobile')?.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark')));
-    document.getElementById('hamburger')?.addEventListener('click', ()=>{
-      document.getElementById('navLinks')?.classList.toggle('active');
-    });
-    // set initial icon
-    const ic = document.getElementById('themeIcon'); if(ic) ic.textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
-  </script>
-
   <!-- Firebase + data -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
