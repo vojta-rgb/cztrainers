@@ -4,23 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Můj trenérský profil</title>
-
-  <!-- Global site styles -->
   <link rel="stylesheet" href="style_main.css"/>
-
-  <!-- Page-only tweaks -->
   <link rel="stylesheet" href="trainer-profile.css"/>
 </head>
 <body>
-  <!-- NAVBAR (same structure you’re using everywhere) -->
+  <!-- NAVBAR (same structure as your pages) -->
   <nav class="navbar">
     <div class="nav-logo">
       <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo"></a>
     </div>
 
     <div class="nav-right">
-      <!-- Profile/Login pill (text is set by auth-navbar.js) -->
-      <a id="profilePill" class="nav-button profile-pill" href="register.html" aria-label="Přihlášení / registrace">
+      <!-- Pill: shows Login or jméno -->
+      <a id="profilePill" class="nav-button profile-pill" href="register.html" aria-label="Přihlásit / registrace">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:.45rem">
           <circle cx="12" cy="8" r="4"></circle><path d="M6 20a6 6 0 0112 0"></path>
         </svg>
@@ -43,69 +39,54 @@
       <a href="o-nas.html" class="nav-button">O nás</a>
       <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display:none">Odhlásit se</a>
-
-      <!-- mobile theme toggle -->
       <button class="theme-toggle" id="themeToggleMobile" type="button" aria-label="Přepnout motiv (mobil)">
         <span>🌗</span>
       </button>
     </div>
   </nav>
 
-  <!-- PAGE CONTENT -->
-  <main class="tp-container">
-    <!-- Header like Instagram: avatar + name + actions -->
-    <section class="tp-header">
-      <img id="tpAvatar" class="tp-avatar" src="https://placehold.co/200x200?text=Profil" alt="Profilová fotka" />
-      <h1 id="tpName" class="tp-name">—</h1>
-
-      <div class="tp-actions">
-        <a class="tp-btn" href="mujprofil.html">Upravit profil</a>
-        <a class="tp-btn" href="account.html">Účet &amp; zabezpečení</a>
-        <button id="logoutInline" class="tp-btn tp-btn-red" type="button">Odhlásit se</button>
+  <main class="container">
+    <!-- Header card (pfp + name + 3 CTA) -->
+    <section class="me-header">
+      <img id="meAvatar" class="me-avatar" src="https://placehold.co/240x240?text=Profil" alt="Profilová fotka">
+      <div class="me-info">
+        <h1 id="meName">Moje jméno</h1>
+        <div class="me-actions">
+          <a class="btn-cta" href="mujprofil.html">Upravit profil</a>
+          <a class="btn-cta" href="account.html">Účet &amp; zabezpečení</a>
+          <button id="btnLogout" class="btn-cta danger">Odhlásit se</button>
+        </div>
       </div>
     </section>
 
-    <hr class="tp-sep"/>
+    <hr class="me-sep">
 
-    <section class="tp-preview">
-      <h2>Náhled vašeho profilu</h2>
-      <div id="profilePreview"></div>
-    </section>
+    <h2 class="preview-title">Náhled vašeho profilu</h2>
+    <div id="profileCard"></div>
   </main>
 
-  <!-- THEME + HAMBURGER (same lightweight script you use) -->
+  <!-- Theme + burger -->
   <script>
-    // Persisted theme
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark');
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+    function setTheme(isDark){
+      document.body.classList.toggle('dark', isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.textContent = isDark ? '🌙' : '☀️';
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const desktopToggle = document.getElementById('themeToggle');
-      const mobileToggle  = document.getElementById('themeToggleMobile');
-      const icon          = document.getElementById('themeIcon');
-
-      function setTheme(isDark){
-        document.body.classList.toggle('dark', isDark);
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-      }
-      if (icon && document.body.classList.contains('dark')) icon.textContent = '🌙';
-
-      [desktopToggle, mobileToggle].forEach(btn=>{
-        if (!btn) return;
-        btn.addEventListener('click', () => setTheme(!document.body.classList.contains('dark')));
-      });
-
-      document.getElementById('hamburger')?.addEventListener('click', () => {
-        document.getElementById('navLinks')?.classList.toggle('active');
-      });
+    document.getElementById('themeToggle')?.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark')));
+    document.getElementById('themeToggleMobile')?.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark')));
+    document.getElementById('hamburger')?.addEventListener('click', ()=>{
+      document.getElementById('navLinks')?.classList.toggle('active');
     });
+    // set initial icon
+    const ic = document.getElementById('themeIcon'); if(ic) ic.textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
   </script>
 
-  <!-- FIREBASE: load current user + data and render header + preview -->
+  <!-- Firebase + data -->
   <script type="module">
-    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -119,92 +100,129 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getDatabase(app);
 
-    const avatarEl = document.getElementById('tpAvatar');
-    const nameEl   = document.getElementById('tpName');
-    const preview  = document.getElementById('profilePreview');
+    const profileCard = document.getElementById("profileCard");
+    const meNameEl    = document.getElementById("meName");
+    const meAvatarEl  = document.getElementById("meAvatar");
+    const pillText    = document.getElementById("pillText");
+    const profilePill = document.getElementById("profilePill");
+    const loginBtn    = document.getElementById("loginBtn");
+    const logoutBtn   = document.getElementById("logoutBtn");
+    const btnLogout   = document.getElementById("btnLogout");
 
-    function renderPreview(userData){
-      const sArr = Array.isArray(userData.specializations)
-        ? userData.specializations
-        : (typeof userData.specializations === 'string'
-            ? userData.specializations.split(',').map(s=>s.trim()).filter(Boolean)
-            : []);
+    function socialsFrom(user){
+      // Support both user.socials.{...} and root instagram/facebook/tiktok
+      const s = user.socials || {};
+      return {
+        instagram: user.instagram || s.instagram || "",
+        facebook:  user.facebook  || s.facebook  || "",
+        tiktok:    user.tiktok    || s.tiktok    || ""
+      };
+    }
 
-      const lArr = Array.isArray(userData.languages)
-        ? userData.languages
-        : (typeof userData.languages === 'string'
-            ? userData.languages.split(',').map(s=>s.trim()).filter(Boolean)
-            : []);
+    function renderSocialLinks(socials = {}) {
+      const platforms = {
+        instagram: v => v.startsWith("http") ? v : `https://instagram.com/${v.replace(/^@/,"")}`,
+        facebook:  v => v.startsWith("http") ? v : `https://facebook.com/${v.replace(/^@/,"")}`,
+        tiktok:    v => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace(/^@/,"")}`
+      };
+      let html = "";
+      for (const k in platforms){
+        const val = (socials[k]||"").trim();
+        if (!val) continue;
+        const link = platforms[k](val);
+        const label = val.startsWith("http") ? val : `@${val.replace(/^@/,"")}`;
+        html += `<a href="${link}" target="_blank" class="social-tag">${k} ${label}</a>`;
+      }
+      return html || "<p>Žádné sociální sítě</p>";
+    }
 
-      preview.innerHTML = `
+    function renderPreview(user){
+      const specs = Array.isArray(user.specializations) ? user.specializations
+                   : (typeof user.specializations === 'string' ? user.specializations.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const langs = Array.isArray(user.languages) ? user.languages
+                   : (typeof user.languages === 'string' ? user.languages.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      const socials = socialsFrom(user);
+
+      profileCard.innerHTML = `
         <div class="profile-container">
           <div class="profile-left">
-            <img class="profile-avatar" src="${userData.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
-            <h3>${(userData.name||'') + ' ' + (userData.prijmeni||'')}</h3>
-            <p><strong>Lokalita:</strong> ${userData.location || '-'}</p>
-            <p><strong>Telefon:</strong> ${userData.phone || '-'}</p>
-            <p><strong>E-mail:</strong> ${userData.email || '-'}</p>
+            <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
+            <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+            <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+            <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+            <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+            <p><strong>🌐 Moje sociální sítě:</strong></p>
+            <div class="socials-container">
+              ${renderSocialLinks(socials)}
+            </div>
           </div>
+
           <div class="profile-right">
-            <p class="bio-text"><strong>O mně:</strong> ${userData.bio || '-'}</p>
+            <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
 
-            <p><strong>Specializace:</strong></p>
+            <p><strong>💪 Specializace:</strong></p>
             <div class="tag-list">
-              ${sArr.map(s => `<span class="tag">${s}</span>`).join('') || '-'}
+              ${specs.map(s=>`<span class="tag">${s}</span>`).join("") || "-"}
             </div>
 
-            <p><strong>Jazyky:</strong></p>
+            <p><strong>🗣️ Jazyky:</strong></p>
             <div class="tag-list">
-              ${lArr.map(l => `<span class="tag">${l}</span>`).join('') || '-'}
+              ${langs.map(l=>`<span class="tag">${l}</span>`).join("") || "-"}
             </div>
 
-            <p><strong>Zkušenosti:</strong> ${userData.experience || '-'} let</p>
-            <p class="pricing-text"><strong>Cena:</strong> ${userData.pricing || '-'}</p>
+            <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+            <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
           </div>
         </div>
       `;
     }
 
-    // Inline logout button
-    document.getElementById('logoutInline')?.addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "index_main.html";
-      } catch (e) {
-        alert("Chyba při odhlášení: " + e.message);
-      }
-    });
+    onAuthStateChanged(auth, async (u)=>{
+      // default header/pill
+      pillText.textContent = u?.emailVerified ? (u.displayName || "Profil") : "Login";
+      profilePill.href = u?.emailVerified ? "trainer-profile.html" : "register.html";
 
-    onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        // not signed in → go to login
-        window.location.href = "login.html";
+      if (!u || !u.emailVerified){
+        // show login in dropdown
+        if (loginBtn)  loginBtn.style.display = "inline-block";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        meNameEl.textContent = "Nejste přihlášen/a";
         return;
       }
-      // header info
-      try {
-        const snap = await get(ref(db, 'users/' + u.uid));
-        if (snap.exists()) {
-          const data = snap.val();
-          avatarEl.src = data.profilePicture || 'https://placehold.co/200x200?text=Profil';
-          nameEl.textContent = `${data.name || ''} ${data.prijmeni || ''}`.trim() || (u.email || 'Můj profil');
-          renderPreview(data);
-        } else {
-          nameEl.textContent = u.email || "Můj profil";
-          renderPreview({});
-        }
-      } catch (err) {
-        nameEl.textContent = u.email || "Můj profil";
-        preview.innerHTML = `<p>Chyba načítání: ${err.message}</p>`;
-      }
+
+      // show logout in dropdown
+      if (loginBtn)  loginBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "inline-block";
+
+      // Load trainer document
+      const snap = await get(ref(db, "users/" + u.uid));
+      const data = snap.exists() ? snap.val() : { name: u.displayName || "", email: u.email };
+
+      // Header fill
+      const fullName = `${data.name || ""} ${data.prijmeni || ""}`.trim() || (u.displayName || "Uživatel");
+      meNameEl.textContent = fullName;
+      pillText.textContent = fullName;
+      meAvatarEl.src = data.profilePicture || "https://placehold.co/240x240?text=Profil";
+
+      // Preview
+      renderPreview({ ...data, email: data.email || u.email });
     });
+
+    // Logout buttons
+    function doLogout(e){
+      e?.preventDefault();
+      signOut(auth).then(()=>window.location.href="index_main.html")
+                   .catch(err=>alert("Chyba při odhlášení: " + err.message));
+    }
+    document.getElementById("logoutBtn")?.addEventListener("click", doLogout);
+    document.getElementById("btnLogout")?.addEventListener("click", doLogout);
   </script>
 
-  <!-- Shared auth/navbar logic -->
+  <!-- Auth-driven navbar visibility (your existing helper) -->
   <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
