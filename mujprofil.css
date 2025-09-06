@@ -129,7 +129,7 @@ body.dark .hint{ color:#a9acb3; }
 
 /* Preview image */
 #profilePreview{
-  width:140px; height:140px; object-fit:cover; border-radius:14px;
+  width:200px; height:200px; object-fit:cover; border-radius:14px;
   border:1px solid #e5e7eb; background:#fafafa; margin-bottom:10px;
 }
 body.dark #profilePreview{ border-color:#333; background:#161616; }
