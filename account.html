@@ -5,51 +5,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CZTRAINERS | Účet & Zabezpečení</title>
   <link rel="stylesheet" href="account.css" />
-    <nav class="navbar">
+</head>
+<body>
+  <nav class="navbar">
     <div class="nav-logo">
       <a href="index_main.html"><img src="CZtrainers new better.png" alt="CZTRAINERS Logo"></a>
     </div>
 
-    <!-- RIGHT: pill + (desktop) theme + burger -->
     <div class="nav-right">
-      <!-- Profile/Login pill -->
       <a id="profilePill" class="nav-button profile-pill" href="register.html" aria-label="Přihlásit / registrace">
-        <!-- simple user icon -->
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:.45rem">
           <circle cx="12" cy="8" r="4"></circle><path d="M6 20a6 6 0 0112 0"></path>
         </svg>
         <span id="pillText">Login</span>
       </a>
-
-      <!-- desktop theme toggle -->
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv">
-        <span id="themeIcon">☀️</span>
-      </button>
-
-      <!-- Hamburger -->
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Přepnout motiv"><span id="themeIcon">☀️</span></button>
+      <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
 
-    <!-- DROPDOWN -->
     <div class="nav-links" id="navLinks" role="menu" aria-label="Navigace">
       <a href="o-nas.html" class="nav-button">O nás</a>
       <a href="login.html" class="nav-button" id="loginBtn">Přihlášení</a>
       <a href="#" class="nav-button" id="logoutBtn" style="display:none">Odhlásit se</a>
-
-      <!-- mobile theme toggle (desktop hides this one) -->
-      <button class="theme-toggle" id="themeToggleMobile" type="button" aria-label="Přepnout motiv (mobil)">
-        <span>🌗</span>
-      </button>
+      <button class="theme-toggle" id="themeToggleMobile" type="button" aria-label="Přepnout motiv (mobil)"><span>🌗</span></button>
     </div>
   </nav>
 
+  <div class="container">
+    <h1>Účet & Zabezpečení</h1>
+
+    <section class="panel">
+      <h2>Změnit e-mail</h2>
+      <input type="email" id="newEmail" placeholder="Nový e-mail" />
+      <button id="btnChangeEmail" class="btn-primary">Změnit e-mail</button>
+    </section>
+
+    <section class="panel">
+      <h2>Změnit heslo</h2>
+      <input type="password" id="newPassword" placeholder="Nové heslo (nebo nechte prázdné pro e-mailový odkaz)" />
+      <button id="btnChangePassword" class="btn-primary">Změnit heslo</button>
+    </section>
+
+    <section class="panel danger">
+      <h2>Smazat účet</h2>
+      <p>Tato akce je nevratná. Všechny údaje budou odstraněny.</p>
+      <button id="btnDeleteAccount" class="btn-danger">Smazat účet</button>
+    </section>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- FUNCTIONALITY -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged, reauthenticateWithPopup, EmailAuthProvider, 
-      updateEmail, sendEmailVerification, updatePassword, deleteUser, GoogleAuthProvider 
+    import {
+      getAuth, onAuthStateChanged,
+      reauthenticateWithCredential, reauthenticateWithPopup,
+      EmailAuthProvider, GoogleAuthProvider,
+      verifyBeforeUpdateEmail, sendEmailVerification, sendPasswordResetEmail,
+      updatePassword, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
@@ -69,137 +83,132 @@
     const db = getDatabase(app);
     const functions = getFunctions(app);
 
-    // Toast helper
+    // Simple toast
     function toast(msg) {
       const t = document.getElementById("toast");
       t.textContent = msg;
       t.className = "show";
-      setTimeout(() => (t.className = t.className.replace("show", "")), 3000);
+      setTimeout(() => (t.className = t.className.replace("show", "")), 3200);
     }
 
-    // Reauth helper (Google or password popup)
+    // Re-authenticate (password users → credential; Google users → popup)
     async function reauth(user) {
       try {
-        if (user.providerData[0]?.providerId === "password") {
+        const providerId = user.providerData?.[0]?.providerId || "password";
+        if (providerId === "password") {
           const email = prompt("Pro potvrzení zadejte svůj e-mail:");
-          const pass = prompt("Zadejte své heslo:");
+          const pass  = prompt("Zadejte své heslo:");
           if (!email || !pass) throw new Error("Chybí údaje.");
           const cred = EmailAuthProvider.credential(email, pass);
-          await reauthenticateWithPopup(user, cred);
+          await reauthenticateWithCredential(user, cred);
         } else {
           const provider = new GoogleAuthProvider();
           await reauthenticateWithPopup(user, provider);
         }
         return true;
       } catch (err) {
-        toast("Reautentizace selhala: " + err.message);
+        toast("Reautentizace selhala: " + (err?.message || err));
         return false;
       }
     }
 
-    // Change email
-    document.addEventListener("DOMContentLoaded", () => {
-      const btnEmail = document.getElementById("btnChangeEmail");
-      const btnPassword = document.getElementById("btnChangePassword");
-      const btnDelete = document.getElementById("btnDeleteAccount");
+    // Ensure logged in
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        toast("Nejste přihlášen.");
+      }
+    });
 
-      btnEmail.addEventListener("click", async () => {
-        const user = auth.currentUser;
-        if (!user) return toast("Nejste přihlášen.");
-        const newEmail = document.getElementById("newEmail").value.trim();
-        if (!newEmail) return toast("Zadejte e-mail.");
+    // Change email → send verify link to NEW email
+    document.getElementById("btnChangeEmail").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return toast("Nejste přihlášen.");
+      const newEmail = document.getElementById("newEmail").value.trim();
+      if (!newEmail) return toast("Zadejte nový e-mail.");
 
-        if (!(await reauth(user))) return;
+      if (!(await reauth(user))) return;
 
+      try {
+        await verifyBeforeUpdateEmail(user, newEmail); // sends link to new email
+        toast("Odeslán ověřovací odkaz na nový e-mail.");
+        // (optional) still-verified on old email:
+        await sendEmailVerification(user).catch(()=>{});
+      } catch (e) {
+        toast("Chyba změny e-mailu: " + e.message);
+      }
+    });
+
+    // Change password:
+    // - if field empty → send reset email
+    // - if filled → set directly after reauth
+    document.getElementById("btnChangePassword").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return toast("Nejste přihlášen.");
+      const newPass = document.getElementById("newPassword").value.trim();
+
+      if (!newPass) {
         try {
-          await updateEmail(user, newEmail);
-          await sendEmailVerification(user);
-          toast("E-mail změněn, ověřte prosím novou adresu.");
+          await sendPasswordResetEmail(auth, user.email);
+          toast("Odeslán e-mail pro změnu hesla.");
         } catch (e) {
-          toast("Chyba: " + e.message);
+          toast("Chyba při odesílání e-mailu: " + e.message);
         }
-      });
+        return;
+      }
 
-      // Change password
-      btnPassword.addEventListener("click", async () => {
-        const user = auth.currentUser;
-        if (!user) return toast("Nejste přihlášen.");
-        const newPass = document.getElementById("newPassword").value.trim();
-        if (!newPass) return toast("Zadejte nové heslo.");
+      if (!(await reauth(user))) return;
 
-        if (!(await reauth(user))) return;
+      try {
+        await updatePassword(user, newPass);
+        toast("Heslo změněno.");
+      } catch (e) {
+        toast("Chyba změny hesla: " + e.message);
+      }
+    });
 
+    // Delete account (+ Cloudinary & DB cleanup)
+    document.getElementById("btnDeleteAccount").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return toast("Nejste přihlášen.");
+      if (!confirm("Opravdu chcete smazat účet? Tuto akci nelze vrátit.")) return;
+
+      if (!(await reauth(user))) return;
+
+      try {
+        const uid = user.uid;
+
+        // read profile to see if we need extra cleanup
+        const snap = await get(ref(db, "users/" + uid));
+        const data = snap.exists() ? snap.val() : null;
+
+        // Try delete Cloudinary avatar (you uploaded with public_id `users/<uid>/pfp`)
         try {
-          await updatePassword(user, newPass);
-          toast("Heslo změněno.");
+          const delFn = httpsCallable(functions, "deleteCloudinaryImage");
+          await delFn({ publicId: `users/${uid}/pfp` });
         } catch (e) {
-          toast("Chyba: " + e.message);
+          console.warn("Cloudinary delete skipped/failed:", e);
         }
-      });
 
-      // Delete account
-      btnDelete.addEventListener("click", async () => {
-        const user = auth.currentUser;
-        if (!user) return toast("Nejste přihlášen.");
-        if (!confirm("Opravdu chcete smazat účet? Tuto akci nelze vrátit.")) return;
+        // DB cleanup (both places, just in case)
+        await Promise.allSettled([
+          remove(ref(db, "users/" + uid)),
+          remove(ref(db, "unverified-users/" + uid)),
+          remove(ref(db, "app-users/" + uid)),   // if you also store simple users
+          remove(ref(db, "roles/" + uid))        // if you keep roles
+        ]);
 
-        if (!(await reauth(user))) return;
+        // Auth removal
+        await deleteUser(user);
 
-        try {
-          const uid = user.uid;
-          const userRef = ref(db, "users/" + uid);
-          const snapshot = await get(userRef);
-          const data = snapshot.val();
-
-          // Cloudinary cleanup if avatarPublicId exists
-          if (data?.avatarPublicId) {
-            const delFn = httpsCallable(functions, "deleteCloudinaryImage");
-            await delFn({ publicId: data.avatarPublicId });
-            toast("Profilová fotka smazána z Cloudinary.");
-          }
-
-          // Firebase DB cleanup
-          await Promise.allSettled([
-            remove(ref(db, "users/" + uid)),
-            remove(ref(db, "unverified-users/" + uid))
-          ]);
-
-          // Auth account removal
-          await deleteUser(user);
-
-          toast("Účet byl úspěšně smazán.");
-          setTimeout(() => (window.location.href = "index_main.html"), 1500);
-        } catch (e) {
-          toast("Chyba při mazání účtu: " + e.message);
-        }
-      });
+        toast("Účet smazán.");
+        setTimeout(() => (window.location.href = "index_main.html"), 1200);
+      } catch (e) {
+        toast("Chyba při mazání účtu: " + e.message);
+      }
     });
   </script>
-</head>
-<body>
-  <div class="container">
-    <h1>Účet & Zabezpečení</h1>
 
-    <section class="panel">
-      <h2>Změnit e-mail</h2>
-      <input type="email" id="newEmail" placeholder="Nový e-mail" />
-      <button id="btnChangeEmail" class="btn-primary">Změnit e-mail</button>
-    </section>
-
-    <section class="panel">
-      <h2>Změnit heslo</h2>
-      <input type="password" id="newPassword" placeholder="Nové heslo" />
-      <button id="btnChangePassword" class="btn-primary">Změnit heslo</button>
-    </section>
-
-    <section class="panel danger">
-      <h2>Smazat účet</h2>
-      <p>Tato akce je nevratná. Všechny údaje budou odstraněny.</p>
-      <button id="btnDeleteAccount" class="btn-danger">Smazat účet</button>
-    </section>
-  </div>
-
-  <div id="toast"></div>
+  <!-- navbar logic -->
   <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
