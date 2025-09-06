@@ -240,6 +240,42 @@
       }
     });
 
+    // --- preview of selected profile photo ---
+    const preview = document.getElementById("profilePreview");
+
+    profileImageInput.addEventListener("change", () => {
+      const file = profileImageInput.files[0];
+
+      // clear preview if nothing selected
+      if (!file) {
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+        return;
+      }
+
+      // guard: only images + size limit
+      if (!file.type.startsWith("image/")) {
+        alert("Vybraný soubor není obrázek.");
+        profileImageInput.value = "";
+        preview.style.display = "none";
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert("Soubor je příliš velký. Maximální velikost je 500 KB.");
+        profileImageInput.value = "";
+        preview.style.display = "none";
+        return;
+      }
+
+      // show preview (use a blob URL; revoke old one if any)
+      if (preview.dataset.blobUrl) URL.revokeObjectURL(preview.dataset.blobUrl);
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.dataset.blobUrl = url;
+      preview.style.display = "block";
+    });
+
+
     // Helpers: downscale, NSFW, signature, signed upload
     async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
       const img = await new Promise((res, rej) => {
