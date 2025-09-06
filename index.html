@@ -56,8 +56,10 @@
       <form id="registerForm" class="form">
         <!-- Obrázek -->
         <div class="field">
-          <label for="profileImage">Přidejte profilový obrázek</label>
+          <label for="profileImage">Profilový obrázek</label>
+          <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
           <input type="file" id="profileImage" accept="image/*" />
+          <p class="hint">Max 500&nbsp;KB · Nevhodné obrázky se zamítnou.</p>
         </div>
 
         <!-- Osobní údaje -->

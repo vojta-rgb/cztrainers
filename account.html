@@ -161,6 +161,7 @@
       try {
         await updatePassword(user, newPass);
         toast("Heslo změněno.");
+        window.location.href = "index_main.html";
       } catch (e) {
         toast("Chyba změny hesla: " + e.message);
       }
