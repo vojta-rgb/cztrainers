@@ -147,6 +147,8 @@ body.dark .checkbox-group label:hover{ background:#1b212b; }
 .btn.btn-red{ background:crimson; color:#fff; }
 .btn.btn-red:hover{ filter:brightness(1.05); }
 
+.hint{ margin:2px 0 0; font-size:.85rem; color:#6b7280; }
+body.dark .hint{ color:#a9acb3; }
 /* ===== UNIVERSAL NAVBAR OVERRIDES (paste at the very end) ===== */
 
 nav.navbar {
