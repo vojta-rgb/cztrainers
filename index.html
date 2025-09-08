@@ -199,9 +199,12 @@
     </div>
   </main>
 
-  <!-- Load TFJS first, then NSFWJS (global "nsfwjs") -->
+  <!-- TFJS must load before nsfwjs -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <script src="https://unpkg.com/nsfwjs@2/dist/nsfwjs.min.js"></script>
+
+  <!-- Your local UMD build that exposes window.nsfwjs -->
+  <script src="vendor/nsfwjs.min.js"></script>
+
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
