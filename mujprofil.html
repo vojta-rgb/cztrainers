@@ -47,7 +47,7 @@
       <a href="#" class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
     </div>
   </nav>
-  
+
   <!-- PAGE -->
   <main class="page-wrapper">
     <div class="form-card">
@@ -82,7 +82,15 @@
           </div>
           <div class="field">
             <label for="phone">Telefon</label>
-            <input type="tel" id="phone" placeholder="+420 123 456 789" pattern="^\+?[0-9]{7,15}$" required />
+            <input
+              type="tel"
+              id="phone"
+              placeholder="+420 123 456 789"
+              inputmode="tel"
+              autocomplete="tel"
+              pattern="^\+?\d(?:\s?\d){6,14}$"
+              required
+            />
           </div>
         </div>
 
@@ -416,11 +424,14 @@
           document.querySelectorAll("#languageOptions input[type='checkbox']:checked")
         ).map(cb => cb.value);
 
+        const phoneRaw = form.phone.value.trim();
+        const phoneNormalized = (phoneRaw.startsWith('+') ? '+' : '') + phoneRaw.replace(/\D/g, '');
+
         const updated = {
           name: form.name.value,
           prijmeni: form.prijmeni.value,
           datum: form.datum.value,
-          phone: form.phone.value,
+          phone: phoneNormalized,
           gender: form.gender.value,
           location: form.location.value,
           bio: form.bio.value,
