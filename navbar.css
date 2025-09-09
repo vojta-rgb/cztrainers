@@ -78,15 +78,21 @@ body.dark .cznav__link:hover{ background:#2c72cc; border-color:#2c72cc; }
   .cznav__link{ width:100%; }
 }
 
-/* Center ALL items in the dropdown (anchors & buttons) */
-.cznav__menu > a,
-.cznav__menu > button {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
+/* Center dropdown items (only our navbar items) */
+.cznav__menu > .cznav__link,
+.cznav__menu > .nav-button {      /* keep if some pages still use old class */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   width: 100%;
 }
+
+/* Always respect hidden state */
+.cznav__menu [hidden] {
+  display: none !important;
+}
+
 
 html, body {
   margin: 0;
