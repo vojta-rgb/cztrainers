@@ -98,3 +98,9 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* Force normal weight in navbar text */
+.cznav,
+.cznav * {
+  font-weight: normal !important;
+}
