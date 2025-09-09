@@ -87,3 +87,8 @@ body.dark .cznav__link:hover{ background:#2c72cc; border-color:#2c72cc; }
   text-align: center !important;
   width: 100%;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}

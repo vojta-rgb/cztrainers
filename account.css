@@ -177,7 +177,6 @@ body {
   background: var(--light);
   color: var(--dark);
   margin: 0;
-  padding: 2rem;
 }
 
 .container {
