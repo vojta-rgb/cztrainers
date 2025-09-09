@@ -712,3 +712,100 @@ body.dark .nav-links .theme-toggle {
   color: var(--light);
   border-color: #2a2a2a;
 }
+
+/* =============== Modern Trainer Cards (non-breaking) =============== */
+:root{
+  --card-radius:16px;
+  --card-shadow:0 10px 24px rgba(0,0,0,.08);
+  --card-shadow-hover:0 14px 32px rgba(0,0,0,.12);
+  --header-h:84px;              /* top colored strip height */
+  --avatar-size:108px;
+}
+
+/* use your existing grid (.cards) – just looks great already */
+
+/* clickable card */
+.trainer-card{
+  display:block;
+  position:relative;
+  border-radius:var(--card-radius);
+  background:#fff;
+  box-shadow:var(--card-shadow);
+  text-decoration:none;
+  color:inherit;
+  overflow:hidden;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.trainer-card:hover{ transform:translateY(-2px); box-shadow:var(--card-shadow-hover); }
+
+/* colored strip on top (can be themed via data-accent) */
+.trainer-card .card-header{
+  height:var(--header-h);
+  background:linear-gradient(135deg, var(--primary), #2c72cc);
+}
+.trainer-card[data-accent="fit"] .card-header{ background:linear-gradient(135deg, #0072CE, #2c72cc); }
+.trainer-card[data-accent="strength"] .card-header{ background:linear-gradient(135deg, #0057b7, #1b6ee2); }
+.trainer-card[data-accent="yoga"] .card-header{ background:linear-gradient(135deg, #4f46e5, #6366f1); }
+.trainer-card[data-accent="rehab"] .card-header{ background:linear-gradient(135deg, #0ea5e9, #0284c7); }
+.trainer-card[data-accent="nutrition"] .card-header{ background:linear-gradient(135deg, #06b6d4, #0ea5e9); }
+
+/* avatar overlapping the header */
+.trainer-card .avatar-wrap{
+  position:absolute;
+  left:50%;
+  top: calc(var(--header-h) - var(--avatar-size)/2);
+  transform:translateX(-50%);
+  width:var(--avatar-size);
+  height:var(--avatar-size);
+  border-radius:50%;
+  padding:3px;              /* white ring */
+  background:#fff;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+}
+.trainer-card .avatar{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+/* card content */
+.trainer-card .card-body{
+  padding: calc(var(--avatar-size)/2 + 22px) 16px 16px;
+  text-align:center;
+}
+.trainer-card .name{
+  margin:0 0 6px;
+  font-weight:800;
+  font-size:1.08rem;
+}
+.trainer-card .meta{
+  display:flex; justify-content:center; gap:.5rem; flex-wrap:wrap;
+  font-size:.92rem; color:#6b7280; margin-bottom:.6rem;
+}
+.trainer-card .meta .sep{ opacity:.55; }
+
+/* tags/chips */
+.trainer-card .tags{
+  display:flex; justify-content:center; gap:.5rem; flex-wrap:wrap;
+}
+.trainer-card .tag{
+  font-weight:600; font-size:.85rem; white-space:nowrap;
+  padding:.28rem .6rem; border-radius:999px;
+  background:rgba(0,114,206,.12); color:#0b63b5;
+  border:1px solid rgba(0,114,206,.22);
+}
+.trainer-card .tag-more{
+  background:#eef2ff; border-color:#dbe3ff; color:#334155;
+}
+
+/* DARK mode */
+body.dark .trainer-card{ background:#161616; box-shadow:0 10px 24px rgba(0,0,0,.35); }
+body.dark .trainer-card .avatar-wrap{ background:#0f0f0f; }
+body.dark .trainer-card .meta{ color:#a1a1aa; }
+body.dark .trainer-card .tag{ background:rgba(44,114,204,.22); color:#cfe0ff; border-color:rgba(44,114,204,.3); }
+body.dark .trainer-card .tag-more{ background:#222; color:#d1d5db; border-color:#2d2d2d; }
+
+/* small polish on very narrow screens */
+@media (max-width:420px){
+  :root{ --avatar-size:96px; --header-h:78px; }
+}

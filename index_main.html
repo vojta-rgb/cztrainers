@@ -305,47 +305,78 @@
       return `profile.html?id=${encodeURIComponent(id)}`;
     }
 
-    function renderUsers(users) {
-      userList.innerHTML = "";
-      if (!users.length) {
-        userList.innerHTML = "<p>Žádní uživatelé nebyli nalezeni.</p>";
-        return;
-      }
-
-      users.forEach(([id, user]) => {
-        const href = safeProfileUrl(id);
-        if (!href) return;
-
-        const photoURL =
-          (typeof user.profilePicture === "string" && user.profilePicture.startsWith("http"))
-            ? user.profilePicture
-            : clThumb(id);
-
-        const name = (user.name || "").trim() || "Neznámý";
-        const lastName = (user.prijmeni || "").trim();
-
-        const card = document.createElement("a");
-        card.className = "card";
-        card.href = href;
-        card.innerHTML = `
-          <img class="profile-pic"
-               src="${photoURL}"
-               alt="Profilový obrázek"
-               onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
-          <div class="card-info">
-            <h3>${name} ${lastName}</h3>
-            <p><strong>Zkušenosti:</strong> ${user.experience || "-"} let</p>
-            <p><strong>Specializace:</strong> ${
-              Array.isArray(user.specializations)
-                ? user.specializations.join(", ")
-                : (user.specializations || "-")
-            }</p>
-            <p><strong>Lokalita:</strong> ${user.location || "-"}</p>
-          </div>
-        `;
-        userList.appendChild(card);
-      });
+  function renderUsers(users) {
+    userList.innerHTML = "";
+    if (!users.length) {
+      userList.innerHTML = "<p>Žádní uživatelé nebyli nalezeni.</p>";
+      return;
     }
+
+    const accentOf = (specsArr) => {
+      const s = (specsArr[0] || "").toLowerCase();
+      if (s.includes("silov")) return "strength";
+      if (s.includes("jóga")) return "yoga";
+      if (s.includes("rehab")) return "rehab";
+      if (s.includes("výživ") || s.includes("nutri")) return "nutrition";
+      return "fit"; // default blue
+    };
+
+    users.forEach(([id, user]) => {
+      const href = safeProfileUrl(id);
+      if (!href) return;
+
+      const photoURL =
+        (typeof user.profilePicture === "string" && user.profilePicture.startsWith("http"))
+          ? user.profilePicture
+          : clThumb(id);
+
+      const name = (user.name || "").trim() || "Neznámý";
+      const lastName = (user.prijmeni || "").trim();
+
+      const specs = Array.isArray(user.specializations)
+        ? user.specializations
+        : (typeof user.specializations === "string"
+            ? user.specializations.split(",").map(s => s.trim()).filter(Boolean)
+            : []);
+
+      const show = specs.slice(0, 3);
+      const moreCount = Math.max(0, specs.length - show.length);
+
+      const accent = accentOf(show);
+
+      const card = document.createElement("a");
+      card.className = "trainer-card";
+      card.href = href;
+      card.setAttribute("data-accent", accent);
+
+      card.innerHTML = `
+        <div class="card-header"></div>
+
+        <div class="avatar-wrap">
+          <img class="avatar"
+              src="${photoURL}"
+              alt="Profilový obrázek"
+              onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
+        </div>
+
+        <div class="card-body">
+          <h3 class="name">${name} ${lastName}</h3>
+          <div class="meta">
+            <span>📍 ${user.location || "-"}</span>
+            <span class="sep">•</span>
+            <span>🧠 ${user.experience ?? "-"} let praxe</span>
+          </div>
+
+          <div class="tags">
+            ${show.map(t => `<span class="tag">${t}</span>`).join("")}
+            ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
+          </div>
+        </div>
+      `;
+
+      userList.appendChild(card);
+    });
+  }
 
     const doFilter = (() => {
       let t;
