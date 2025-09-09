@@ -25,6 +25,26 @@ const logoutBtn = document.getElementById("logoutBtn");
 const hamburger = document.getElementById("hamburger");
 const navLinks  = document.getElementById("navLinks");
 
+// Helpers
+const show = (el, visible) => {
+  if (!el) return;
+  if (visible) {
+    el.removeAttribute("hidden");
+    el.style.display = "";
+  } else {
+    el.setAttribute("hidden", "");
+    el.style.display = "none";
+  }
+};
+
+async function getRole(uid){
+  try {
+    const snap = await get(ref(db, "roles/" + uid));
+    if (snap.exists()) return snap.val();        // e.g. "user" | "trainer"
+  } catch {}
+  return null;
+}
+
 // Hamburger toggle
 if (hamburger && navLinks) {
   hamburger.addEventListener("click", () => {
@@ -51,17 +71,9 @@ if (hamburger && navLinks) {
   btn.addEventListener("click", () => setMode(!document.body.classList.contains("dark")));
 })();
 
-// Role helper
-async function getRole(uid){
-  try {
-    const snap = await get(ref(db, "roles/" + uid));
-    if (snap.exists()) return snap.val();
-  } catch {}
-  return null;
-}
-
 // Auth → UI
 onAuthStateChanged(auth, async (user) => {
+  // default state (guest)
   let state = "guest";
   let name  = "Login";
   let pillHref = "register.html";
@@ -69,15 +81,15 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user && user.emailVerified) {
     const role = await getRole(user.uid);
-    const display = user.displayName || user.email?.split("@")[0] || "Uživatel";
+    const display = user.displayName || (user.email ? user.email.split("@")[0] : "Uživatel");
 
     if (role === "user") {
-      state = "app-user";
+      state = "app-user";          // regular app user (not trainer)
       name = display;
-      pillHref = "#";
+      pillHref = "#";              // no-op
       pillClickable = false;
     } else {
-      state = "trainer";
+      state = "trainer";           // trainer (or unknown role defaults here)
       name = display;
       pillHref = "trainer-profile.html";
       pillClickable = true;
@@ -90,8 +102,9 @@ onAuthStateChanged(auth, async (user) => {
     if (pillText) pillText.textContent = name;
   }
 
-  if (loginBtn)  loginBtn.style.display  = (state === "guest") ? "inline-block" : "none";
-  if (logoutBtn) logoutBtn.style.display = (state === "guest") ? "none" : "inline-block";
+  // Use `hidden` so external CSS can't force them visible
+  show(loginBtn,  state === "guest");
+  show(logoutBtn, state !== "guest");
 });
 
 // Logout
