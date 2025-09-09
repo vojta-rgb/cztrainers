@@ -104,3 +104,45 @@ html, body {
 .cznav * {
   font-weight: bold !important;
 }
+
+/* Mobile tweaks: keep controls compact and show a floating dropdown */
+@media (max-width: 767.98px) {
+  .cznav__logo img { height: 40px; }
+  .cznav__right { gap: .5rem; }
+  .cznav__pill { padding: .35rem .7rem; font-size: 14px; }
+  .cznav__hamburger { flex-shrink: 0; z-index: 1001; } /* never squeezed off */
+
+  /* Turn the menu into a floating sheet below the bar */
+  .cznav { position: sticky; top: 0; z-index: 1000; }
+  .cznav__menu {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: calc(56px + 8px);        /* approx navbar height + gap */
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    border-radius: 12px;
+    padding: .6rem;
+    display: none;                 /* stays hidden until .active */
+  }
+  .cznav__menu.active { display: flex !important; }
+
+  /* center items (anchors & buttons) */
+  .cznav__menu > a,
+  .cznav__menu > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
+}
+
+/* Dark sheet in dark mode */
+@media (max-width: 767.98px) {
+  body.dark .cznav__menu {
+    background: #1b1b1b;
+    border-color: #2a2a2a;
+  }
+}

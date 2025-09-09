@@ -184,3 +184,14 @@ body.dark .tag{ background:#444; color:var(--light); }
   opacity:0; transform:translateY(20px); transition:opacity .4s, transform .4s; z-index:9999;
 }
 .toast.show{ opacity:1; transform:translateY(0); }
+
+/* Ensure the search row never exceeds the viewport width */
+.search-wrap,
+#search {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .search-wrap { width: 100% !important; margin: 0 auto 1.25rem; }
+}
