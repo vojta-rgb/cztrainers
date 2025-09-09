@@ -77,3 +77,13 @@ body.dark .cznav__link:hover{ background:#2c72cc; border-color:#2c72cc; }
   body.dark .cznav__menu{ background:transparent; }
   .cznav__link{ width:100%; }
 }
+
+/* Center ALL items in the dropdown (anchors & buttons) */
+.cznav__menu > a,
+.cznav__menu > button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100%;
+}

@@ -40,67 +40,6 @@ body.dark::before {
   opacity: 0.04;
 }
 
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--primary);
-  padding: 1rem 2rem;
-  color: white;
-  flex-wrap: wrap;
-}
-
-.nav-logo img {
-  height: 60px;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.nav-button {
-  color: white;
-  background: transparent;
-  text-decoration: none;
-  border: 1px solid white;
-  border-radius: var(--radius);
-  padding: 0.4rem 0.8rem;
-  transition: 0.3s;
-  font-weight: 600;
-}
-
-.nav-button:hover {
-  background: white;
-  color: var(--primary);
-}
-
-.theme-toggle {
-  font-size: 1.2rem;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
-/* Hamburger */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: white;
-}
-
 /* Overlay */
 .overlay {
   background-color: rgba(0, 0, 0, 0.149);
