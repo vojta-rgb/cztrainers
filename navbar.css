@@ -1,0 +1,79 @@
+/* ========= CZTRAINERS isolated navbar ========= */
+.cznav{
+  position:relative;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.8rem 1.2rem;
+  background:#0072CE; color:#fff;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* make sure foreign CSS doesn’t leak in */
+.cznav *{ box-sizing:border-box; }
+
+/* Logo */
+.cznav__logo img{ height:50px; display:block; }
+
+/* Right side cluster */
+.cznav__right{ margin-left:auto; display:inline-flex; align-items:center; gap:.75rem; }
+
+/* Profile/Login pill */
+.cznav__pill{
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.45rem .9rem; border-radius:999px;
+  border:1px solid rgba(255,255,255,.85);
+  color:#fff; text-decoration:none; font-weight:600; line-height:1;
+  background:transparent; white-space:nowrap;
+}
+.cznav__pill:hover{ background:rgba(255,255,255,.12); }
+
+/* Theme toggle */
+.cznav__theme{
+  border:1px solid rgba(255,255,255,.85);
+  background:transparent; color:#fff;
+  padding:.45rem .6rem; border-radius:999px;
+  cursor:pointer; line-height:1;
+}
+
+/* Hamburger */
+.cznav__hamburger{
+  display:inline-flex; flex-direction:column; justify-content:center;
+  gap:4px; width:28px; height:22px; background:none; border:0; padding:0; cursor:pointer;
+}
+.cznav__hamburger span{ display:block; height:3px; border-radius:3px; background:#fff; }
+
+/* Dropdown menu */
+.cznav__menu{
+  display:none;
+  position:absolute; right:12px; top:calc(100% + 8px);
+  min-width:220px; padding:.6rem;
+  background:#fff; color:#111;
+  border:1px solid #e5e7eb; border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  flex-direction:column; gap:.6rem; z-index:1000;
+}
+.cznav__menu.active{ display:flex !important; }
+
+.cznav__link{
+  display:block; width:100%;
+  background:#fff; color:#111; text-decoration:none;
+  border:1px solid #e5e7eb; border-radius:12px;
+  padding:.5rem .75rem; font-weight:600;
+}
+.cznav__link:hover{ background:#0072CE; color:#fff; border-color:#0072CE; }
+
+/* Dark mode variants */
+body.dark .cznav{ color:#f4f4f4; }
+body.dark .cznav__menu{ background:#1b1b1b; border-color:#2a2a2a; }
+body.dark .cznav__link{ background:#202020; color:#f4f4f4; border-color:#2a2a2a; }
+body.dark .cznav__link:hover{ background:#2c72cc; border-color:#2c72cc; }
+
+/* Mobile: full-width block under the bar */
+@media (max-width:767.98px){
+  .cznav__menu{
+    position:static; right:auto; top:auto; min-width:0; width:100%;
+    margin-top:.6rem; padding:0; background:transparent; border:0; box-shadow:none;
+  }
+  body.dark .cznav__menu{ background:transparent; }
+  .cznav__link{ width:100%; }
+}

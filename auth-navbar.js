@@ -30,41 +30,38 @@ if (hamburger && navLinks) {
   hamburger.addEventListener("click", () => {
     navLinks.classList.toggle("active");
   });
-  // close after clicking any item (mobile UX)
   navLinks.querySelectorAll("a,button").forEach(el => {
     el.addEventListener("click", () => navLinks.classList.remove("active"));
   });
 }
 
-// Theme (bind both buttons if present)
-function bindTheme(btnId){
-  const btn = document.getElementById(btnId);
-  if(!btn) return;
-  const icon = document.getElementById("themeIcon"); // desktop icon only
-  const update = (isDark) => {
+// Theme (single button)
+(function bindTheme(){
+  const btn  = document.getElementById("themeToggle");
+  const icon = document.getElementById("themeIcon");
+  if (!btn) return;
+
+  const setMode = (isDark) => {
     document.body.classList.toggle("dark", isDark);
     if (icon) icon.textContent = isDark ? "🌙" : "☀️";
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
-  // init
-  if (localStorage.getItem("theme") === "dark") update(true);
-  btn.addEventListener("click", () => update(!document.body.classList.contains("dark")));
-}
-bindTheme("themeToggle");
-bindTheme("themeToggleMobile");
+
+  setMode(localStorage.getItem("theme") === "dark");
+  btn.addEventListener("click", () => setMode(!document.body.classList.contains("dark")));
+})();
 
 // Role helper
 async function getRole(uid){
   try {
     const snap = await get(ref(db, "roles/" + uid));
-    if (snap.exists()) return snap.val(); // "user" | "trainer" | etc.
+    if (snap.exists()) return snap.val();
   } catch {}
   return null;
 }
 
 // Auth → UI
 onAuthStateChanged(auth, async (user) => {
-  // default: guest
   let state = "guest";
   let name  = "Login";
   let pillHref = "register.html";
@@ -75,13 +72,11 @@ onAuthStateChanged(auth, async (user) => {
     const display = user.displayName || user.email?.split("@")[0] || "Uživatel";
 
     if (role === "user") {
-      // APP-USER: show name, pill does nothing
       state = "app-user";
       name = display;
       pillHref = "#";
       pillClickable = false;
     } else {
-      // USER / trainer: show name, goes to trainer-profile.html
       state = "trainer";
       name = display;
       pillHref = "trainer-profile.html";
