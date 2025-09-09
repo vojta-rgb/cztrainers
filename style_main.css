@@ -206,7 +206,7 @@ body.dark .tag{ background:#444; color:var(--light); }
     align-items: stretch;
   }
   #search{
-    height: 44px;
+    height: 60px;
     padding: 0.7rem 1rem;
     /* leave room for the overlay button */
     padding-right: calc(var(--filtry-w) + var(--filtry-gap) + 12px);
