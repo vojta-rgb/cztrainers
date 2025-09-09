@@ -102,5 +102,5 @@ html, body {
 /* Force normal weight in navbar text */
 .cznav,
 .cznav * {
-  font-weight: normal !important;
+  font-weight: bold !important;
 }
