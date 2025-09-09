@@ -274,3 +274,40 @@ button {
   from { bottom: 30px; opacity: 1; }
   to { bottom: 0; opacity: 0; }
 }
+
+/* ===== Dark mode overrides for the account page ===== */
+body.dark .panel{
+  background: #1e1e1e;         /* panel surface */
+  color: #f4f4f4;              /* text inside panel */
+  box-shadow: 0 4px 12px rgba(0,0,0,.45);
+}
+
+body.dark .panel.danger{
+  background: #1b1515;         /* subtle red-tinted surface */
+  border-color: #ef4444;
+}
+
+/* form fields */
+body.dark input,
+body.dark textarea,
+body.dark select{
+  background: #111;            /* field bg */
+  color: #f4f4f4;              /* field text */
+  border-color: #2a2a2a;
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder{
+  color: #a1a1aa;
+}
+
+/* keep buttons readable on dark */
+body.dark .btn-primary,
+body.dark .btn-danger{
+  color: #fff;
+}
+
+/* toast on dark */
+body.dark #toast{
+  background: #222;
+  color: #fff;
+}
