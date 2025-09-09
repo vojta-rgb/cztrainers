@@ -27,12 +27,11 @@
 }
 .cznav__pill:hover{ background:rgba(255,255,255,.12); }
 
-/* Theme toggle */
+/* Theme toggle — now plain emoji */
 .cznav__theme{
-  border:1px solid rgba(255,255,255,.85);
-  background:transparent; color:#fff;
-  padding:.45rem .6rem; border-radius:999px;
-  cursor:pointer; line-height:1;
+  background:transparent; border:0; color:#fff;
+  padding:0; cursor:pointer; line-height:1;
+  font-size:20px;
 }
 
 /* Hamburger */
@@ -55,7 +54,8 @@
 .cznav__menu.active{ display:flex !important; }
 
 .cznav__link{
-  display:block; width:100%;
+  display:flex; align-items:center; justify-content:center;
+  width:100%;
   background:#fff; color:#111; text-decoration:none;
   border:1px solid #e5e7eb; border-radius:12px;
   padding:.5rem .75rem; font-weight:600;
