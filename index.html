@@ -205,7 +205,6 @@
   <!-- Your local UMD build that exposes window.nsfwjs -->
   <script src="vendor/nsfwjs.min.js"></script>
 
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -296,24 +295,47 @@
       return new Promise((res) => canvas.toBlob(res, mime, quality));
     }
 
-    let nsfwModelPromise;
-    function getNSFWModel(){
-      // use the global provided by the script tag
-      const NSFW = window.nsfwjs;
-      if (!NSFW) throw new Error("NSFWJS failed to load");
-      return nsfwModelPromise ||= NSFW.load();
-    }
-    async function isImageSafe(file){
-      const model = await getNSFWModel();
-      const dataURL = await new Promise((res)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file);});
-      const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=dataURL; });
-      const preds = await model.classify(img);
-      const score = {Sexy:0,Porn:0,Hentai:0};
-      preds.forEach(p=>{ if(score[p.className]!=null) score[p.className]=p.probability; });
-      if (score.Porn + score.Hentai >= 0.2) return false;
-      if (score.Sexy >= 0.5) return false;
-      return true;
-    }
+    // ---------- NSFWJS (local if possible, otherwise CDN) ----------
+let nsfwModelPromise = null;
+
+// Try local model first; if missing (404), fall back to CDN
+async function getNSFWModel() {
+  if (nsfwModelPromise) return nsfwModelPromise;
+
+  const LOCAL_DIR = "./vendor/nsfw-model/";                 // directory that contains model.json + shard files
+  const LOCAL_PROBE = LOCAL_DIR + "model.json";
+  const CDN_DIR   = "https://unpkg.com/nsfwjs@2/dist/model/";
+
+  // Probe the local model.json (HEAD = cheap and fast)
+  let modelDir = CDN_DIR;
+    try {
+      const res = await fetch(LOCAL_PROBE, { method: "HEAD", cache: "no-store" });
+      if (res.ok) modelDir = LOCAL_DIR;
+    } catch (_) { /* ignore; use CDN */ }
+
+    // window.nsfwjs is provided by vendor/nsfwjs.min.js
+    const NS = window.nsfwjs;
+    if (!NS) throw new Error("NSFWJS UMD not loaded (vendor/nsfwjs.min.js)");
+
+    nsfwModelPromise = NS.load(modelDir);
+    return nsfwModelPromise;
+  }
+
+  // (optional) warm-up so first use is instant
+  getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
+
+  async function isImageSafe(file) {
+    const model = await getNSFWModel();
+    const dataURL = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataURL; });
+    const preds = await model.classify(img);
+    const score = { Sexy: 0, Porn: 0, Hentai: 0 };
+    preds.forEach(p => { if (score[p.className] != null) score[p.className] = p.probability; });
+    if (score.Porn + score.Hentai >= 0.2) return false;
+    if (score.Sexy >= 0.5) return false;
+    return true;
+  }
 async function getSignature(params){
   try {
     const r = await fetch(SIGNER_URL, {
@@ -338,7 +360,7 @@ async function getSignature(params){
       const { signature, apiKey } = await getSignature({ public_id, timestamp, overwrite:true, invalidate:true });
 
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", file, "pfp.jpg");   // instead of form.append("file", file)
       form.append("api_key", apiKey);
       form.append("timestamp", String(timestamp));
       form.append("public_id", public_id);
