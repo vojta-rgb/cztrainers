@@ -222,3 +222,36 @@ body.dark .tag{ background:#444; color:var(--light); }
     border-radius: 9999px;
   }
 }
+
+/* ==== Favorite (heart) button on trainer card ==== */
+.trainer-card .fav-btn{
+  position:absolute; top:10px; right:10px;
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.35rem .6rem;
+  background:#fff; color:#111; border:1px solid rgba(0,0,0,.08);
+  border-radius:999px; box-shadow:0 6px 16px rgba(0,0,0,.12);
+  font-weight:700; font-size:.92rem; cursor:pointer; z-index:5;
+  user-select:none;
+}
+.trainer-card .fav-btn .heart{
+  font-size:1.05rem; line-height:1; display:inline-block;
+}
+.trainer-card .fav-btn .count{
+  font-weight:700; opacity:.85;
+}
+.trainer-card .fav-btn:hover{ filter:brightness(1.03); transform:translateY(-1px); }
+.trainer-card .fav-btn:active{ transform:translateY(0); }
+.trainer-card .fav-btn.on{
+  background:#fff0f2; border-color:#f3c2ce; color:#c81e4a;
+}
+.trainer-card .fav-btn[disabled]{
+  opacity:.55; cursor:not-allowed;
+}
+
+/* dark */
+body.dark .trainer-card .fav-btn{
+  background:#0f0f0f; color:#e5e7eb; border-color:#222; box-shadow:0 10px 24px rgba(0,0,0,.45);
+}
+body.dark .trainer-card .fav-btn.on{
+  background:#2a0f18; border-color:#72273a; color:#ff8cab;
+}

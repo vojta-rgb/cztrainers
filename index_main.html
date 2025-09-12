@@ -86,6 +86,20 @@
           </div>
           <div id="f-exp-hint" class="small"></div>
         </fieldset>
+        <fieldset>
+          <legend>Oblíbení</legend>
+          <label style="display:block; margin:.25rem 0;">
+            <input type="checkbox" id="f-only-favs"> Moji oblíbení
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Řazení</legend>
+          <select id="f-sort" style="width:100%; height:40px; border-radius:10px; border:1px solid #e5e7eb; padding:0 .6rem;">
+            <option value="default">Výchozí</option>
+            <option value="popular">Nejoblíbenější</option>
+          </select>
+        </fieldset>
       </div>
       <div class="filters-actions">
         <button id="filtersClear" class="btn">Vymazat vše</button>
@@ -99,208 +113,230 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- Shared navbar logic for ALL pages -->
-  <script type="module" src="auth-navbar.js"></script>
+<script type="module">
+  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getDatabase, ref, onValue, set, remove, runTransaction
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  <!-- Page-specific logic (trainers list + filters) -->
-  <script type="module">
-    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  // --- Firebase ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+    authDomain: "cztrainers-dat1.firebaseapp.com",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cztrainers-dat1",
+    storageBucket: "cztrainers-dat1.appspot.com",
+    messagingSenderId: "369200533487",
+    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  };
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  const auth = getAuth(app);
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-    };
+  // --- Cloudinary thumb helper ---
+  const CLOUD_NAME = "dkt3pdcbe";
+  const clThumb = (uid) => `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
 
-    // Safe initialize
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
+  // --- DOM ---
+  const userList      = document.getElementById("userList");
+  const searchInput   = document.getElementById("search");
+  const loader        = document.getElementById("loader");
+  const filtersToggle = document.getElementById("filtersToggle");
+  const filtersPanel  = document.getElementById("filtersPanel");
+  const chipsWrap     = document.getElementById("activeChips");
 
-    // Cloudinary thumb helper
-    const CLOUD_NAME = "dkt3pdcbe";
-    function clThumb(uid) {
-      return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_320,h_320,q_auto,f_auto/users/${uid}/pfp`;
-    }
+  const boxLocations = document.getElementById("f-locations");
+  const boxSpecs     = document.getElementById("f-specs");
+  const boxLangs     = document.getElementById("f-langs");
+  const boxGenders   = document.getElementById("f-genders");
+  const expMinInput  = document.getElementById("f-exp-min");
+  const expMaxInput  = document.getElementById("f-exp-max");
+  const expHint      = document.getElementById("f-exp-hint");
 
-    // DOM
-    const userList      = document.getElementById("userList");
-    const searchInput   = document.getElementById("search");
-    const loader        = document.getElementById("loader");
-    const filtersToggle = document.getElementById("filtersToggle");
-    const filtersPanel  = document.getElementById("filtersPanel");
-    const chipsWrap     = document.getElementById("activeChips");
+  const onlyFavsCheckbox = document.getElementById("f-only-favs");
+  const sortSelect       = document.getElementById("f-sort");
 
-    const boxLocations = document.getElementById("f-locations");
-    const boxSpecs     = document.getElementById("f-specs");
-    const boxLangs     = document.getElementById("f-langs");
-    const boxGenders   = document.getElementById("f-genders");
-    const expMinInput  = document.getElementById("f-exp-min");
-    const expMaxInput  = document.getElementById("f-exp-max");
-    const expHint      = document.getElementById("f-exp-hint");
+  const btnApply = document.getElementById("filtersApply");
+  const btnClear = document.getElementById("filtersClear");
 
-    const btnApply = document.getElementById("filtersApply");
-    const btnClear = document.getElementById("filtersClear");
+  const toastEl = document.getElementById("toast");
+  const toast = (msg) => {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"), 1800);
+  };
 
-    // State
-    let allUsers = []; // [ [uid, user], ... ]
-    let facets   = null;
+  // --- State ---
+  let allUsers = [];                 // [ [uid, user], ... ]
+  let facets   = null;
+  let me = null;                     // current auth user
+  let myFavSet = new Set();          // trainer UIDs I favorited
+  let favCounts = {};                // { trainerUid: number }
 
-    // Toggle filters panel
-    filtersToggle.addEventListener("click", () => {
+  // toggle filters panel
+  filtersToggle.addEventListener("click", () => {
     const isHidden = filtersPanel.hasAttribute("hidden");
-    if (isHidden) {
-      // show
-      filtersPanel.removeAttribute("hidden");
-      filtersPanel.classList.add("open");
-    } else {
-      // hide
-      filtersPanel.setAttribute("hidden", "");
-      filtersPanel.classList.remove("open");
-    }
+    if (isHidden) { filtersPanel.removeAttribute("hidden"); filtersPanel.classList.add("open"); }
+    else { filtersPanel.setAttribute("hidden",""); filtersPanel.classList.remove("open"); }
   });
 
-    // Helpers
-    const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
+  // --- Facets helpers ---
+  const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
 
-    function buildFacets(users){
-      const locations = new Set(), specs = new Set(), langs = new Set(), genders = new Set();
-      let expMin = Infinity, expMax = -Infinity;
+  function buildFacets(users){
+    const locations = new Set(), specs = new Set(), langs = new Set(), genders = new Set();
+    let expMin = Infinity, expMax = -Infinity;
 
-      users.forEach(([_, u]) => {
-        uniqPush(locations, u.location);
-        uniqPush(genders,   u.gender);
+    users.forEach(([_, u]) => {
+      uniqPush(locations, u.location);
+      uniqPush(genders,   u.gender);
 
+      const sArr = Array.isArray(u.specializations) ? u.specializations :
+        (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
+      sArr.forEach(v => uniqPush(specs, v));
+
+      const lArr = Array.isArray(u.languages) ? u.languages :
+        (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
+      lArr.forEach(v => uniqPush(langs, v));
+
+      const e = Number(u.experience || 0);
+      if (Number.isFinite(e)) { expMin = Math.min(expMin, e); expMax = Math.max(expMax, e); }
+    });
+
+    if (!Number.isFinite(expMin)) expMin = 0;
+    if (!Number.isFinite(expMax)) expMax = 0;
+    return { locations, specs, langs, genders, expMin, expMax };
+  }
+
+  function checkboxList(container, name, values){
+    const arr = [...values].sort((a,b)=>a.localeCompare(b,'cs'));
+    container.innerHTML = arr.map(v => `
+      <label style="display:block; margin:.25rem 0;">
+        <input type="checkbox" name="${name}" value="${v}"> ${v}
+      </label>
+    `).join("") || "<span class='small'>Žádné položky</span>";
+  }
+
+  function populateFilters(){
+    checkboxList(boxLocations, "loc",    facets.locations);
+    checkboxList(boxSpecs,     "spec",   facets.specs);
+    checkboxList(boxLangs,     "lang",   facets.langs);
+    checkboxList(boxGenders,   "gender", facets.genders);
+
+    expMinInput.placeholder = String(facets.expMin);
+    expMaxInput.placeholder = String(facets.expMax);
+    expHint.textContent     = `Rozsah v datech: ${facets.expMin} – ${facets.expMax} let`;
+  }
+
+  // --- Filters ---
+  function getFiltersFromUI(){
+    const checked = (sel) => [...document.querySelectorAll(sel+':checked')].map(i=>i.value);
+    return {
+      q:      searchInput.value.trim().toLowerCase(),
+      loc:    checked('input[name="loc"]'),
+      spec:   checked('input[name="spec"]'),
+      lang:   checked('input[name="lang"]'),
+      gender: checked('input[name="gender"]'),
+      expMin: expMinInput.value ? Number(expMinInput.value) : null,
+      expMax: expMaxInput.value ? Number(expMaxInput.value) : null,
+      onlyFavs: !!onlyFavsCheckbox?.checked,
+      sort: sortSelect?.value || "default",
+    };
+  }
+
+  function applyFilters(users, f){
+    const q = f.q;
+    let out = users.filter(([id, u]) => {
+      if (q) {
+        const hay = [
+          u.name, u.prijmeni, u.bio,
+          Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
+          u.location
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (f.loc.length && !f.loc.includes(u.location)) return false;
+
+      if (f.spec.length) {
         const sArr = Array.isArray(u.specializations) ? u.specializations :
           (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
-        sArr.forEach(v => uniqPush(specs, v));
+        if (!f.spec.every(s => sArr.includes(s))) return false;
+      }
 
+      if (f.lang.length) {
         const lArr = Array.isArray(u.languages) ? u.languages :
           (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
-        lArr.forEach(v => uniqPush(langs, v));
+        if (!f.lang.some(l => lArr.includes(l))) return false;
+      }
 
-        const e = Number(u.experience || 0);
-        if (Number.isFinite(e)) { expMin = Math.min(expMin, e); expMax = Math.max(expMax, e); }
-      });
+      if (f.gender.length && !f.gender.includes(u.gender)) return false;
 
-      if (!Number.isFinite(expMin)) expMin = 0;
-      if (!Number.isFinite(expMax)) expMax = 0;
-      return { locations, specs, langs, genders, expMin, expMax };
+      const e = Number(u.experience || 0);
+      if (f.expMin != null && e < f.expMin) return false;
+      if (f.expMax != null && e > f.expMax) return false;
+
+      // NEW: Only my favorites
+      if (f.onlyFavs && me) {
+        if (!myFavSet.has(id)) return false;
+      } else if (f.onlyFavs && !me) {
+        // if user is not signed in and tries to filter onlyFavs, show none
+        return false;
+      }
+
+      return true;
+    });
+
+    // NEW: sorting
+    if (f.sort === "popular") {
+      out.sort((a,b) => (favCounts[b[0]] || 0) - (favCounts[a[0]] || 0));
     }
 
-    function checkboxList(container, name, values){
-      const arr = [...values].sort((a,b)=>a.localeCompare(b,'cs'));
-      container.innerHTML = arr.map(v => `
-        <label style="display:block; margin:.25rem 0;">
-          <input type="checkbox" name="${name}" value="${v}"> ${v}
-        </label>
-      `).join("") || "<span class='small'>Žádné položky</span>";
-    }
+    return out;
+  }
 
-    function populateFilters(){
-      checkboxList(boxLocations, "loc",    facets.locations);
-      checkboxList(boxSpecs,     "spec",   facets.specs);
-      checkboxList(boxLangs,     "lang",   facets.langs);
-      checkboxList(boxGenders,   "gender", facets.genders);
+  function renderChips(f){
+    const chips = [];
+    const add = (label, value, clearKey, clearVal) => {
+      chips.push(`<span class="chip">${label}: ${value} <button data-k="${clearKey}" data-v="${encodeURIComponent(clearVal || '')}">×</button></span>`);
+    };
 
-      expMinInput.placeholder = String(facets.expMin);
-      expMaxInput.placeholder = String(facets.expMax);
-      expHint.textContent     = `Rozsah v datech: ${facets.expMin} – ${facets.expMax} let`;
-    }
+    if (f.q) add("Hledat", f.q, "q");
+    f.loc.forEach(v => add("Lokalita", v, "loc", v));
+    f.spec.forEach(v => add("Specializace", v, "spec", v));
+    f.lang.forEach(v => add("Jazyk", v, "lang", v));
+    f.gender.forEach(v => add("Pohlaví", v, "gender", v));
+    if (f.expMin != null) add("Zkušenost ≥", f.expMin, "expMin");
+    if (f.expMax != null) add("Zkušenost ≤", f.expMax, "expMax");
+    if (f.onlyFavs) add("Filtr", "Moji oblíbení", "onlyFavs");
 
-    function getFiltersFromUI(){
-      const checked = (sel) => [...document.querySelectorAll(sel+':checked')].map(i=>i.value);
-      return {
-        q:      searchInput.value.trim().toLowerCase(),
-        loc:    checked('input[name="loc"]'),
-        spec:   checked('input[name="spec"]'),
-        lang:   checked('input[name="lang"]'),
-        gender: checked('input[name="gender"]'),
-        expMin: expMinInput.value ? Number(expMinInput.value) : null,
-        expMax: expMaxInput.value ? Number(expMaxInput.value) : null,
-      };
-    }
-
-    function applyFilters(users, f){
-      const q = f.q;
-      return users.filter(([_, u]) => {
-        if (q) {
-          const hay = [
-            u.name, u.prijmeni, u.bio,
-            Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
-            u.location
-          ].filter(Boolean).join(" ").toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-
-        if (f.loc.length && !f.loc.includes(u.location)) return false;
-
-        if (f.spec.length) {
-          const sArr = Array.isArray(u.specializations) ? u.specializations :
-            (typeof u.specializations === 'string' ? u.specializations.split(',').map(s=>s.trim()) : []);
-          if (!f.spec.every(s => sArr.includes(s))) return false; // require ALL selected specs
-        }
-
-        if (f.lang.length) {
-          const lArr = Array.isArray(u.languages) ? u.languages :
-            (typeof u.languages === 'string' ? u.languages.split(',').map(s=>s.trim()) : []);
-          if (!f.lang.some(l => lArr.includes(l))) return false; // at least ONE language
-        }
-
-        if (f.gender.length && !f.gender.includes(u.gender)) return false;
-
-        const e = Number(u.experience || 0);
-        if (f.expMin != null && e < f.expMin) return false;
-        if (f.expMax != null && e > f.expMax) return false;
-
-        return true;
-      });
-    }
-
-    function renderChips(f){
-      const chips = [];
-      const add = (label, value, clearKey, clearVal) => {
-        chips.push(`<span class="chip">${label}: ${value} <button data-k="${clearKey}" data-v="${encodeURIComponent(clearVal || '')}">×</button></span>`);
-      };
-
-      if (f.q) add("Hledat", f.q, "q");
-      f.loc.forEach(v => add("Lokalita", v, "loc", v));
-      f.spec.forEach(v => add("Specializace", v, "spec", v));
-      f.lang.forEach(v => add("Jazyk", v, "lang", v));
-      f.gender.forEach(v => add("Pohlaví", v, "gender", v));
-      if (f.expMin != null) add("Zkušenost ≥", f.expMin, "expMin");
-      if (f.expMax != null) add("Zkušenost ≤", f.expMax, "expMax");
-
-      chipsWrap.innerHTML = chips.join("") || "";
-      chipsWrap.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const k = btn.dataset.k;
-          const v = decodeURIComponent(btn.dataset.v||"");
-          switch (k) {
-            case "q": searchInput.value = ""; break;
-            case "expMin": expMinInput.value = ""; break;
-            case "expMax": expMaxInput.value = ""; break;
-            default: {
-              const selector = `input[name="${k}"][value="${CSS.escape(v)}"]`;
-              const el = document.querySelector(selector);
-              if (el) el.checked = false;
-            }
+    chipsWrap.innerHTML = chips.join("") || "";
+    chipsWrap.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.dataset.k;
+        const v = decodeURIComponent(btn.dataset.v||"");
+        switch (k) {
+          case "q": searchInput.value = ""; break;
+          case "expMin": expMinInput.value = ""; break;
+          case "expMax": expMaxInput.value = ""; break;
+          case "onlyFavs": if (onlyFavsCheckbox) onlyFavsCheckbox.checked = false; break;
+          default: {
+            const selector = `input[name="${k}"][value="${CSS.escape(v)}"]`;
+            const el = document.querySelector(selector);
+            if (el) el.checked = false;
           }
-          doFilter();
-        });
+        }
+        doFilter();
       });
-    }
+    });
+  }
 
-    function safeProfileUrl(id) {
-      if (!/^[A-Za-z0-9_-]+$/.test(id)) return null;
-      return `profile.html?id=${encodeURIComponent(id)}`;
-    }
+  function safeProfileUrl(id) {
+    if (!/^[A-Za-z0-9_-]+$/.test(id)) return null;
+    return `profile.html?id=${encodeURIComponent(id)}`;
+  }
 
+  // --- Rendering cards (now with the heart) ---
   function renderUsers(users) {
     userList.innerHTML = "";
     if (!users.length) {
@@ -314,7 +350,7 @@
       if (s.includes("jóga")) return "yoga";
       if (s.includes("rehab")) return "rehab";
       if (s.includes("výživ") || s.includes("nutri")) return "nutrition";
-      return "fit"; // default blue
+      return "fit";
     };
 
     users.forEach(([id, user]) => {
@@ -337,8 +373,11 @@
 
       const show = specs.slice(0, 3);
       const moreCount = Math.max(0, specs.length - show.length);
-
       const accent = accentOf(show);
+
+      const count = favCounts[id] || 0;
+      const isMine = me && me.uid === id;
+      const favOn = myFavSet.has(id);
 
       const card = document.createElement("a");
       card.className = "trainer-card";
@@ -347,6 +386,12 @@
 
       card.innerHTML = `
         <div class="card-header"></div>
+
+        <!-- Heart button -->
+        <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
+          <span class="heart">${favOn ? "♥" : "♡"}</span>
+          <span class="count">${count}</span>
+        </button>
 
         <div class="avatar-wrap">
           <img class="avatar"
@@ -374,43 +419,110 @@
     });
   }
 
-    const doFilter = (() => {
-      let t;
-      return function trigger(){
-        clearTimeout(t);
-        t = setTimeout(() => {
-          const f = getFiltersFromUI();
-          renderChips(f);
-          renderUsers(applyFilters(allUsers, f));
-        }, 150);
-      };
-    })();
+  // --- Favorite toggling ---
+  async function toggleFavorite(trainerId){
+    // Gate strangers
+    if (!me) {
+      toast("Pro ukládání oblíbených je potřeba účet.");
+      window.location.href = "register.html";
+      return;
+    }
+    if (trainerId === me.uid) return; // cannot favorite yourself
 
-    btnApply.addEventListener("click", () => {
-      doFilter();
-      filtersPanel.setAttribute("hidden", "");
-    });
-    btnClear.addEventListener("click", () => {
-      searchInput.value = "";
-      expMinInput.value = "";
-      expMaxInput.value = "";
-      document.querySelectorAll('#filtersPanel input[type="checkbox"]').forEach(cb => (cb.checked = false));
-      doFilter();
-    });
-    searchInput.addEventListener("input", doFilter);
-    filtersPanel.addEventListener("change", (e) => {
-      if (e.target.matches('input[type="checkbox"], input[type="number"]')) doFilter();
-    });
+    const favRef  = ref(db, `favoritesByUser/${me.uid}/${trainerId}`);
+    const countRef= ref(db, `favoriteCounts/${trainerId}`);
+    const already = myFavSet.has(trainerId);
 
-    // Load trainers
-    onValue(ref(db, "users/"), (snapshot) => {
-      loader.style.display = "none";
-      const data = snapshot.val() || {};
-      allUsers = Object.entries(data).filter(([_, user]) => user && user.email);
-      facets = buildFacets(allUsers);
-      populateFilters();
+    try {
+      if (already) {
+        // remove favorite
+        await remove(favRef);
+        await runTransaction(countRef, (cur) => Math.max(0, (cur || 0) - 1));
+        toast("Odebráno z oblíbených");
+      } else {
+        // add favorite
+        await set(favRef, { addedAt: Math.floor(Date.now()/1000) });
+        await runTransaction(countRef, (cur) => (cur || 0) + 1);
+        toast("Přidáno do oblíbených ✓");
+      }
+    } catch (e) {
+      alert("Nepodařilo se změnit oblíbené: " + (e?.message || e));
+    }
+  }
+
+  // --- Delegated click for hearts (stop link nav) ---
+  userList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".fav-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.getAttribute("data-id");
+    if (!id) return;
+    toggleFavorite(id);
+  });
+
+  // --- Filter reactiveness ---
+  const doFilter = (() => {
+    let t;
+    return function trigger(){
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const f = getFiltersFromUI();
+        renderChips(f);
+        renderUsers(applyFilters(allUsers, f));
+      }, 120);
+    };
+  })();
+
+  btnApply.addEventListener("click", () => {
+    doFilter();
+    filtersPanel.setAttribute("hidden", "");
+  });
+  btnClear.addEventListener("click", () => {
+    searchInput.value = "";
+    expMinInput.value = "";
+    expMaxInput.value = "";
+    document.querySelectorAll('#filtersPanel input[type="checkbox"]').forEach(cb => (cb.checked = false));
+    if (sortSelect) sortSelect.value = "default";
+    doFilter();
+  });
+  searchInput.addEventListener("input", doFilter);
+  filtersPanel.addEventListener("change", (e) => {
+    if (e.target.matches('input[type="checkbox"], input[type="number"], select')) doFilter();
+  });
+
+  // --- Data subscriptions ---
+  // trainers
+  onValue(ref(db, "users/"), (snapshot) => {
+    loader.style.display = "none";
+    const data = snapshot.val() || {};
+    allUsers = Object.entries(data).filter(([_, user]) => user && user.email);
+    facets = buildFacets(allUsers);
+    populateFilters();
+    doFilter();
+  });
+
+  // counts (public)
+  onValue(ref(db, "favoriteCounts"), (snap) => {
+    favCounts = snap.val() || {};
+    doFilter();
+  });
+
+  // auth + my favorites
+  onAuthStateChanged(auth, (user) => {
+    me = user && user.emailVerified ? user : null;
+
+    if (me) {
+      onValue(ref(db, `favoritesByUser/${me.uid}`), (snap) => {
+        const m = snap.val() || {};
+        myFavSet = new Set(Object.keys(m));
+        doFilter();
+      });
+    } else {
+      myFavSet = new Set();
       doFilter();
-    });
-  </script>
+    }
+  });
+</script>
 </body>
 </html>
