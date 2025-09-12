@@ -18,7 +18,11 @@
   font-size: 2rem;
   color: var(--primary);
 }
-.ur-subtitle { margin: 0 0 12px; color: #555; }
+.ur-subtitle { 
+  margin: 0 0 12px; 
+  color: #555;
+  text-align: center;
+}
 
 /* Container */
 .ur-container {
