@@ -255,12 +255,13 @@ body.dark .trainer-card .fav-btn{
 body.dark .trainer-card .fav-btn.on{
   background:#2a0f18; border-color:#72273a; color:#ff8cab;
 }
-/* ---- Dark mode for search bar ---- */
+/* ---- Dark mode for search bar and filters ---- */
 body.dark #search{
   background:#1e1e1e;          /* field background */
   color:#eaeaea;                /* text color */
   border-color:#2b2b2b;         /* subtle border */
 }
+body.dark .chip{ background:rgba(255,255,255,.12); color:#d1d5db; }
 /* placeholder + focus ring in dark */
 body.dark #search::placeholder{ color:#a1a1aa; }
 body.dark #search:focus{
