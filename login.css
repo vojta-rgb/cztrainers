@@ -157,3 +157,14 @@ body.dark .ur-foot {
 body.dark .ur-foot a {
   color: #6fb3ff;
 }
+
+/* Footer shouldn't stick to the bottom on the login page */
+.page-container{
+  min-height: auto;           /* was calc(100vh - 80px) */
+  margin: 40px auto 24px;     /* add a bit of bottom space before the footer */
+}
+
+/* If some cached CSS still wins, force it */
+@media all {
+  .page-container{ min-height: unset !important; }
+}
