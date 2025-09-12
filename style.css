@@ -156,3 +156,43 @@ body.dark .hint{ color:#a9acb3; }
   border:1px solid #e5e7eb; background:#fafafa; margin-bottom:10px;
 }
 body.dark #profilePreview{ border-color:#333; background:#161616; }
+
+/* Buttons */
+.ur-btn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #d9d9d9;
+  color: var(--dark);
+  background: #f9fafb;
+  transition: transform .12s ease, filter .12s ease, background .15s ease, color .15s ease;
+  margin-right: 10px;
+}
+.ur-btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
+
+.ur-btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.ur-btn-ghost {
+  background: #fff;
+}
+
+/* Footer */
+.ur-foot {
+  max-width: 1100px;
+  margin: 0 auto 26px;
+  padding: 0 18px;
+  color: #555;
+}
+.ur-foot a { color: var(--primary); text-decoration: none; font-weight: 600; }
+.ur-foot a:hover { text-decoration: underline; }
+
+/* Dark mode (cooperates with body.dark) */
+body.dark .ur-btn { background: #232323; color: #eaeaea; border-color: #2b2b2b; }
+body.dark .ur-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+body.dark .ur-foot { color: #cfcfcf; }

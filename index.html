@@ -188,12 +188,16 @@
 
         <!-- Actions -->
         <div class="actions">
-          <button type="submit" class="btn primary">Odeslat</button>
-          <button type="button" class="btn btn-red" onclick="window.location.href='register.html'">Zpět</button>
+        <button id="submitBtn" type="submit" class="ur-btn ur-btn-primary">Vytvořit účet</button>
+        <a class="ur-btn ur-btn-ghost" href="register.html">Zpět na výběr registrace</a>
         </div>
       </form>
     </div>
   </main>
+
+  <footer class="ur-foot">
+    <p>Máte účet? <a href="login.html">Přihlásit se</a></p>
+  </footer>
 
   <!-- TFJS must load before nsfwjs -->
   <script src="https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
