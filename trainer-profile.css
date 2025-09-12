@@ -59,6 +59,7 @@ body.dark .me-header{ background:#1e1e1e; }
   max-width: 1100px;
 }
 body.dark .me-sep{ background: rgba(255,255,255,.08); }
+body.dark .btn-cta{ background:#2a2a2a; }
 
 .preview-title{
   margin: 0 0 1rem 0;
