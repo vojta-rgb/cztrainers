@@ -255,3 +255,21 @@ body.dark .trainer-card .fav-btn{
 body.dark .trainer-card .fav-btn.on{
   background:#2a0f18; border-color:#72273a; color:#ff8cab;
 }
+/* ---- Dark mode for search bar ---- */
+body.dark #search{
+  background:#1e1e1e;          /* field background */
+  color:#eaeaea;                /* text color */
+  border-color:#2b2b2b;         /* subtle border */
+}
+/* placeholder + focus ring in dark */
+body.dark #search::placeholder{ color:#a1a1aa; }
+body.dark #search:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(43,125,233,.22);
+}
+/* If the browser autocompletes with a white fill (Safari/Chrome) */
+body.dark #search:-webkit-autofill{
+  -webkit-text-fill-color:#eaeaea;
+  -webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset;
+  box-shadow: 0 0 0px 1000px #1e1e1e inset;
+}
