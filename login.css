@@ -132,24 +132,28 @@ body.dark .btn.ghost:hover{ background:#141a22; }
 /* Message line */
 .message{ margin-top:12px; min-height:20px; text-align:center; }
 
-/* ---------- Auth Footer ---------- */
-.auth-footer {
+/* ---------- Footer (consistent with other pages) ---------- */
+.ur-foot {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 18px;
   text-align: center;
-  margin: 24px 0 32px;
   font-size: 0.95rem;
-  color: var(--muted);
+  color: #555;
 }
-.auth-footer a {
-  font-weight: 600;
+.ur-foot a {
   color: var(--primary);
   text-decoration: none;
+  font-weight: 600;
 }
-.auth-footer a:hover {
+.ur-foot a:hover {
   text-decoration: underline;
 }
-body.dark .auth-footer {
-  color: #cfd6df;
+
+/* Dark mode */
+body.dark .ur-foot {
+  color: #cfcfcf;
 }
-body.dark .auth-footer a {
+body.dark .ur-foot a {
   color: #6fb3ff;
 }
