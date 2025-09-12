@@ -131,3 +131,25 @@ body.dark .btn.ghost:hover{ background:#141a22; }
 
 /* Message line */
 .message{ margin-top:12px; min-height:20px; text-align:center; }
+
+/* ---------- Auth Footer ---------- */
+.auth-footer {
+  text-align: center;
+  margin: 24px 0 32px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.auth-footer a {
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+body.dark .auth-footer {
+  color: #cfd6df;
+}
+body.dark .auth-footer a {
+  color: #6fb3ff;
+}
