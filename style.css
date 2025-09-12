@@ -186,8 +186,8 @@ body.dark #profilePreview{ border-color:#333; background:#161616; }
 .ur-foot {
   max-width: 1100px;
   margin: 0 auto 26px;
-  text-align: center;
   padding: 20px;
+  text-align: center;
   color: #555;
 }
 .ur-foot a { color: var(--primary); text-decoration: none; font-weight: 600; }

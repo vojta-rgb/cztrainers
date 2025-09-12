@@ -21,7 +21,7 @@ html, body { margin:0; padding:0; font-family: 'Inter', system-ui, -apple-system
   font-size: 2rem;
   color: var(--primary);
 }
-.reg-subtitle { margin: 0 0 12px; color: #555; }
+.reg-subtitle { margin: 0 0 12px; color: #555;  text-align: center;}
 
 /* Container + grid */
 .reg-container {
