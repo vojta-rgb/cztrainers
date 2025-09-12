@@ -87,7 +87,7 @@ body.dark fieldset{ background:#181818; }
 
 .filters-actions{ display:flex; gap:.75rem; justify-content:flex-end; margin-top:.5rem; }
 .btn{ padding:.6rem .9rem; border-radius:.6rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
-.btn.primary{ background:#111827; color:#fff; border-color:#111827; }
+.btn.primary{ background:#0072CE; color:#fff; border-color:#0165b7; }
 
 .small{ font-size:.85rem; color:#6b7280; }
 
@@ -274,3 +274,6 @@ body.dark #search:-webkit-autofill{
   -webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset;
   box-shadow: 0 0 0px 1000px #1e1e1e inset;
 }
+/*sum button inside filters tweaks*/
+.btn:hover{ transform:translateY(-50%) scale(1.03); }
+.btn:active{ transform:translateY(-50%) scale(.98); }
