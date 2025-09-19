@@ -205,32 +205,76 @@
   let currentUserId = null;
   let editMode = false;          // if true, we’re editing our existing review
   let originalCreatedAt = null;  // preserve createdAt on edit
+  
+  // ===== Robust Czech profanity check (client-only) =====
+  // 1) Try to load bad-words-cz from multiple CDNs
+  // 2) If all fail, use a local Czech heuristic (stems + accent/leet normalization)
 
-  // badwords check (new one)
-  // Czech profanity check in-browser (no server)
-  // We lazy-load the library from a CDN so you don't need to install anything.
   let czFilter = null;
 
-  async function containsBadWords(text){
-    try {
-      if (!czFilter) {
-        const mod = await import("https://esm.sh/bad-words-cz@1.0.4");
-        const Filter = mod.default;       // the class exported by the package
-        czFilter = new Filter();          // Czech wordlist baked in
-      }
-      return czFilter.isProfane(String(text || ""));
-    } catch (e) {
-      console.warn("CZ filter load failed, falling back to English-only:", e);
-      // Last-resort fallback (English-only) so users aren’t blocked if CDN hiccups
+  async function loadCzFilter() {
+    const urls = [
+      "https://esm.sh/bad-words-cz@1.0.4",
+      "https://cdn.skypack.dev/bad-words-cz@1.0.4",
+      "https://jspm.dev/bad-words-cz@1.0.4"
+    ];
+    for (const u of urls) {
       try {
-        const r = await fetch(
-          `https://www.purgomalum.com/service/containsprofanity?text=${encodeURIComponent(text||"")}`
-        );
-        return (await r.text()) === "true";
-      } catch {
-        return false;
-      }
+        const mod = await import(u);
+        const Filter = mod.default || mod; // some CDNs export default
+        return new Filter();
+      } catch (_) {}
     }
+    return null;
+  }
+
+  // light Czech normalization (remove diacritics + basic leetspeak)
+  function normalizeCz(s) {
+    const map = {
+      á:"a", č:"c", ď:"d", é:"e", ě:"e", í:"i", ň:"n",
+      ó:"o", ř:"r", š:"s", ť:"t", ú:"u", ů:"u", ý:"y", ž:"z",
+      Á:"a", Č:"c", Ď:"d", É:"e", Ě:"e", Í:"i", Ň:"n",
+      Ó:"o", Ř:"r", Š:"s", Ť:"t", Ú:"u", Ů:"u", Ý:"y", Ž:"z"
+    };
+    let t = String(s || "").replace(/./gu, ch => map[ch] ?? ch).toLowerCase();
+    t = t
+      .replace(/[@]/g,"a").replace(/\$/g,"s")
+      .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e")
+      .replace(/4/g,"a").replace(/5/g,"s").replace(/7/g,"t");
+    // collapse non-letters to spaces
+    t = t.replace(/[^a-z0-9]+/g, " ");
+    return t;
+  }
+
+  // compact Czech stems to catch inflections
+  const CZ_STEMS = [
+    "kurv","pico","pica","pic","pich","pici","pice","picky",
+    "kunda","kund","kundy",
+    "kokot","kokoti",
+    "curak","curaci","curack","curaku","curacku",
+    "zmrd","zmrde","zmrdov",
+    "srač","srac","sraci","sracky",
+    "hovn","prdel","prdele",
+    "mrd","mrdk","mrdka","mrdat",
+    "suk","suka","sukani","šuk","šukat", // normalized handles diacritics
+    "debil","debile","blbec","blbci",
+    // a few English ones for completeness
+    "fuck","shit","bitch","asshole"
+  ];
+
+  function czechHeuristic(text) {
+    const t = normalizeCz(text);
+    return CZ_STEMS.some(stem => t.includes(stem));
+  }
+
+  async function containsBadWords(text) {
+    try {
+      if (!czFilter) czFilter = await loadCzFilter();
+      if (czFilter) return czFilter.isProfane(String(text || ""));
+    } catch (e) {
+      console.warn("CZ filter CDN failed, using heuristic:", e);
+    }
+    return czechHeuristic(text);
   }
 
   // get display name from your DB (users -> trainers, app-users -> normal users)
