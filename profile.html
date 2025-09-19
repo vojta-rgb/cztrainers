@@ -248,7 +248,28 @@
 
   // compact Czech stems to catch inflections
   const CZ_STEMS = [
-  "asshole"
+    // core vulgar stems (normalized, no diacritics)
+    "kurv","zkurv","prokurv","dojeb","pojeb","vyjeb","najeb","zajeb","jeb",
+    "mrdat","mrd","mrdk","promrd","vymrd","odmrd","zasmrd", // keep short "mrd" last in block
+    "prc","prcat","vyprc","sprc","opr","naprc",
+    "suk","sukat","presuk","vosuk","zasuk",
+    "pic","pico","pica","pice","pici","picov","picus","pich",
+    "kund","kunda","kundi","kundov","kundis",
+    "curak","curaci","curack",
+    "kokot","kokota","kokotin","kokotsk",
+    "zmrd","zmrdit","zmrde","zmrds",
+    "srac","srack","srat","posrat","nasrat","vysrat","osrat",
+    "zasran","posran","usran","presr",
+    "hovn","prdel","vprdel","doprdel",
+    "chcan","chcat","pochcat","nachcat","ochcan",
+    "pytelkouli","koule","koure","vykour", // sexual slang stems
+    "cecky","kozy","kozaře","kozama","kozat",
+    "prsa","prciny","koukatna prsa", // soft adult slang (will still match by stem)
+    "krava","svine","prasat","prase","parchant","parch",
+    "debil","debiln","idiot","blbec","blbka","blbost","magor","kreten","kripl","retard",
+    "sprostak","sprostarn",
+    // short english add-ons commonly used in CZ
+    "fuck","fucking","shit","bullshit","bitch","asshole","dick","cunt","bastard"
   ];
 
   function czechHeuristic(text) {
