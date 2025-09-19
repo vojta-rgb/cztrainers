@@ -75,14 +75,13 @@
     <!-- REVIEW SYSTEM END -->
   </div>
 
-  <!-- Profanity filter library -->
-  <script src="https://unpkg.com/washyourmouthoutwithsoap/dist/washyourmouthoutwithsoap.min.js"></script>
-
   <script type="module">
+    /* ===== Firebase imports ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+    /* ===== Firebase config ===== */
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -94,13 +93,15 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db  = getDatabase(app);
+    const auth = getAuth(app);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id');
+    /* ===== URL & DOM refs ===== */
+    const urlParams   = new URLSearchParams(window.location.search);
+    const userId      = urlParams.get("id"); // trainer id whose profile we view
     const profileCard = document.getElementById("profileCard");
-
-    function renderSocialLinks(socials = {}) {
+      
+  function renderSocialLinks(socials = {}) {
       const platforms = {
         instagram: usernameOrUrl =>
           usernameOrUrl?.startsWith("http")
@@ -191,24 +192,34 @@
       profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
     }
 
-    // ===== Review System (stars + profanity + redirects) =====
-    const auth = getAuth(app);
-
-    const reviewsList = document.getElementById("reviewsList");
+    /* ====== REVIEW SYSTEM ====== */
+    const reviewsSection      = document.getElementById("reviewsSection");
+    const reviewsList         = document.getElementById("reviewsList");
     const reviewFormContainer = document.getElementById("reviewFormContainer");
-    const reviewText = document.getElementById("reviewText");
-    const submitReview = document.getElementById("submitReview");
-    const reviewNotice = document.getElementById("reviewNotice");
-    const starRating = document.getElementById("starRating");
-    const reviewsSection = document.getElementById("reviewsSection");
+    const reviewText          = document.getElementById("reviewText");
+    const submitReview        = document.getElementById("submitReview");
+    const reviewNotice        = document.getElementById("reviewNotice");
+    const starRating          = document.getElementById("starRating");
     let selectedRating = 0;
 
-    // Guard: only attach review logic if the review section exists and we have a userId
+    // Only initialize if the review section exists and we have a trainer id
     if (reviewsSection && userId) {
-      // Profanity filter (global from the non-module script)
-      const filter = new WashYourMouthOutWithSoap();
 
-      // Star rating click handling
+      // --- Profanity check via PurgoMalum API (works for Czech) ---
+      async function containsBadWords(text) {
+        // If the service is unreachable, we choose "not profane" to avoid blocking legit users.
+        try {
+          const res = await fetch(
+            `https://www.purgomalum.com/service/containsprofanity?text=${encodeURIComponent(text)}`
+          );
+          return (await res.text()) === "true";
+        } catch {
+          console.warn("Profanity API unavailable – skipping check.");
+          return false;
+        }
+      }
+
+      // --- Star picker ---
       if (starRating) {
         starRating.querySelectorAll("span").forEach(star => {
           star.addEventListener("click", () => {
@@ -220,25 +231,24 @@
         });
       }
 
-      // Load existing reviews
+      // --- Load existing reviews ---
       function loadReviews() {
-        const reviewsRef = ref(db, `reviews/${userId}`);
-        onValue(reviewsRef, snapshot => {
-          if (!reviewsList) return;
+        const rRef = ref(db, `reviews/${userId}`);
+        onValue(rRef, snap => {
           reviewsList.innerHTML = "";
-          if (snapshot.exists()) {
-            const reviews = snapshot.val();
+          if (snap.exists()) {
+            const reviews = snap.val();
             Object.keys(reviews).forEach(uid => {
               const r = reviews[uid];
-              const div = document.createElement("div");
-              div.className = "review-card";
               const stars = Math.max(1, Math.min(5, Number(r.rating) || 0));
-              div.innerHTML = `
+              const card = document.createElement("div");
+              card.className = "review-card";
+              card.innerHTML = `
                 <div class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
                 <p class="review-text">"${r.text}"</p>
                 <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
               `;
-              reviewsList.appendChild(div);
+              reviewsList.appendChild(card);
             });
           } else {
             reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
@@ -247,53 +257,51 @@
       }
       loadReviews();
 
-      // Auth handling
+      // --- Auth gating (no self-review, only once, redirect strangers) ---
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           // Prevent self-review
-          const trainerSnap = await get(ref(db, "users/" + userId));
-          const trainerData = trainerSnap.val();
           if (user.uid === userId) {
-            if (reviewNotice) reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
+            reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
             return;
           }
 
           // One review per user per trainer
-          const userReviewSnap = await get(ref(db, `reviews/${userId}/${user.uid}`));
-          if (userReviewSnap.exists()) {
-            if (reviewNotice) reviewNotice.textContent = "Recenzi jste již napsali.";
+          const myReviewSnap = await get(ref(db, `reviews/${userId}/${user.uid}`));
+          if (myReviewSnap.exists()) {
+            reviewNotice.textContent = "Recenzi jste již napsali.";
             return;
           }
 
-          if (reviewFormContainer) reviewFormContainer.style.display = "block";
+          // Enable form
+          reviewFormContainer.style.display = "block";
 
-          if (submitReview) {
-            submitReview.onclick = async () => {
-              const text = (reviewText?.value || "").trim();
-              if (!text) { alert("Recenze nemůže být prázdná."); return; }
-              if (!selectedRating) { alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
-              if (filter.isProfane(text, "cs")) { alert("Recenze obsahuje zakázaná slova."); return; }
+          submitReview.onclick = async () => {
+            const text = (reviewText?.value || "").trim();
+            if (!text)          { alert("Recenze nemůže být prázdná."); return; }
+            if (!selectedRating){ alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
+            if (await containsBadWords(text)) { alert("Recenze obsahuje zakázaná slova."); return; }
 
-              const reviewData = {
-                text,
-                rating: selectedRating,
-                authorId: user.uid,
-                authorName: user.displayName || "Uživatel",
-                createdAt: Date.now()
-              };
-
-              await set(ref(db, `reviews/${userId}/${user.uid}`), reviewData);
-              if (reviewText) reviewText.value = "";
-              selectedRating = 0;
-              if (starRating) starRating.querySelectorAll("span").forEach(s => s.classList.remove("active"));
-              if (reviewNotice) reviewNotice.textContent = "Recenze byla odeslána.";
-              if (reviewFormContainer) reviewFormContainer.style.display = "none";
+            const reviewData = {
+              text,
+              rating: selectedRating,
+              authorId: user.uid,
+              authorName: user.displayName || "Uživatel",
+              createdAt: Date.now()
             };
-          }
+
+            await set(ref(db, `reviews/${userId}/${user.uid}`), reviewData);
+            reviewText.value = "";
+            selectedRating = 0;
+            starRating.querySelectorAll("span").forEach(s => s.classList.remove("active"));
+            reviewNotice.textContent = "Recenze byla odeslána.";
+            reviewFormContainer.style.display = "none";
+          };
+
         } else {
-          // Stranger: show notice and redirect on click
-          if (reviewNotice) reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
-          if (reviewFormContainer) reviewFormContainer.style.display = "none";
+          // Stranger: show notice and redirect on any click in the section
+          reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
+          reviewFormContainer.style.display = "none";
           reviewsSection.addEventListener("click", () => {
             window.location.href = "register.html";
           }, { once: true });
