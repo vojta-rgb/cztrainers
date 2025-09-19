@@ -64,143 +64,203 @@
     <div id="profileCard"></div>
   </main>
 
+  <!-- TRAINER REVIEWS (read-only with verify) -->
+  <section id="trainerReviews" class="reviews-container" style="margin-top:2rem;">
+    <h2>Recenze vašich klientů</h2>
+    <div id="trainerReviewsList" class="reviews-list"></div>
+  </section>
+
   <!-- Firebase + data -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, get, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-      authDomain: "cztrainers-dat1.firebaseapp.com",
-      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "cztrainers-dat1",
-      storageBucket: "cztrainers-dat1.appspot.com",
-      messagingSenderId: "369200533487",
-      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  const firebaseConfig = {
+    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+    authDomain: "cztrainers-dat1.firebaseapp.com",
+    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cztrainers-dat1",
+    storageBucket: "cztrainers-dat1.appspot.com",
+    messagingSenderId: "369200533487",
+    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getDatabase(app);
+
+  const profileCard = document.getElementById("profileCard");
+  const meNameEl    = document.getElementById("meName");
+  const meAvatarEl  = document.getElementById("meAvatar");
+  const pillText    = document.getElementById("pillText");
+  const profilePill = document.getElementById("profilePill");
+  const loginBtn    = document.getElementById("loginBtn");
+  const logoutBtn   = document.getElementById("logoutBtn");
+  const btnLogout   = document.getElementById("btnLogout");
+
+  function socialsFrom(user){
+    const s = user.socials || {};
+    return {
+      instagram: user.instagram || s.instagram || "",
+      facebook:  user.facebook  || s.facebook  || "",
+      tiktok:    user.tiktok    || s.tiktok    || ""
     };
+  }
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getDatabase(app);
-
-    const profileCard = document.getElementById("profileCard");
-    const meNameEl    = document.getElementById("meName");
-    const meAvatarEl  = document.getElementById("meAvatar");
-    const pillText    = document.getElementById("pillText");
-    const profilePill = document.getElementById("profilePill");
-    const loginBtn    = document.getElementById("loginBtn");
-    const logoutBtn   = document.getElementById("logoutBtn");
-    const btnLogout   = document.getElementById("btnLogout");
-
-    function socialsFrom(user){
-      // Support both user.socials.{...} and root instagram/facebook/tiktok
-      const s = user.socials || {};
-      return {
-        instagram: user.instagram || s.instagram || "",
-        facebook:  user.facebook  || s.facebook  || "",
-        tiktok:    user.tiktok    || s.tiktok    || ""
-      };
+  function renderSocialLinks(socials = {}) {
+    const platforms = {
+      instagram: v => v.startsWith("http") ? v : `https://instagram.com/${v.replace(/^@/,"")}`,
+      facebook:  v => v.startsWith("http") ? v : `https://facebook.com/${v.replace(/^@/,"")}`,
+      tiktok:    v => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace(/^@/,"")}`
+    };
+    let html = "";
+    for (const k in platforms){
+      const val = (socials[k]||"").trim();
+      if (!val) continue;
+      const link = platforms[k](val);
+      const label = val.startsWith("http") ? val : `@${val.replace(/^@/,"")}`;
+      html += `<a href="${link}" target="_blank" class="social-tag">${k} ${label}</a>`;
     }
+    return html || "<p>Žádné sociální sítě</p>";
+  }
 
-    function renderSocialLinks(socials = {}) {
-      const platforms = {
-        instagram: v => v.startsWith("http") ? v : `https://instagram.com/${v.replace(/^@/,"")}`,
-        facebook:  v => v.startsWith("http") ? v : `https://facebook.com/${v.replace(/^@/,"")}`,
-        tiktok:    v => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace(/^@/,"")}`
-      };
-      let html = "";
-      for (const k in platforms){
-        const val = (socials[k]||"").trim();
-        if (!val) continue;
-        const link = platforms[k](val);
-        const label = val.startsWith("http") ? val : `@${val.replace(/^@/,"")}`;
-        html += `<a href="${link}" target="_blank" class="social-tag">${k} ${label}</a>`;
-      }
-      return html || "<p>Žádné sociální sítě</p>";
-    }
+  function renderPreview(user){
+    const specs = Array.isArray(user.specializations) ? user.specializations
+                 : (typeof user.specializations === 'string' ? user.specializations.split(',').map(s=>s.trim()).filter(Boolean) : []);
+    const langs = Array.isArray(user.languages) ? user.languages
+                 : (typeof user.languages === 'string' ? user.languages.split(',').map(l=>l.trim()).filter(Boolean) : []);
+    const socials = socialsFrom(user);
 
-    function renderPreview(user){
-      const specs = Array.isArray(user.specializations) ? user.specializations
-                   : (typeof user.specializations === 'string' ? user.specializations.split(',').map(s=>s.trim()).filter(Boolean) : []);
-      const langs = Array.isArray(user.languages) ? user.languages
-                   : (typeof user.languages === 'string' ? user.languages.split(',').map(s=>s.trim()).filter(Boolean) : []);
-      const socials = socialsFrom(user);
-
-      profileCard.innerHTML = `
-        <div class="profile-container">
-          <div class="profile-left">
-            <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
-            <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-            <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
-            <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
-            <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
-            <p><strong>🌐 Moje sociální sítě:</strong></p>
-            <div class="socials-container">
-              ${renderSocialLinks(socials)}
-            </div>
-          </div>
-
-          <div class="profile-right">
-            <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
-
-            <p><strong>💪 Specializace:</strong></p>
-            <div class="tag-list">
-              ${specs.map(s=>`<span class="tag">${s}</span>`).join("") || "-"}
-            </div>
-
-            <p><strong>🗣️ Jazyky:</strong></p>
-            <div class="tag-list">
-              ${langs.map(l=>`<span class="tag">${l}</span>`).join("") || "-"}
-            </div>
-
-            <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
-            <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+    profileCard.innerHTML = `
+      <div class="profile-container">
+        <div class="profile-left">
+          <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
+          <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+          <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+          <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+          <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+          <p><strong>🌐 Moje sociální sítě:</strong></p>
+          <div class="socials-container">
+            ${renderSocialLinks(socials)}
           </div>
         </div>
-      `;
-    }
 
-    onAuthStateChanged(auth, async (u)=>{
-      // default header/pill
-      pillText.textContent = u?.emailVerified ? (u.displayName || "Profil") : "Login";
-      profilePill.href = u?.emailVerified ? "trainer-profile.html" : "register.html";
+        <div class="profile-right">
+          <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
 
-      if (!u || !u.emailVerified){
-        // show login in dropdown
-        if (loginBtn)  loginBtn.style.display = "inline-block";
-        if (logoutBtn) logoutBtn.style.display = "none";
-        meNameEl.textContent = "Nejste přihlášen/a";
+          <p><strong>💪 Specializace:</strong></p>
+          <div class="tag-list">
+            ${specs.map(s=>`<span class="tag">${s}</span>`).join("") || "-"}
+          </div>
+
+          <p><strong>🗣️ Jazyky:</strong></p>
+          <div class="tag-list">
+            ${langs.map(l=>`<span class="tag">${l}</span>`).join("") || "-"}
+          </div>
+
+          <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+          <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------- Trainer's own reviews (read-only + verify toggle) ----------
+  function starsLine(n){ n=Math.max(1,Math.min(5,Number(n)||0)); return "★".repeat(n)+"☆".repeat(5-n); }
+
+  function renderTrainerReviews(trainerId){
+    const listEl = document.getElementById("trainerReviewsList");
+    if (!listEl) return;
+
+    const rRef = ref(db, `reviews/${trainerId}`);
+    onValue(rRef, (snap)=>{
+      listEl.innerHTML = "";
+      if (!snap.exists()){
+        listEl.innerHTML = "<p>Zatím žádné recenze.</p>";
         return;
       }
+      const data = snap.val();
+      Object.entries(data).forEach(([reviewerId, r])=>{
+        const card = document.createElement("div");
+        card.className = "review-card";
 
-      // show logout in dropdown
-      if (loginBtn)  loginBtn.style.display = "none";
-      if (logoutBtn) logoutBtn.style.display = "inline-block";
+        const badge = r.verified
+          ? '<span class="badge badge--ok" title="Ověřená recenze">✔ Ověřeno</span>'
+          : '<span class="badge badge--pending" title="Čeká na ověření">Neověřeno</span>';
 
-      // Load trainer document
-      const snap = await get(ref(db, "users/" + u.uid));
-      const data = snap.exists() ? snap.val() : { name: u.displayName || "", email: u.email };
+        card.innerHTML = `
+          <div class="review-top">
+            <div class="review-stars">${starsLine(r.rating)}</div>
+            ${badge}
+            <button class="btn-verify" data-reviewer="${reviewerId}" data-state="${r.verified?1:0}">
+              ${r.verified ? "Zrušit ověření" : "Ověřit recenzi"}
+            </button>
+          </div>
+          <p class="review-text">"${r.text}"</p>
+          <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt||Date.now()).toLocaleDateString("cs-CZ")}</p>
+        `;
+        listEl.appendChild(card);
+      });
 
-      // Header fill
-      const fullName = `${data.name || ""} ${data.prijmeni || ""}`.trim() || (u.displayName || "Uživatel");
-      meNameEl.textContent = fullName;
-      pillText.textContent = fullName;
-      meAvatarEl.src = data.profilePicture || "https://placehold.co/240x240?text=Profil";
-
-      // Preview
-      renderPreview({ ...data, email: data.email || u.email });
+      // toggle verified (only flips the boolean field)
+      listEl.querySelectorAll(".btn-verify").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const reviewerId = btn.getAttribute("data-reviewer");
+          const current = btn.getAttribute("data-state")==="1";
+          try{
+            await set(ref(db, `reviews/${trainerId}/${reviewerId}/verified`), !current);
+          }catch(e){
+            console.error("Verify toggle denied:", e);
+            alert("Nelze změnit stav ověření (práva k databázi).");
+          }
+        });
+      });
+    }, (err)=>{
+      console.error("Reviews read error:", err);
+      listEl.innerHTML = "<p>Nepodařilo se načíst recenze.</p>";
     });
+  }
+  // ----------------------------------------------------------------------
 
-    // Logout buttons
-    function doLogout(e){
-      e?.preventDefault();
-      signOut(auth).then(()=>window.location.href="index_main.html")
-                   .catch(err=>alert("Chyba při odhlášení: " + err.message));
+  onAuthStateChanged(auth, async (u)=>{
+    // default header/pill
+    pillText.textContent = u?.emailVerified ? (u.displayName || "Profil") : "Login";
+    profilePill.href = u?.emailVerified ? "trainer-profile.html" : "register.html";
+
+    if (!u || !u.emailVerified){
+      if (loginBtn)  loginBtn.style.display = "inline-block";
+      if (logoutBtn) logoutBtn.style.display = "none";
+      meNameEl.textContent = "Nejste přihlášen/a";
+      return;
     }
-    document.getElementById("logoutBtn")?.addEventListener("click", doLogout);
-    document.getElementById("btnLogout")?.addEventListener("click", doLogout);
-  </script>
+
+    if (loginBtn)  loginBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
+
+    const snap = await get(ref(db, "users/" + u.uid));
+    const data = snap.exists() ? snap.val() : { name: u.displayName || "", email: u.email };
+
+    const fullName = `${data.name || ""} ${data.prijmeni || ""}`.trim() || (u.displayName || "Uživatel");
+    meNameEl.textContent = fullName;
+    pillText.textContent = fullName;
+    meAvatarEl.src = data.profilePicture || "https://placehold.co/240x240?text=Profil";
+
+    // preview card
+    renderPreview({ ...data, email: data.email || u.email });
+
+    // load my reviews + enable verify toggle
+    renderTrainerReviews(u.uid);
+  });
+
+  function doLogout(e){
+    e?.preventDefault();
+    signOut(auth).then(()=>window.location.href="index_main.html")
+                 .catch(err=>alert("Chyba při odhlášení: " + err.message));
+  }
+  document.getElementById("logoutBtn")?.addEventListener("click", doLogout);
+  document.getElementById("btnLogout")?.addEventListener("click", doLogout);
+</script>
 
   <!-- Auth-driven navbar visibility (your existing helper) -->
   <script type="module" src="auth-navbar.js"></script>
