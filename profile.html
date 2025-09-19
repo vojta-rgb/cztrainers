@@ -205,7 +205,7 @@
   let currentUserId = null;
   let editMode = false;          // if true, we’re editing our existing review
   let originalCreatedAt = null;  // preserve createdAt on edit
-  
+
   // ===== Robust Czech profanity check (client-only) =====
   // 1) Try to load bad-words-cz from multiple CDNs
   // 2) If all fail, use a local Czech heuristic (stems + accent/leet normalization)
@@ -248,18 +248,7 @@
 
   // compact Czech stems to catch inflections
   const CZ_STEMS = [
-    "kurv","pico","pica","pic","pich","pici","pice","picky",
-    "kunda","kund","kundy",
-    "kokot","kokoti",
-    "curak","curaci","curack","curaku","curacku",
-    "zmrd","zmrde","zmrdov",
-    "srač","srac","sraci","sracky",
-    "hovn","prdel","prdele",
-    "mrd","mrdk","mrdka","mrdat",
-    "suk","suka","sukani","šuk","šukat", // normalized handles diacritics
-    "debil","debile","blbec","blbci",
-    // a few English ones for completeness
-    "fuck","shit","bitch","asshole"
+  "asshole"
   ];
 
   function czechHeuristic(text) {
