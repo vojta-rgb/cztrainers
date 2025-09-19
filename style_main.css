@@ -346,3 +346,20 @@ body.dark .review-form-container textarea{background:#161616;color:#eaeaea;borde
   .review-form-container textarea{grid-column:1/-1}
   #submitReview{justify-self:start}
 }
+
+/* review form: checkbox + button polish */
+.anon-row{grid-column:1/2;display:flex;align-items:center;gap:.5rem;margin:.25rem 0 .25rem;font-weight:600;color:#374151}
+body.dark .anon-row{color:#d1d5db}
+.anon-row input{width:18px;height:18px;margin:0;accent-color:var(--primary)}
+
+#submitReview{
+  grid-column:2/3;justify-self:end;height:44px;padding:0 1.1rem;border:0;border-radius:999px;
+  background:var(--primary);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.12)
+}
+#submitReview:hover{filter:brightness(1.04);transform:translateY(-1px)}
+#submitReview:active{transform:none}
+
+/* stack nicely on small screens */
+@media(max-width:640px){
+  #submitReview{grid-column:1/-1;justify-self:start}
+}
