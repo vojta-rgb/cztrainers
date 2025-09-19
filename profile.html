@@ -75,203 +75,231 @@
     <!-- REVIEW SYSTEM END -->
   </div>
 
-  <!-- FIREBASE + PROFILE SCRIPT -->
+  <!-- Profanity filter library -->
+  <script src="https://unpkg.com/washyourmouthoutwithsoap/dist/washyourmouthoutwithsoap.min.js"></script>
+
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  // Czech profanity filter (bad-words-cz via CDN)
-  import Filter from "https://cdn.jsdelivr.net/npm/bad-words-cz@1.0.4/dist/bad-words-cz.esm.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  const filter = new Filter();
-  const firebaseConfig = {
-    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-    authDomain: "cztrainers-dat1.firebaseapp.com",
-    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "cztrainers-dat1",
-    storageBucket: "cztrainers-dat1.appspot.com",
-    messagingSenderId: "369200533487",
-    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('id');
-  const profileCard = document.getElementById("profileCard");
-
-  function renderSocialLinks(socials = {}) {
-    const platforms = {
-      instagram: usernameOrUrl =>
-        usernameOrUrl.startsWith("http")
-          ? usernameOrUrl
-          : `https://instagram.com/${usernameOrUrl.replace(/^@/, "")}`,
-      facebook: usernameOrUrl =>
-        usernameOrUrl.startsWith("http")
-          ? usernameOrUrl
-          : `https://facebook.com/${usernameOrUrl.replace(/^@/, "")}`,
-      tiktok: usernameOrUrl =>
-        usernameOrUrl.startsWith("http")
-          ? usernameOrUrl
-          : `https://tiktok.com/@${usernameOrUrl.replace(/^@/, "")}`
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    let html = "";
-    for (let key in platforms) {
-      if (socials[key] && socials[key].trim() !== "") {
-        const link = platforms[key](socials[key]);
-        const displayName = socials[key].startsWith("http")
-          ? socials[key]
-          : `@${socials[key].replace(/^@/, "")}`;
-        html += `<a href="${link}" target="_blank" class="social-tag">${key} ${displayName}</a>`;
-      }
-    }
-    return html || "<p>Žádné sociální sítě</p>";
-  }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  if (userId) {
-    const userRef = ref(db, 'users/' + userId);
-    get(userRef).then(snapshot => {
-      if (snapshot.exists()) {
-        const user = snapshot.val();
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+    const profileCard = document.getElementById("profileCard");
 
-        const specializations = Array.isArray(user.specializations)
-          ? user.specializations.join(', ')
-          : (typeof user.specializations === 'string' ? user.specializations : '-');
-
-        const languages = Array.isArray(user.languages)
-          ? user.languages.join(', ')
-          : (typeof user.languages === 'string' ? user.languages : '-');
-
-        profileCard.innerHTML = `
-          <div class="profile-container">
-            <div class="profile-left">
-              <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
-              <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-              <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
-              <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
-              <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
-              <p><strong>🌐 Moje sociální sítě:</strong></p>
-              <p> </p>
-              <div class="socials-container">
-                ${renderSocialLinks({
-                  instagram: user.instagram,
-                  facebook: user.facebook,
-                  tiktok: user.tiktok
-                })}
-              </div>
-            </div>
-            <div class="profile-right">
-              <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
-              <p><strong>💪 Specializace:</strong></p>
-              <div class="tag-list">
-                ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
-                  .map(s => `<span class="tag">${s.trim()}</span>`).join("") || "-"}
-              </div>
-              
-              <p><strong>🗣️ Jazyky:</strong></p>
-              <div class="tag-list">
-                ${(Array.isArray(user.languages) ? user.languages : (user.languages || "").split(","))
-                  .map(l => `<span class="tag">${l.trim()}</span>`).join("") || "-"}
-              </div>
-
-              <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
-              <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
-            </div>
-          </div>
-        `;
-      } else {
-        profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
-      }
-    }).catch(error => {
-      profileCard.innerHTML = `<p>Chyba načítání: ${error.message}</p>`;
-    });
-  } else {
-    profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
-  }
-
-  const starRating = document.getElementById("starRating");
-  let selectedRating = 0;
-
-  // Handle star selection
-  starRating.querySelectorAll("span").forEach(star => {
-    star.addEventListener("click", () => {
-      selectedRating = parseInt(star.dataset.value);
-      starRating.querySelectorAll("span").forEach(s => {
-        s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
-      });
-    });
-  });
-
-  // Load reviews
-  function loadReviews() {
-    const reviewsRef = dbRef(db, `reviews/${userId}`);
-    onValue(reviewsRef, snapshot => {
-      reviewsList.innerHTML = "";
-      if (snapshot.exists()) {
-        const reviews = snapshot.val();
-        Object.keys(reviews).forEach(uid => {
-          const r = reviews[uid];
-          const div = document.createElement("div");
-          div.className = "review-card";
-          div.innerHTML = `
-            <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
-            <p class="review-text">"${r.text}"</p>
-            <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
-          `;
-          reviewsList.appendChild(div);
-        });
-      } else {
-        reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
-      }
-    });
-  }
-
-  loadReviews();
-
-  // Handle auth
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const trainerSnap = await get(dbRef(db, "users/" + userId));
-      const trainerData = trainerSnap.val();
-      
-      if (user.uid === userId) {
-        reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
-        return;
-      }
-
-      const userReviewSnap = await get(dbRef(db, `reviews/${userId}/${user.uid}`));
-      if (userReviewSnap.exists()) {
-        reviewNotice.textContent = "Recenzi jste již napsali.";
-        return;
-      }
-
-      reviewFormContainer.style.display = "block";
-      submitReview.onclick = async () => {
-        const text = reviewText.value.trim();
-        if (!text) return alert("Recenze nemůže být prázdná.");
-        if (!selectedRating) return alert("Vyberte hodnocení (1–5 hvězdiček).");
-        if (filter.isProfane(text)) return alert("Recenze obsahuje zakázaná slova.");
-
-        const reviewData = {
-          text,
-          rating: selectedRating,
-          authorId: user.uid,
-          authorName: user.displayName || "Uživatel",
-          createdAt: Date.now()
-        };
-
-        await set(dbRef(db, `reviews/${userId}/${user.uid}`), reviewData);
-        reviewText.value = "";
-        selectedRating = 0;
-        starRating.querySelectorAll("span").forEach(s => s.classList.remove("active"));
-        reviewNotice.textContent = "Recenze byla odeslána.";
-        reviewFormContainer.style.display = "none";
+    function renderSocialLinks(socials = {}) {
+      const platforms = {
+        instagram: usernameOrUrl =>
+          usernameOrUrl?.startsWith("http")
+            ? usernameOrUrl
+            : `https://instagram.com/${String(usernameOrUrl).replace(/^@/, "")}`,
+        facebook: usernameOrUrl =>
+          usernameOrUrl?.startsWith("http")
+            ? usernameOrUrl
+            : `https://facebook.com/${String(usernameOrUrl).replace(/^@/, "")}`,
+        tiktok: usernameOrUrl =>
+          usernameOrUrl?.startsWith("http")
+            ? usernameOrUrl
+            : `https://tiktok.com/@${String(usernameOrUrl).replace(/^@/, "")}`
       };
-    } else {
-      reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
+
+      let html = "";
+      for (let key in platforms) {
+        if (socials[key] && String(socials[key]).trim() !== "") {
+          const link = platforms[key](socials[key]);
+          const displayName = String(socials[key]).startsWith("http")
+            ? socials[key]
+            : `@${String(socials[key]).replace(/^@/, "")}`;
+          html += `<a href="${link}" target="_blank" class="social-tag">${key} ${displayName}</a>`;
+        }
+      }
+      return html || "<p>Žádné sociální sítě</p>";
     }
-  });
+
+    // ===== Load trainer profile (UNCHANGED LOGIC) =====
+    if (userId) {
+      const userRef = ref(db, 'users/' + userId);
+      get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const user = snapshot.val();
+
+          const specializations = Array.isArray(user.specializations)
+            ? user.specializations.join(', ')
+            : (typeof user.specializations === 'string' ? user.specializations : '-');
+
+          const languages = Array.isArray(user.languages)
+            ? user.languages.join(', ')
+            : (typeof user.languages === 'string' ? user.languages : '-');
+
+          profileCard.innerHTML = `
+            <div class="profile-container">
+              <div class="profile-left">
+                <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
+                <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
+                <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+                <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
+                <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
+                <p><strong>🌐 Moje sociální sítě:</strong></p>
+                <p> </p>
+                <div class="socials-container">
+                  ${renderSocialLinks({
+                    instagram: user.instagram,
+                    facebook: user.facebook,
+                    tiktok: user.tiktok
+                  })}
+                </div>
+              </div>
+              <div class="profile-right">
+                <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
+                <p><strong>💪 Specializace:</strong></p>
+                <div class="tag-list">
+                  ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
+                    .map(s => `<span class="tag">${String(s).trim()}</span>`).join("") || "-"}
+                </div>
+                
+                <p><strong>🗣️ Jazyky:</strong></p>
+                <div class="tag-list">
+                  ${(Array.isArray(user.languages) ? user.languages : (user.languages || "").split(","))
+                    .map(l => `<span class="tag">${String(l).trim()}</span>`).join("") || "-"}
+                </div>
+
+                <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
+                <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+              </div>
+            </div>
+          `;
+        } else {
+          profileCard.innerHTML = "<p>Uživatel nebyl nalezen.</p>";
+        }
+      }).catch(error => {
+        profileCard.innerHTML = `<p>Chyba načítání: ${error.message}</p>`;
+      });
+    } else {
+      profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
+    }
+
+    // ===== Review System (stars + profanity + redirects) =====
+    const auth = getAuth(app);
+
+    const reviewsList = document.getElementById("reviewsList");
+    const reviewFormContainer = document.getElementById("reviewFormContainer");
+    const reviewText = document.getElementById("reviewText");
+    const submitReview = document.getElementById("submitReview");
+    const reviewNotice = document.getElementById("reviewNotice");
+    const starRating = document.getElementById("starRating");
+    const reviewsSection = document.getElementById("reviewsSection");
+    let selectedRating = 0;
+
+    // Guard: only attach review logic if the review section exists and we have a userId
+    if (reviewsSection && userId) {
+      // Profanity filter (global from the non-module script)
+      const filter = new WashYourMouthOutWithSoap();
+
+      // Star rating click handling
+      if (starRating) {
+        starRating.querySelectorAll("span").forEach(star => {
+          star.addEventListener("click", () => {
+            selectedRating = parseInt(star.dataset.value);
+            starRating.querySelectorAll("span").forEach(s => {
+              s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+            });
+          });
+        });
+      }
+
+      // Load existing reviews
+      function loadReviews() {
+        const reviewsRef = ref(db, `reviews/${userId}`);
+        onValue(reviewsRef, snapshot => {
+          if (!reviewsList) return;
+          reviewsList.innerHTML = "";
+          if (snapshot.exists()) {
+            const reviews = snapshot.val();
+            Object.keys(reviews).forEach(uid => {
+              const r = reviews[uid];
+              const div = document.createElement("div");
+              div.className = "review-card";
+              const stars = Math.max(1, Math.min(5, Number(r.rating) || 0));
+              div.innerHTML = `
+                <div class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
+                <p class="review-text">"${r.text}"</p>
+                <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
+              `;
+              reviewsList.appendChild(div);
+            });
+          } else {
+            reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
+          }
+        });
+      }
+      loadReviews();
+
+      // Auth handling
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // Prevent self-review
+          const trainerSnap = await get(ref(db, "users/" + userId));
+          const trainerData = trainerSnap.val();
+          if (user.uid === userId) {
+            if (reviewNotice) reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
+            return;
+          }
+
+          // One review per user per trainer
+          const userReviewSnap = await get(ref(db, `reviews/${userId}/${user.uid}`));
+          if (userReviewSnap.exists()) {
+            if (reviewNotice) reviewNotice.textContent = "Recenzi jste již napsali.";
+            return;
+          }
+
+          if (reviewFormContainer) reviewFormContainer.style.display = "block";
+
+          if (submitReview) {
+            submitReview.onclick = async () => {
+              const text = (reviewText?.value || "").trim();
+              if (!text) { alert("Recenze nemůže být prázdná."); return; }
+              if (!selectedRating) { alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
+              if (filter.isProfane(text, "cs")) { alert("Recenze obsahuje zakázaná slova."); return; }
+
+              const reviewData = {
+                text,
+                rating: selectedRating,
+                authorId: user.uid,
+                authorName: user.displayName || "Uživatel",
+                createdAt: Date.now()
+              };
+
+              await set(ref(db, `reviews/${userId}/${user.uid}`), reviewData);
+              if (reviewText) reviewText.value = "";
+              selectedRating = 0;
+              if (starRating) starRating.querySelectorAll("span").forEach(s => s.classList.remove("active"));
+              if (reviewNotice) reviewNotice.textContent = "Recenze byla odeslána.";
+              if (reviewFormContainer) reviewFormContainer.style.display = "none";
+            };
+          }
+        } else {
+          // Stranger: show notice and redirect on click
+          if (reviewNotice) reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
+          if (reviewFormContainer) reviewFormContainer.style.display = "none";
+          reviewsSection.addEventListener("click", () => {
+            window.location.href = "register.html";
+          }, { once: true });
+        }
+      });
+    }
   </script>
 
   <script type="module" src="auth-navbar.js"></script>
