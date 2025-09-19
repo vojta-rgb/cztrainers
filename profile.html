@@ -48,11 +48,41 @@
     <div id="profileCard" class="profilecard"></div>
   </div>
 
+  <div class="container">
+    <h1>Profil uživatele</h1>
+  <div id="profileCard" class="profilecard"></div>
+
+    <!-- REVIEW SYSTEM START -->
+    <div id="reviewsSection" class="reviews-container">
+      <h2>Recenze</h2>
+    <div id="reviewsList" class="reviews-list"></div>
+
+      <div id="reviewFormContainer" class="review-form-container" style="display:none;">
+        <label for="reviewRating">Hodnocení:</label>
+        <div id="starRating" class="star-rating">
+          <span data-value="1">★</span>
+          <span data-value="2">★</span>
+          <span data-value="3">★</span>
+          <span data-value="4">★</span>
+          <span data-value="5">★</span>
+        </div>
+
+        <textarea id="reviewText" placeholder="Napište svou recenzi..." rows="4"></textarea>
+        <button id="submitReview" class="btn primary">Odeslat recenzi</button>
+      </div>
+      <p id="reviewNotice" class="small"></p>
+    </div>
+    <!-- REVIEW SYSTEM END -->
+  </div>
+
   <!-- FIREBASE + PROFILE SCRIPT -->
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  // Czech profanity filter (bad-words-cz via CDN)
+  import Filter from "https://cdn.jsdelivr.net/npm/bad-words-cz@1.0.4/dist/bad-words-cz.esm.js";
 
+  const filter = new Filter();
   const firebaseConfig = {
     apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
     authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -159,6 +189,89 @@
   } else {
     profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
   }
+
+  const starRating = document.getElementById("starRating");
+  let selectedRating = 0;
+
+  // Handle star selection
+  starRating.querySelectorAll("span").forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.dataset.value);
+      starRating.querySelectorAll("span").forEach(s => {
+        s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+      });
+    });
+  });
+
+  // Load reviews
+  function loadReviews() {
+    const reviewsRef = dbRef(db, `reviews/${userId}`);
+    onValue(reviewsRef, snapshot => {
+      reviewsList.innerHTML = "";
+      if (snapshot.exists()) {
+        const reviews = snapshot.val();
+        Object.keys(reviews).forEach(uid => {
+          const r = reviews[uid];
+          const div = document.createElement("div");
+          div.className = "review-card";
+          div.innerHTML = `
+            <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
+            <p class="review-text">"${r.text}"</p>
+            <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
+          `;
+          reviewsList.appendChild(div);
+        });
+      } else {
+        reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
+      }
+    });
+  }
+
+  loadReviews();
+
+  // Handle auth
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const trainerSnap = await get(dbRef(db, "users/" + userId));
+      const trainerData = trainerSnap.val();
+      
+      if (user.uid === userId) {
+        reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
+        return;
+      }
+
+      const userReviewSnap = await get(dbRef(db, `reviews/${userId}/${user.uid}`));
+      if (userReviewSnap.exists()) {
+        reviewNotice.textContent = "Recenzi jste již napsali.";
+        return;
+      }
+
+      reviewFormContainer.style.display = "block";
+      submitReview.onclick = async () => {
+        const text = reviewText.value.trim();
+        if (!text) return alert("Recenze nemůže být prázdná.");
+        if (!selectedRating) return alert("Vyberte hodnocení (1–5 hvězdiček).");
+        if (filter.isProfane(text)) return alert("Recenze obsahuje zakázaná slova.");
+
+        const reviewData = {
+          text,
+          rating: selectedRating,
+          authorId: user.uid,
+          authorName: user.displayName || "Uživatel",
+          createdAt: Date.now()
+        };
+
+        await set(dbRef(db, `reviews/${userId}/${user.uid}`), reviewData);
+        reviewText.value = "";
+        selectedRating = 0;
+        starRating.querySelectorAll("span").forEach(s => s.classList.remove("active"));
+        reviewNotice.textContent = "Recenze byla odeslána.";
+        reviewFormContainer.style.display = "none";
+      };
+    } else {
+      reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
+    }
+  });
   </script>
 
   <script type="module" src="auth-navbar.js"></script>
