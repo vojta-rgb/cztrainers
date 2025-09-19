@@ -324,3 +324,19 @@ body.dark .review-form-container textarea{background:#161616;color:#eaeaea;borde
   .review-form-container textarea{grid-column:1/-1}
   #submitReview{justify-self:start}
 }
+/* === Review form spacing + button fix === */
+.review-form-container{gap:1rem 1.25rem}
+.review-form-container label{margin:.25rem 0 .35rem}
+.star-rating{margin:.15rem 0 .5rem}
+.review-form-container textarea{min-height:120px}
+
+/* put the button on its own row + tidy sizing */
+#submitReview{
+  grid-column:1/-1;           /* new row under the textarea */
+  justify-self:end;           /* align to the right */
+  display:inline-flex; align-items:center;
+  height:44px; padding:0 1rem;
+  border:0; border-radius:999px; line-height:1;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+#submitReview:active{transform:translateY(1px)}
