@@ -45,8 +45,8 @@
     </div>
   </nav>
 
-  <div class="container animate__animated animate__fadeIn">
-    <h1>Profil uživatele</h1>
+  <div class="container">
+    <h1 class="animate__animated animate__fadeInUp">Profil uživatele</h1>
     <div id="profileCard" class="profilecard"></div>
   </div>
 
@@ -148,7 +148,7 @@
             : (typeof user.languages === 'string' ? user.languages : '-');
 
           profileCard.innerHTML = `
-            <div class="profile-container">
+            <div class="profile-container animate__animated animate__fadeIn animate__slow">
               <div class="profile-left">
                 <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
                 <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
