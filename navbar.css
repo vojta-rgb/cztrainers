@@ -98,12 +98,6 @@ html, body {
   padding: 0;
 }
 
-/* Force normal weight in navbar text */
-.cznav,
-.cznav * {
-  font-weight: bold !important;
-}
-
 /* Mobile tweaks: keep controls compact and show a floating dropdown */
 @media (max-width: 767.98px) {
   .cznav__logo img { height: 40px; }
