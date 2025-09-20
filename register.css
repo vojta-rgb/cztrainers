@@ -47,7 +47,6 @@ html, body { margin:0; padding:0; font-family: 'Inter', system-ui, -apple-system
   flex-direction: column;
   overflow: hidden;
   transition: transform .18s ease, box-shadow .18s ease;
-  animation-duration: 2s;
 }
 .reg-card:hover {
   transform: translateY(-2px);
