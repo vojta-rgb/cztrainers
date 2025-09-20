@@ -98,6 +98,16 @@ html, body {
   padding: 0;
 }
 
+/* reset navbar text weight */
+.cznav,
+.cznav a,
+.cznav__pill,
+.cznav__link,
+.cznav__pill #pillText{
+  font-weight: 500;            /* or 400 if you want regular */
+  font-variation-settings: "wght" 500; /* Inter variable font safety */
+}
+
 /* Mobile tweaks: keep controls compact and show a floating dropdown */
 @media (max-width: 767.98px) {
   .cznav__logo img { height: 40px; }
@@ -138,14 +148,4 @@ html, body {
     background: #1b1b1b;
     border-color: #2a2a2a;
   }
-}
-
-/* reset navbar text weight */
-.cznav,
-.cznav a,
-.cznav__pill,
-.cznav__link,
-.cznav__pill #pillText{
-  font-weight: 600 !important;           /* or 400 if you want regular */
-  font-variation-settings: "wght" 500; /* Inter variable font safety */
 }
