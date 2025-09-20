@@ -22,7 +22,7 @@
   display:inline-flex; align-items:center; gap:.45rem;
   padding:.45rem .9rem; border-radius:999px;
   border:1px solid rgba(255,255,255,.85);
-  color:#fff; text-decoration:none; font-weight:600 !important; line-height:1;
+  color:#fff; text-decoration:none; font-weight:600; line-height:1;
   background:transparent; white-space:nowrap;
 }
 .cznav__pill:hover{ background:rgba(255,255,255,.12); }
@@ -98,14 +98,10 @@ html, body {
   padding: 0;
 }
 
-/* reset navbar text weight */
+/* Force normal weight in navbar text */
 .cznav,
-.cznav a,
-.cznav__pill,
-.cznav__link,
-.cznav__pill #pillText{
-  font-weight: 500;            /* or 400 if you want regular */
-  font-variation-settings: "wght" 500; /* Inter variable font safety */
+.cznav * {
+  font-weight: bold !important;
 }
 
 /* Mobile tweaks: keep controls compact and show a floating dropdown */
