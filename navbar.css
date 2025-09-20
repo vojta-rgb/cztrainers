@@ -146,6 +146,6 @@ html, body {
 .cznav__pill,
 .cznav__link,
 .cznav__pill #pillText{
-  font-weight: 500;           /* or 400 if you want regular */
+  font-weight: 600 !important;           /* or 400 if you want regular */
   font-variation-settings: "wght" 500; /* Inter variable font safety */
 }
