@@ -364,3 +364,5 @@ body.dark .anon-row{color:#d1d5db}
 @media(max-width:640px){
   #submitReview{grid-column:1/-1;justify-self:start}
 }
+/* =============== test =============== */
+.cznav__pill{display:inline-flex; align-items:center; gap:.45rem;padding:.45rem .9rem; border-radius:999px;border:1px solid rgba(255,255,255,.85);color:#fff; text-decoration:none; font-weight:600; line-height:1;background:transparent; white-space:nowrap; }
