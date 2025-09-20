@@ -47,6 +47,7 @@ html, body { margin:0; padding:0; font-family: 'Inter', system-ui, -apple-system
   flex-direction: column;
   overflow: hidden;
   transition: transform .18s ease, box-shadow .18s ease;
+  animation-duration: 2s;
 }
 .reg-card:hover {
   transform: translateY(-2px);
@@ -103,3 +104,11 @@ body.dark .reg-features { color: #d5d5d5; }
 body.dark .reg-btn { background: #232323; color: #eaeaea; border-color: #2b2b2b; }
 body.dark .reg-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 body.dark .reg-foot { color: #cfcfcf; }
+
+.my-element {
+  display: inline-block;
+  margin: 0 0.5rem;
+
+  animation: bounce; /* referring directly to the animation's @keyframe declaration */
+  animation-duration: 2s; /* don't forget to set a duration! */
+}
