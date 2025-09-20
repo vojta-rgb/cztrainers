@@ -13,9 +13,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 </head>
 <body>
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script>AOS.init({ duration: 700, once: true });</script>
-
   <!-- Navbar (isolated) -->
   <nav class="cznav" aria-label="Hlavní navigace">
     <div class="cznav__logo">
@@ -351,16 +348,7 @@
       return;
     }
 
-    const accentOf = (specsArr) => {
-      const s = (specsArr[0] || "").toLowerCase();
-      if (s.includes("silov")) return "strength";
-      if (s.includes("jóga")) return "yoga";
-      if (s.includes("rehab")) return "rehab";
-      if (s.includes("výživ") || s.includes("nutri")) return "nutrition";
-      return "fit";
-    };
-
-    users.forEach(([id, user]) => {
+    users.forEach(([id, user], idx) => {
       const href = safeProfileUrl(id);
       if (!href) return;
 
@@ -380,21 +368,37 @@
 
       const show = specs.slice(0, 3);
       const moreCount = Math.max(0, specs.length - show.length);
+
+      const accentOf = (arr) => {
+        const s = (arr[0] || "").toLowerCase();
+        if (s.includes("silov")) return "strength";
+        if (s.includes("jóga")) return "yoga";
+        if (s.includes("rehab")) return "rehab";
+        if (s.includes("výživ") || s.includes("nutri")) return "nutrition";
+        return "fit";
+      };
       const accent = accentOf(show);
 
-      const count = favCounts[id] || 0;
+      const count  = favCounts[id] || 0;
       const isMine = me && me.uid === id;
-      const favOn = myFavSet.has(id);
+      const favOn  = myFavSet.has(id);
+
+      // stagger: 0,80,160,240,… (wrap every 8 for long lists)
+      const delay = (idx % 8) * 80;
 
       const card = document.createElement("a");
       card.className = "trainer-card";
       card.href = href;
       card.setAttribute("data-accent", accent);
 
+      // AOS attributes
+      card.setAttribute("data-aos", "fade-up");
+      card.setAttribute("data-aos-delay", String(delay));
+      card.setAttribute("data-aos-anchor-placement", "top-bottom");
+
       card.innerHTML = `
         <div class="card-header"></div>
 
-        <!-- Heart button -->
         <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
           <span class="heart">${favOn ? "♥" : "♡"}</span>
           <span class="count">${count}</span>
@@ -414,7 +418,6 @@
             <span class="sep">•</span>
             <span>🧠 ${user.experience ?? "-"} let praxe</span>
           </div>
-
           <div class="tags">
             ${show.map(t => `<span class="tag">${t}</span>`).join("")}
             ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
@@ -424,6 +427,9 @@
 
       userList.appendChild(card);
     });
+
+    // Tell AOS new nodes were added
+    if (window.AOS) AOS.refreshHard();
   }
 
   // --- Favorite toggling ---
@@ -529,6 +535,15 @@
       myFavSet = new Set();
       doFilter();
     }
+  });
+</script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 650,            // animation length
+    easing: 'ease-out-quart', // feels snappy
+    once: true,               // animate only the first time
+    offset: 80                // start a bit before the card hits viewport
   });
 </script>
 </body>
