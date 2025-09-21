@@ -74,6 +74,20 @@
           <input type="password" id="password" placeholder="Min. 6 znaků" minlength="6" required />
         </label>
 
+        <!-- NEW: Age confirmation (required) -->
+        <label class="ur-check" style="display:flex;gap:.5rem;align-items:flex-start;margin:.5rem 0;">
+          <input type="checkbox" id="age16" required />
+          <span>Je mi alespoň 16 let.</span>
+        </label>
+
+        <!-- NEW: TOS & Privacy consent (required) -->
+        <label class="ur-check" style="display:flex;gap:.5rem;align-items:flex-start;margin:.25rem 0 1rem;">
+          <input type="checkbox" id="consentTos" required />
+          <span>Souhlasím se <a href="podminky.html" target="_blank" rel="noopener">Smluvními podmínkami</a> a se 
+            <a href="ochrana-osobnich-udaju.html" target="_blank" rel="noopener">Zásadami ochrany osobních údajů</a>.
+          </span>
+        </label>
+
         <button id="submitBtn" type="submit" class="ur-btn ur-btn-primary">Vytvořit účet</button>
         <a class="ur-btn ur-btn-ghost" href="register.html">Zpět na výběr registrace</a>
       </form>
@@ -82,6 +96,11 @@
 
   <footer class="ur-foot animate__animated animate__swing animate__delay-3s">
     <p>Máte účet? <a href="login.html">Přihlásit se</a></p>
+    <!-- Optional: global legal links -->
+    <p style="margin-top:.5rem">
+      <a href="podminky.html">Smluvní podmínky</a> ·
+      <a href="ochrana-osobnich-udaju.html">Zásady ochrany osobních údajů</a>
+    </p>
   </footer>
 
   <!-- Shared navbar auth logic (toggles register/login vs profile/account/logout) -->
@@ -118,6 +137,16 @@
       const email = (document.getElementById("email").value || "").trim();
       const password = document.getElementById("password").value;
 
+      // NEW: quick client-side checks (required already enforces too)
+      if (!document.getElementById("age16").checked) {
+        alert("Pro pokračování potvrďte, že je vám alespoň 16 let.");
+        return;
+      }
+      if (!document.getElementById("consentTos").checked) {
+        alert("Pro pokračování je nutný souhlas s podmínkami a zásadami.");
+        return;
+      }
+
       if (!name || !email || !password || password.length < 6) {
         alert("Vyplňte prosím všechny údaje. Heslo musí mít alespoň 6 znaků.");
         return;
@@ -135,11 +164,21 @@
           email,
           role: "user",
           emailVerified: false,
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          ageConfirmed: true
         });
 
         // Flat roles map for quick checks/rules
         await set(ref(db, "roles/" + uid), "user");
+
+        // NEW: store consent version + timestamp
+        const consentVersion = "2025-09-21"; // bump when you change texts
+        await set(ref(db, "app-users/" + uid + "/consent"), {
+          tos: true,
+          privacy: true,
+          version: consentVersion,
+          at: Date.now()
+        });
 
         await sendEmailVerification(cred.user);
         alert("Účet byl vytvořen. Poslali jsme vám ověřovací e-mail. Po ověření se přihlaste.");

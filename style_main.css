@@ -371,3 +371,6 @@ body.dark .anon-row{color:#d1d5db}
 @media (prefers-reduced-motion: reduce) {
   [data-aos] { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
+/* register-user.css additions (optional style polish) */
+.ur-check input{ width:18px; height:18px; margin:3px 0 0 0; accent-color: var(--primary); }
+.ur-check a{ color: var(--primary); text-decoration: underline; }
