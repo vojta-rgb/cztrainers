@@ -195,6 +195,45 @@
         const snap = await get(ref(db, "users/" + uid));
         const data = snap.exists() ? snap.val() : null;
 
+        // --- Archive a minimal snapshot BEFORE deletion ---
+        const [snapUsers, snapApp, snapUnv] = await Promise.all([
+          get(ref(db, "users/" + uid)),
+          get(ref(db, "app-users/" + uid)),
+          get(ref(db, "unverified-users/" + uid)),
+        ]);
+
+        const source = snapUsers.exists()
+          ? "users"
+          : snapApp.exists()
+          ? "app-users"
+          : snapUnv.exists()
+          ? "unverified-users"
+          : "none";
+
+        const base = snapUsers.val() || snapApp.val() || snapUnv.val() || {};
+
+        const archive = {
+          uid,
+          archivedAt: Date.now(),
+          reason: "user-initiated",   // or "account-deletion"
+          source,
+          profile: {
+            name: base.name || null,
+            prijmeni: base.prijmeni || null,
+            email: user.email || base.email || null,
+            location: base.location || null,
+            specializations: base.specializations || null,
+            languages: base.languages || null,
+            profilePicture: base.profilePicture || null,
+          },
+        };
+
+        try {
+          await set(ref(db, "deleted-users/" + uid), archive);
+        } catch (e) {
+          console.warn("Archiving to deleted-users failed (will continue):", e);
+        }
+
         // Try delete Cloudinary avatar (you uploaded with public_id `users/<uid>/pfp`)
         try {
           const delFn = httpsCallable(functions, "deleteCloudinaryImage");
