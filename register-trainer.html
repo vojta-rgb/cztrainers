@@ -201,6 +201,16 @@
         <a class="ur-btn ur-btn-ghost" href="register.html">Zpět na výběr registrace</a>
         </div>
       </form>
+      <!-- SUCCESS CARD (hidden by default) -->
+      <div id="successCard" class="rt-success-card" style="display:none">
+        <h3>✅ Účet vytvořen – ověřte e-mail</h3>
+        <p>Poslali jsme vám ověřovací e-mail. Otevřete schránku a klikněte na odkaz pro aktivaci účtu.</p>
+        <p style="opacity:.9">Nevidíte zprávu? Zkontrolujte Spam/Promo a počkejte pár minut.</p>
+        <div class="rt-success-actions">
+          <a class="rt-btn rt-btn-primary" href="login.html">Přejít na přihlášení</a>
+          <a class="rt-btn" href="index_main.html">Zpět na hlavní stránku</a>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -345,23 +355,23 @@ async function getNSFWModel() {
     if (score.Sexy >= 0.5) return false;
     return true;
   }
-async function getSignature(params){
-  try {
-    const r = await fetch(SIGNER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params)
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(()=>"(no body)");
-      throw new Error(`Signature service HTTP ${r.status}: ${txt}`);
+  async function getSignature(params){
+    try {
+      const r = await fetch(SIGNER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params)
+      });
+      if (!r.ok) {
+        const txt = await r.text().catch(()=>"(no body)");
+        throw new Error(`Signature service HTTP ${r.status}: ${txt}`);
+      }
+      return r.json();
+    } catch (e) {
+      console.error("Signer error:", e);
+      throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker). Zkontrolujte CORS a nasazení.");
     }
-    return r.json();
-  } catch (e) {
-    console.error("Signer error:", e);
-    throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker). Zkontrolujte CORS a nasazení.");
   }
-}
 
     async function uploadPfpSigned({ file, uid }){
       const public_id = `users/${uid}/pfp`;
@@ -391,6 +401,43 @@ async function getSignature(params){
         throw new Error(`Cloudinary chyba ${resp.status}: ${body}`);
       }
       return resp.json();
+    }
+
+    // === UX helpers: toast, button spinner, success card ===
+    const rtToastEl = document.getElementById("rt-toast");
+    function toast(msg){
+      if(!rtToastEl) return;
+      rtToastEl.textContent = String(msg || "");
+      rtToastEl.classList.add("show");
+      setTimeout(()=> rtToastEl.classList.remove("show"), 2600);
+    }
+
+    // OPTIONAL: replace blocking window.alert with non-blocking toast (no other edits needed)
+    // comment this line out if you still want native alerts:
+    window.alert = (m)=> toast(m);
+
+    const submitBtn = document.getElementById("submitBtn");
+    function setLoading(isOn){
+      if(!submitBtn) return;
+      if(isOn){
+        submitBtn.dataset.label = submitBtn.textContent;
+        submitBtn.classList.add("rt-loading");
+        submitBtn.innerHTML = '<span class="rt-spin" aria-hidden="true"></span>' + (submitBtn.dataset.label || "Odesílám…");
+        submitBtn.disabled = true;
+      }else{
+        submitBtn.classList.remove("rt-loading");
+        submitBtn.textContent = submitBtn.dataset.label || "Vytvořit účet";
+        submitBtn.disabled = false;
+      }
+    }
+
+    function showSuccessCard(){
+      const form = document.getElementById("registerForm");
+      const card = document.getElementById("successCard");
+      if(form && card){
+        form.style.display = "none";
+        card.style.display = "block";
+      }
     }
 
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
@@ -472,10 +519,12 @@ async function getSignature(params){
         // carry on — they can verify email and you can migrate on first login
       }
 
-      alert("Ověřovací e-mail byl odeslán. Zkontrolujte prosím doručenou poštu/spam.");
+      showSuccessCard();
+      toast("Odesláno – zkontrolujte e-mail.");
       await signOut(auth);
       this.reset();
-      window.location.href = "login.html";
+      // nechte uživatele vidět kartu a pak přesměrujte
+      setTimeout(()=>{ window.location.href = "login.html"; }, 2500);
 
     } catch (error) {
       alert("Chyba při registraci: " + error.message);
@@ -483,6 +532,8 @@ async function getSignature(params){
     }
   });
   </script>
+
   <script type="module" src="auth-navbar.js"></script>
+  <div id="rt-toast" class="rt-toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -197,3 +197,53 @@ body.dark #profilePreview{ border-color:#333; background:#161616; }
 body.dark .ur-btn { background: #232323; color: #eaeaea; border-color: #2b2b2b; }
 body.dark .ur-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 body.dark .ur-foot { color: #cfcfcf; }
+
+/* ==== Toast (bottom-right) ==== */
+.rt-toast{
+  position:fixed; bottom:20px; right:20px; z-index:9999;
+  background:#111; color:#fff; border-radius:12px;
+  padding:.7rem 1rem; box-shadow:0 8px 24px rgba(0,0,0,.18);
+  opacity:0; transform:translateY(10px);
+  transition:opacity .22s ease, transform .22s ease;
+  pointer-events:none;
+  max-width: 80vw;
+}
+.rt-toast.show{ opacity:1; transform:translateY(0); }
+@media (max-width:640px){
+  .rt-toast{ left:12px; right:12px; bottom:12px; }
+}
+body.dark .rt-toast{ background:#1e1e1e; }
+
+/* ==== Success card after registration ==== */
+.rt-success-card{
+  margin-top: 12px;
+  border:1px solid #bbf7d0;
+  background:#ecfdf5; color:#065f46;
+  border-radius:14px; padding:14px 16px;
+}
+.rt-success-card h3{ margin:.2rem 0 .4rem; font-weight:700; }
+.rt-success-card p{ margin:.2rem 0; }
+.rt-success-actions{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.6rem; }
+.rt-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:42px; padding:0 14px; border-radius:10px;
+  background:#fff; color:#0b63b5; text-decoration:none; border:1px solid #dbeafe;
+  font-weight:600;
+}
+.rt-btn:hover{ filter:brightness(1.03); }
+.rt-btn-primary{ background:#0072CE; color:#fff; border-color:#0072CE; }
+body.dark .rt-success-card{
+  background:#093a2e; color:#c7f9e5; border-color:#1b5f4f;
+}
+body.dark .rt-btn{ background:#1e293b; color:#cfe0ff; border-color:#334155; }
+body.dark .rt-btn-primary{ background:#2b7de9; border-color:#2b7de9; }
+
+/* ==== Button spinner (used by setLoading) ==== */
+.rt-loading{ opacity:.9; cursor:not-allowed; }
+.rt-spin{
+  display:inline-block; width:1em; height:1em;
+  border:.18em solid currentColor; border-right-color:transparent;
+  border-radius:50%; margin-right:.55em; animation:rtspin .8s linear infinite;
+  vertical-align:-.15em;
+}
+@keyframes rtspin{ to{ transform:rotate(360deg); } }
