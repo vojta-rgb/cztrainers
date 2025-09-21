@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zásady ochrany osobních údajů | CZTrainers</title>
+<style>
+  :root{--ink:#0f172a;--muted:#475569;--brand:#0072CE;--bg:#fff;--card:#fafafa}
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0}
+  .wrap{max-width:900px;margin:0 auto;padding:32px 18px}
+  h1{font-size:clamp(1.6rem,2.2vw,2.2rem);margin:.2rem 0 1rem;color:var(--brand)}
+  h2{margin:1.6rem 0 .6rem}
+  p,li{line-height:1.65;color:var(--ink)}
+  .muted{color:var(--muted)}
+  .card{background:var(--card);border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  ul{padding-left:1.1rem}
+  .kicker{font-weight:600;margin-bottom:10px}
+  .footer{margin-top:28px;font-size:.95rem;color:var(--muted)}
+  code{background:#f3f4f6;padding:.1rem .3rem;border-radius:6px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Zásady ochrany osobních údajů</h1>
+  <p class="muted">Poslední aktualizace: <strong>__DD.MM.RRRR__</strong></p>
+
+  <section class="card">
+    <p class="kicker">Správce údajů</p>
+    <p>
+      <strong>__NÁZEV PROVOZOVATELE__</strong><br>
+      IČO: __IČO__<br>
+      Sídlo: __ULICE A ČÍSLO__, __PSČ__ __MĚSTO__, Česká republika<br>
+      E-mail: <a href="mailto:__KONTAKT_EMAIL__">__KONTAKT_EMAIL__</a>
+    </p>
+  </section>
+
+  <h2>1. Jaké údaje zpracováváme</h2>
+  <ul>
+    <li><strong>Účet uživatele:</strong> e-mail, jméno (pokud vyplníte), heslo (uložené bezpečně ve službě Firebase Auth – neznáme jeho obsah).</li>
+    <li><strong>Profil trenéra:</strong> jméno a příjmení, fotografie, lokalita, telefon, e-mail, sociální sítě, zkušenosti, specializace, jazyky, ceník, bio.</li>
+    <li><strong>Provozní data:</strong> technické logy (IP, identifikátory zařízení/cookie pro udržení relace, časová razítka), oblíbení, recenze.</li>
+  </ul>
+
+  <h2>2. Účely a právní základy</h2>
+  <ul>
+    <li><strong>Poskytnutí služby a správa účtu</strong> – právní základ <em>plnění smlouvy</em> (čl. 6 odst. 1 písm. b) GDPR).</li>
+    <li><strong>Veřejná prezentace trenéra</strong> – <em>plnění smlouvy</em> a u fotografií/sociálních odkazů též <em>souhlas</em> (čl. 6 odst. 1 písm. a)).</li>
+    <li><strong>Bezpečnost a prevence zneužití</strong> – <em>oprávněný zájem</em> (čl. 6 odst. 1 písm. f)).</li>
+    <li><strong>Komunikace s vámi</strong> – <em>plnění smlouvy</em> nebo <em>oprávněný zájem</em> (podpora, notifikace).</li>
+    <li><strong>Marketing</strong> (pokud zvolíte) – pouze na základě <em>souhlasu</em>.</li>
+  </ul>
+
+  <h2>3. Doba uchování</h2>
+  <ul>
+    <li>Údaje účtu a profilu: po dobu existence účtu. Po smazání účtu si vyhrazujeme přiměřenou archivační lhůtu (např. 3–6 měsíců) pro řešení sporů a logy bezpečnosti.</li>
+    <li>Recenze a oblíbení: dokud jsou zobrazeny, nebo do odvolání/žádosti o výmaz dle níže uvedených práv.</li>
+    <li>Technické logy: obvykle 3–12 měsíců.</li>
+  </ul>
+
+  <h2>4. Příjemci a přenosy mimo EU</h2>
+  <ul>
+    <li><strong>Google Firebase</strong> (autentizace, databáze): zpracovatel dle smluvních podmínek a <em>Data Processing Terms</em>; přenosy mimo EU ošetřeny <em>Standardními smluvními doložkami (SCC)</em>.</li>
+    <li><strong>Cloudinary</strong> (hostování obrázků): zpracovatel s DPA a SCC.</li>
+    <li>Případně další poskytovatelé, budou uvedeni průběžně v této sekci.</li>
+  </ul>
+
+  <h2>5. Cookies</h2>
+  <p>Služba používá nezbytné cookies pro přihlášení a zabezpečení relace (Firebase). Pokud později zapneme analytické/marketingové cookies, zobrazíme vám volbu souhlasu. Podrobnosti najdete v nastavení prohlížeče nebo v samostatném oznámení o cookies, bude-li zavedeno.</p>
+
+  <h2>6. Vaše práva</h2>
+  <ul>
+    <li>právo na přístup (získat kopii údajů), opravu, výmaz, omezení zpracování, přenositelnost, vznést námitku;</li>
+    <li>právo odvolat souhlas kdykoli, pokud je zpracování na souhlasu založeno;</li>
+    <li>stížnost u dozorového úřadu: <a href="https://www.uoou.cz/" target="_blank" rel="noopener">ÚOOÚ</a>.</li>
+  </ul>
+
+  <h2>7. Děti</h2>
+  <p>Služba není určena dětem mladším 15/16 let. Pokud zjistíme, že zpracováváme údaje dítěte bez odpovídajícího souhlasu zákonného zástupce, účet zablokujeme a údaje odstraníme.</p>
+
+  <h2>8. Bezpečnost</h2>
+  <p>Údaje zabezpečujeme pomocí technických a organizačních opatření (šifrované přenosy HTTPS, řízení přístupu, audit logy). Hesla spravuje Firebase Auth (hashovaně); k jejich obsahu nemáme přístup.</p>
+
+  <h2>9. Změny zásad</h2>
+  <p>Tyto zásady můžeme aktualizovat. O významných změnách budeme informovat v rozhraní nebo e-mailem. Datum „Poslední aktualizace“ najdete nahoře na této stránce.</p>
+
+  <div class="footer">
+    <p>Kontakt pro žádosti subjektů údajů: <a href="mailto:__KONTAKT_EMAIL__">__KONTAKT_EMAIL__</a></p>
+  </div>
+</main>
+</body>
+</html>
