@@ -374,3 +374,29 @@ body.dark .anon-row{color:#d1d5db}
 /* register-user.css additions (optional style polish) */
 .ur-check input{ width:18px; height:18px; margin:3px 0 0 0; accent-color: var(--primary); }
 .ur-check a{ color: var(--primary); text-decoration: underline; }
+/* --- report UI --- */
+.review-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:.5rem;
+  margin-top:.35rem;
+}
+.report-btn{
+  background:transparent;
+  border:0;
+  color:#c2410c;
+  font-weight:700;
+  padding:.2rem .4rem;
+  border-radius:8px;
+  cursor:pointer;
+}
+.report-btn:hover{ background:rgba(234,88,12,.08); }
+.report-btn[disabled]{ opacity:.6; cursor:default; }
+
+.reported-pill{
+  display:inline-flex; align-items:center; gap:.35rem;
+  padding:.18rem .5rem; border-radius:999px;
+  font-size:.78rem; font-weight:700;
+  background:rgba(234,88,12,.12);
+  color:#c2410c; border:1px solid rgba(234,88,12,.25);
+}

@@ -77,6 +77,8 @@
     <!-- REVIEW SYSTEM END -->
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script type="module">
     /* ===== Firebase imports ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -103,7 +105,7 @@
     const userId      = urlParams.get("id"); // trainer id whose profile we view
     const profileCard = document.getElementById("profileCard");
       
-  function renderSocialLinks(socials = {}) {
+    function renderSocialLinks(socials = {}) {
       const platforms = {
         instagram: usernameOrUrl =>
           usernameOrUrl?.startsWith("http")
@@ -193,283 +195,370 @@
     } else {
       profileCard.innerHTML = "<p>Chybí ID uživatele v URL.</p>";
     }
-  /* ====== REVIEW SYSTEM (edit + anonymous + verified) ====== */
-  const reviewsSection      = document.getElementById("reviewsSection");
-  const reviewsList         = document.getElementById("reviewsList");
-  const reviewFormContainer = document.getElementById("reviewFormContainer");
-  const reviewText          = document.getElementById("reviewText");
-  const submitReview        = document.getElementById("submitReview");
-  const reviewNotice        = document.getElementById("reviewNotice");
-  const starRating          = document.getElementById("starRating");
-  const reviewAnon          = document.getElementById("reviewAnon");
-  let selectedRating = 0;
-  let currentUserId = null;
-  let editMode = false;          // if true, we’re editing our existing review
-  let originalCreatedAt = null;  // preserve createdAt on edit
 
-  // ===== Robust Czech profanity check (client-only) =====
-  // 1) Try to load bad-words-cz from multiple CDNs
-  // 2) If all fail, use a local Czech heuristic (stems + accent/leet normalization)
+    /* ====== REVIEW SYSTEM (edit + anonymous + verified) ====== */
+    const reviewsSection      = document.getElementById("reviewsSection");
+    const reviewsList         = document.getElementById("reviewsList");
+    const reviewFormContainer = document.getElementById("reviewFormContainer");
+    const reviewText          = document.getElementById("reviewText");
+    const submitReview        = document.getElementById("submitReview");
+    const reviewNotice        = document.getElementById("reviewNotice");
+    const starRating          = document.getElementById("starRating");
+    const reviewAnon          = document.getElementById("reviewAnon");
+    let selectedRating = 0;
+    let currentUserId = null;
+    let editMode = false;          // if true, we’re editing our existing review
+    let originalCreatedAt = null;  // preserve createdAt on edit
+    
+    // --- tiny toast (no alert) ---
+    const toastEl = document.getElementById("toast");
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(()=> toastEl.classList.remove("show"), 2200);
+    }
 
-  let czFilter = null;
+    // ===== Robust Czech profanity check (client-only) =====
+    // 1) Try to load bad-words-cz from multiple CDNs
+    // 2) If all fail, use a local Czech heuristic (stems + accent/leet normalization)
 
-  async function loadCzFilter() {
-    const urls = [
-      "https://esm.sh/bad-words-cz@1.0.4",
-      "https://cdn.skypack.dev/bad-words-cz@1.0.4",
-      "https://jspm.dev/bad-words-cz@1.0.4"
+    let czFilter = null;
+
+    async function loadCzFilter() {
+      const urls = [
+        "https://esm.sh/bad-words-cz@1.0.4",
+        "https://cdn.skypack.dev/bad-words-cz@1.0.4",
+        "https://jspm.dev/bad-words-cz@1.0.4"
+      ];
+      for (const u of urls) {
+        try {
+          const mod = await import(u);
+          const Filter = mod.default || mod; // some CDNs export default
+          return new Filter();
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    // light Czech normalization (remove diacritics + basic leetspeak)
+    function normalizeCz(s) {
+      const map = {
+        á:"a", č:"c", ď:"d", é:"e", ě:"e", í:"i", ň:"n",
+        ó:"o", ř:"r", š:"s", ť:"t", ú:"u", ů:"u", ý:"y", ž:"z",
+        Á:"a", Č:"c", Ď:"d", É:"e", Ě:"e", Í:"i", Ň:"n",
+        Ó:"o", Ř:"r", Š:"s", Ť:"t", Ú:"u", Ů:"u", Ý:"y", Ž:"z"
+      };
+      let t = String(s || "").replace(/./gu, ch => map[ch] ?? ch).toLowerCase();
+      t = t
+        .replace(/[@]/g,"a").replace(/\$/g,"s")
+        .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e")
+        .replace(/4/g,"a").replace(/5/g,"s").replace(/7/g,"t");
+      // collapse non-letters to spaces
+      t = t.replace(/[^a-z0-9]+/g, " ");
+      return t;
+    }
+
+    // compact Czech stems to catch inflections
+    const CZ_STEMS = [
+      // core vulgar stems (normalized, no diacritics)
+      "kurv","zkurv","prokurv","dojeb","pojeb","vyjeb","najeb","zajeb","jeb",
+      "mrdat","mrd","mrdk","promrd","vymrd","odmrd","zasmrd",
+      "prc","prcat","vyprc","sprc","opr","naprc",
+      "suk","sukat","presuk","vosuk","zasuk",
+      "pic","pico","pica","pice","pici","picov","picus","pich",
+      "kund","kunda","kundi","kundov","kundis",
+      "curak","curaci","curack",
+      "kokot","kokota","kokotin","kokotsk",
+      "zmrd","zmrdit","zmrde","zmrds",
+      "srac","srack","srat","posrat","nasrat","vysrat","osrat",
+      "zasran","posran","usran","presr",
+      "hovn","prdel","vprdel","doprdel",
+      "chcan","chcat","pochcat","nachcat","ochcan",
+      "pytelkouli","koule","koure","vykour",
+      "cecky","kozy","kozat",
+      "prsa","prciny",
+      "krava","svine","prasat","prase","parchant","parch",
+      "debil","debiln","idiot","blbec","blbka","blbost","magor","kreten","kripl","retard",
+      "sprostak","sprostarn",
+      "fuck","fucking","shit","bullshit","bitch","asshole","dick","cunt","bastard","niga","niger",
     ];
-    for (const u of urls) {
+
+    function czechHeuristic(text) {
+      const t = normalizeCz(text);
+      return CZ_STEMS.some(stem => t.includes(stem));
+    }
+
+    async function containsBadWords(text) {
       try {
-        const mod = await import(u);
-        const Filter = mod.default || mod; // some CDNs export default
-        return new Filter();
-      } catch (_) {}
+        if (!czFilter) czFilter = await loadCzFilter();
+        if (czFilter) return czFilter.isProfane(String(text || ""));
+      } catch (e) {
+        console.warn("CZ filter CDN failed, using heuristic:", e);
+      }
+      return czechHeuristic(text);
     }
-    return null;
-  }
 
-  // light Czech normalization (remove diacritics + basic leetspeak)
-  function normalizeCz(s) {
-    const map = {
-      á:"a", č:"c", ď:"d", é:"e", ě:"e", í:"i", ň:"n",
-      ó:"o", ř:"r", š:"s", ť:"t", ú:"u", ů:"u", ý:"y", ž:"z",
-      Á:"a", Č:"c", Ď:"d", É:"e", Ě:"e", Í:"i", Ň:"n",
-      Ó:"o", Ř:"r", Š:"s", Ť:"t", Ú:"u", Ů:"u", Ý:"y", Ž:"z"
-    };
-    let t = String(s || "").replace(/./gu, ch => map[ch] ?? ch).toLowerCase();
-    t = t
-      .replace(/[@]/g,"a").replace(/\$/g,"s")
-      .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e")
-      .replace(/4/g,"a").replace(/5/g,"s").replace(/7/g,"t");
-    // collapse non-letters to spaces
-    t = t.replace(/[^a-z0-9]+/g, " ");
-    return t;
-  }
-
-  // compact Czech stems to catch inflections
-  const CZ_STEMS = [
-    // core vulgar stems (normalized, no diacritics)
-    "kurv","zkurv","prokurv","dojeb","pojeb","vyjeb","najeb","zajeb","jeb",
-    "mrdat","mrd","mrdk","promrd","vymrd","odmrd","zasmrd", // keep short "mrd" last in block
-    "prc","prcat","vyprc","sprc","opr","naprc",
-    "suk","sukat","presuk","vosuk","zasuk",
-    "pic","pico","pica","pice","pici","picov","picus","pich",
-    "kund","kunda","kundi","kundov","kundis",
-    "curak","curaci","curack",
-    "kokot","kokota","kokotin","kokotsk",
-    "zmrd","zmrdit","zmrde","zmrds",
-    "srac","srack","srat","posrat","nasrat","vysrat","osrat",
-    "zasran","posran","usran","presr",
-    "hovn","prdel","vprdel","doprdel",
-    "chcan","chcat","pochcat","nachcat","ochcan",
-    "pytelkouli","koule","koure","vykour", // sexual slang stems
-    "cecky","kozy","kozaře","kozama","kozat",
-    "prsa","prciny","koukatna prsa", // soft adult slang (will still match by stem)
-    "krava","svine","prasat","prase","parchant","parch",
-    "debil","debiln","idiot","blbec","blbka","blbost","magor","kreten","kripl","retard",
-    "sprostak","sprostarn",
-    // short english add-ons commonly used in CZ
-    "fuck","fucking","shit","bullshit","bitch","asshole","dick","cunt","bastard","niga","niger",
-  ];
-
-  function czechHeuristic(text) {
-    const t = normalizeCz(text);
-    return CZ_STEMS.some(stem => t.includes(stem));
-  }
-
-  async function containsBadWords(text) {
-    try {
-      if (!czFilter) czFilter = await loadCzFilter();
-      if (czFilter) return czFilter.isProfane(String(text || ""));
-    } catch (e) {
-      console.warn("CZ filter CDN failed, using heuristic:", e);
+    // get display name from your DB (users -> trainers, app-users -> normal users)
+    async function fetchDisplayName(uid){
+      try{
+        const s1 = await get(ref(db, `users/${uid}`));
+        if (s1.exists() && s1.val()?.name) return s1.val().name;
+      }catch{}
+      try{
+        const s2 = await get(ref(db, `app-users/${uid}`));
+        if (s2.exists() && s2.val()?.name) return s2.val().name;
+      }catch{}
+      const u = auth.currentUser;
+      return (u && (u.displayName || u.email?.split("@")[0])) || "Uživatel";
     }
-    return czechHeuristic(text);
-  }
 
-  // get display name from your DB (users -> trainers, app-users -> normal users)
-  async function fetchDisplayName(uid){
-    // try trainers collection
-    try{
-      const s1 = await get(ref(db, `users/${uid}`));
-      if (s1.exists() && s1.val()?.name) return s1.val().name;
-    }catch{}
-    // try app-users
-    try{
-      const s2 = await get(ref(db, `app-users/${uid}`));
-      if (s2.exists() && s2.val()?.name) return s2.val().name;
-    }catch{}
-    // fallback to Auth
-    const u = auth.currentUser;
-    return (u && (u.displayName || u.email?.split("@")[0])) || "Uživatel";
-  }
-
-  // stars (picker)
-  if (starRating){
-    starRating.querySelectorAll("span").forEach(star=>{
-      star.addEventListener("click", ()=>{
-        selectedRating = parseInt(star.dataset.value);
-        starRating.querySelectorAll("span").forEach(s=>{
-          s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+    // stars (picker)
+    if (starRating){
+      starRating.querySelectorAll("span").forEach(star=>{
+        star.addEventListener("click", ()=>{
+          selectedRating = parseInt(star.dataset.value);
+          starRating.querySelectorAll("span").forEach(s=>{
+            s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+          });
         });
       });
-    });
-  }
+    }
 
-  function reviewCardHTML(r, isMine){
-    const stars = Math.max(1, Math.min(5, Number(r.rating)||0));
-    const badge = r.verified
-      ? '<span class="badge badge--ok" title="Ověřená recenze">✔ Ověřeno</span>'
-      : '<span class="badge badge--pending" title="Čeká na ověření">Neověřeno</span>';
+    function reviewCardHTML(r, isMine){
+      const stars = Math.max(1, Math.min(5, Number(r.rating)||0));
+      const badge = r.verified
+        ? '<span class="badge badge--ok" title="Ověřená recenze">✔ Ověřeno</span>'
+        : '<span class="badge badge--pending" title="Čeká na ověření">Neověřeno</span>';
 
-    return `
-      <div class="review-top">
-        <div class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
-        ${badge}
-        ${isMine ? '<button class="btn-plain edit-review" type="button">Upravit</button>' : ""}
-      </div>
-      <p class="review-text">"${r.text}"</p>
-      <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
-    `;
-  }
+      return `
+        <div class="review-top">
+          <div class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
+          ${badge}
+          ${isMine ? '<button class="btn-plain edit-review" type="button">Upravit</button>' : ""}
+        </div>
+        <p class="review-text">"${r.text}"</p>
+        <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
+      `;
+    }
 
-  // load all reviews, render edit button for your own review
-  function loadReviews(){
-    const rRef = ref(db, `reviews/${userId}`);
-    onValue(rRef, snap=>{
-      reviewsList.innerHTML = "";
-      if (!snap.exists()){
-        reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
-        return;
-      }
-      const all = snap.val();
-      Object.keys(all).forEach(uid=>{
-        const r = all[uid];
-        const card = document.createElement("div");
-        card.className = "review-card";
-        card.innerHTML = reviewCardHTML(r, currentUserId && uid === currentUserId);
-        // hook edit button if it's ours
-        if (currentUserId && uid === currentUserId){
-          const btn = card.querySelector(".edit-review");
-          if (btn){
-            btn.addEventListener("click", ()=>{
-              // enter edit mode: prefill form
-              editMode = true;
-              selectedRating = Number(r.rating)||0;
-              starRating?.querySelectorAll("span").forEach(s=>{
-                s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
-              });
-              reviewText.value = r.text || "";
-              reviewAnon.checked = !!r.anonymous;
-              originalCreatedAt = r.createdAt || Date.now();
-              reviewFormContainer.style.display = "block";
-              reviewNotice.textContent = "Upravujete svou recenzi.";
-              submitReview.textContent = "Uložit změny";
-            });
+    // load all reviews, render edit button for your own review
+    function loadReviews(){
+      const rRef = ref(db, `reviews/${userId}`);
+      onValue(rRef, snap=>{
+        reviewsList.innerHTML = "";
+        if (!snap.exists()){
+          reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
+          return;
+        }
+        const all = snap.val();
+        Object.keys(all).forEach(uid=>{
+          const r = all[uid];
+          const card = document.createElement("div");
+          card.className = "review-card";
+          card.innerHTML = reviewCardHTML(r, currentUserId && uid === currentUserId);
+
+          // Attach reporting UI
+          card.dataset.reviewerId = uid;                       // who wrote this review
+          card.dataset.text       = r.text || "";
+          card.dataset.rating     = Number(r.rating) || 0;
+          card.dataset.createdAt  = r.createdAt || 0;
+          card.dataset.authorName = r.authorName || "Uživatel";
+
+          if (currentUserId && currentUserId !== uid) {
+            const actions = document.createElement("div");
+            actions.className = "review-actions";
+
+            const reportBtn = document.createElement("button");
+            reportBtn.className = "report-btn";
+            reportBtn.type = "button";
+            reportBtn.textContent = "Nahlásit";
+            reportBtn.dataset.rid = uid; // reviewerId
+
+            actions.appendChild(reportBtn);
+            card.appendChild(actions);
+
+            // mark as already reported (disable & rename) — keep inside same scope as reportBtn
+            const alreadyRef = ref(db, `reviewReportsQueue/${userId}/${uid}/${currentUserId}`);
+            onValue(alreadyRef, (snap) => {
+              if (snap.exists()) {
+                reportBtn.disabled = true;
+                reportBtn.textContent = "Nahlášeno";
+              }
+            }, { onlyOnce: true });
           }
-        }
-        reviewsList.appendChild(card);
-      });
-    }, err=>{
-      console.error("Reviews read denied:", err);
-      reviewsList.innerHTML = "<p>Nepodařilo se načíst recenze (práva k databázi).</p>";
-    });
-  }
-  loadReviews();
 
-  // auth gate: self-review blocked, one review per user; allow editing
-  onAuthStateChanged(auth, async(user)=>{
-    if (user){
-      currentUserId = user.uid;
-
-      if (user.uid === userId){
-        reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
-        return;
-      }
-
-      // check if I already have a review (to decide create vs edit default state)
-      try{
-        const mySnap = await get(ref(db, `reviews/${userId}/${user.uid}`));
-        if (mySnap.exists()){
-          // user can edit; form hidden by default until they click "Upravit"
-          reviewNotice.textContent = "Recenzi můžete upravit pomocí tlačítka \"Upravit\".";
-          submitReview.textContent = "Odeslat recenzi"; // default label (will change in edit)
-        }else{
-          // first time → show form
-          reviewFormContainer.style.display = "block";
-          submitReview.textContent = "Odeslat recenzi";
-        }
-      }catch(e){
-        console.error("Check my review failed:", e);
-        reviewNotice.textContent = "Nelze ověřit vaše recenze (práva k databázi).";
-        return;
-      }
-
-      // submit (create or update)
-      submitReview.onclick = async ()=>{
-        const text = (reviewText?.value || "").trim();
-        if (!text){ alert("Recenze nemůže být prázdná."); return; }
-        if (!selectedRating){ alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
-        if (await containsBadWords(text)){ alert("Recenze obsahuje zakázaná slova."); return; }
-
-        // name logic: if anonymous checked -> "Uživatel", else resolved name from DB
-        const displayName = reviewAnon.checked ? "Uživatel" : await fetchDisplayName(user.uid);
-
-        // build data
-        const now = Date.now();
-        const path = ref(db, `reviews/${userId}/${user.uid}`);
-
-        // on create → verified always false
-        // on edit   → preserve verified and createdAt
-        let verified = false;
-        let createdAt = now;
-
-        if (editMode){
-          try{
-            const cur = await get(path);
-            if (cur.exists()){
-              const curVal = cur.val();
-              verified = !!curVal.verified;        // keep whatever it was (user can't change it)
-              createdAt = curVal.createdAt || now; // preserve original timestamp
+          // hook edit button if it's ours
+          if (currentUserId && uid === currentUserId){
+            const btn = card.querySelector(".edit-review");
+            if (btn){
+              btn.addEventListener("click", ()=>{
+                // enter edit mode: prefill form
+                editMode = true;
+                selectedRating = Number(r.rating)||0;
+                starRating?.querySelectorAll("span").forEach(s=>{
+                  s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+                });
+                reviewText.value = r.text || "";
+                reviewAnon.checked = !!r.anonymous;
+                originalCreatedAt = r.createdAt || Date.now();
+                reviewFormContainer.style.display = "block";
+                reviewNotice.textContent = "Upravujete svou recenzi.";
+                submitReview.textContent = "Uložit změny";
+              });
             }
-          }catch{}
-        }
+          }
 
-        const reviewData = {
-          text,
-          rating: selectedRating,
-          authorId: user.uid,
-          authorName: displayName,
-          anonymous: !!reviewAnon.checked,
-          verified,             // stays as is; initially false on create
-          createdAt
-        };
+          reviewsList.appendChild(card);
+        });
+      }, err=>{
+        console.error("Reviews read denied:", err);
+        reviewsList.innerHTML = "<p>Nepodařilo se načíst recenze (práva k databázi).</p>";
+      });
+    }
+    loadReviews();
 
-        try{
-          await set(path, reviewData);
-          // reset UI
-          editMode = false;
-          reviewText.value = "";
-          reviewAnon.checked = false;
-          selectedRating = 0;
-          starRating?.querySelectorAll("span").forEach(s=>s.classList.remove("active"));
-          reviewNotice.textContent = "Recenze byla uložena.";
-          reviewFormContainer.style.display = "none";
-          submitReview.textContent = "Odeslat recenzi";
-        }catch(e){
-          console.error("Write review denied:", e);
-          alert("Nepodařilo se uložit recenzi (práva k databázi).");
+    // One-click report → writes to moderation queue; one report per user per review
+    reviewsList.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".report-btn");
+      if (!btn) return;
+
+      const user = auth.currentUser;
+      if (!user) { toast("Pro nahlášení se přihlaste."); return; }
+
+      // Find the review card and its data
+      const card = btn.closest(".review-card");
+      if (!card) return;
+
+      const reviewerId = card.dataset.reviewerId;   // author of the review (uid)
+      if (!reviewerId) return;
+
+      // Prevent duplicate reports by same user on the same review
+      const reportRef = ref(db, `reviewReportsQueue/${userId}/${reviewerId}/${user.uid}`);
+
+      // Prepare a tiny snapshot (helps you moderate even if review later changes)
+      const payload = {
+        reason: "Uživatel nahlásil recenzi",
+        createdAt: Date.now(),
+        reporterUid: user.uid,
+        reviewSnapshot: {
+          text: card.dataset.text || "",
+          rating: Number(card.dataset.rating) || 0,
+          createdAt: Number(card.dataset.createdAt) || 0,
+          authorName: card.dataset.authorName || "Uživatel",
+          path: `reviews/${userId}/${reviewerId}` // where it currently lives
         }
       };
 
-    }else{
-      currentUserId = null;
-      reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
-      reviewFormContainer.style.display = "none";
-      reviewsSection.addEventListener("click", ()=>{ window.location.href = "register.html"; }, { once:true });
-    }
-  });
+      try {
+        await set(reportRef, payload); // write once; overwrites if same reporter re-clicks
+        // UI feedback (no alert)
+        btn.disabled = true;
+        btn.textContent = "Nahlášeno";
+        const pill = document.createElement("span");
+        pill.className = "reported-pill";
+        pill.textContent = "Odesláno k moderaci";
+        btn.after(pill);
+
+        toast("Děkujeme, nahlášení bylo odesláno.");
+      } catch (err) {
+        console.error("Report failed:", err);
+        toast("Nepodařilo se odeslat nahlášení.");
+      }
+    });
+
+    // auth gate: self-review blocked, one review per user; allow editing
+    onAuthStateChanged(auth, async(user)=>{
+      if (user){
+        currentUserId = user.uid;
+
+        if (user.uid === userId){
+          reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
+          return;
+        }
+
+        // check if I already have a review (to decide create vs edit default state)
+        try{
+          const mySnap = await get(ref(db, `reviews/${userId}/${user.uid}`));
+          if (mySnap.exists()){
+            // user can edit; form hidden by default until they click "Upravit"
+            reviewNotice.textContent = "Recenzi můžete upravit pomocí tlačítka \"Upravit\".";
+            submitReview.textContent = "Odeslat recenzi"; // default label (will change in edit)
+          }else{
+            // first time → show form
+            reviewFormContainer.style.display = "block";
+            submitReview.textContent = "Odeslat recenzi";
+          }
+        }catch(e){
+          console.error("Check my review failed:", e);
+          reviewNotice.textContent = "Nelze ověřit vaše recenze (práva k databázi).";
+          return;
+        }
+
+        // submit (create or update)
+        submitReview.onclick = async ()=>{
+          const text = (reviewText?.value || "").trim();
+          if (!text){ alert("Recenze nemůže být prázdná."); return; }
+          if (!selectedRating){ alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
+          if (await containsBadWords(text)){ alert("Recenze obsahuje zakázaná slova."); return; }
+
+          // name logic: if anonymous checked -> "Uživatel", else resolved name from DB
+          const displayName = reviewAnon.checked ? "Uživatel" : await fetchDisplayName(user.uid);
+
+          // build data
+          const now = Date.now();
+          const path = ref(db, `reviews/${userId}/${user.uid}`);
+
+          // on create → verified always false
+          // on edit   → preserve verified and createdAt
+          let verified = false;
+          let createdAt = now;
+
+          if (editMode){
+            try{
+              const cur = await get(path);
+              if (cur.exists()){
+                const curVal = cur.val();
+                verified = !!curVal.verified;        // keep whatever it was (user can't change it)
+                createdAt = curVal.createdAt || now; // preserve original timestamp
+              }
+            }catch{}
+          }
+
+          const reviewData = {
+            text,
+            rating: selectedRating,
+            authorId: user.uid,
+            authorName: displayName,
+            anonymous: !!reviewAnon.checked,
+            verified,             // stays as is; initially false on create
+            createdAt
+          };
+
+          try{
+            await set(path, reviewData);
+            // reset UI
+            editMode = false;
+            reviewText.value = "";
+            reviewAnon.checked = false;
+            selectedRating = 0;
+            starRating?.querySelectorAll("span").forEach(s=>s.classList.remove("active"));
+            reviewNotice.textContent = "Recenze byla uložena.";
+            reviewFormContainer.style.display = "none";
+            submitReview.textContent = "Odeslat recenzi";
+          }catch(e){
+            console.error("Write review denied:", e);
+            alert("Nepodařilo se uložit recenzi (práva k databázi).");
+          }
+        };
+
+      }else{
+        currentUserId = null;
+        reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
+        reviewFormContainer.style.display = "none";
+        reviewsSection.addEventListener("click", ()=>{ window.location.href = "register.html"; }, { once:true });
+      }
+    });
   </script>
 
   <script type="module" src="auth-navbar.js"></script>
