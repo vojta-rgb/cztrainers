@@ -247,3 +247,9 @@ body.dark .rt-btn-primary{ background:#2b7de9; border-color:#2b7de9; }
   vertical-align:-.15em;
 }
 @keyframes rtspin{ to{ transform:rotate(360deg); } }
+.rt-check{
+  display:flex; gap:.5rem; align-items:flex-start;
+  margin:.25rem 0 1rem; font-weight:600; color:#374151;
+}
+.rt-check input{ width:18px; height:18px; margin-top:2px; accent-color:var(--primary); }
+body.dark .rt-check{ color:#d1d5db; }
