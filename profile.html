@@ -325,7 +325,7 @@
       });
     }
 
-    function reviewCardHTML(r, isMine){
+   function reviewCardHTML(r, isMine, showReport){
       const stars = Math.max(1, Math.min(5, Number(r.rating)||0));
       const badge = r.verified
         ? '<span class="badge badge--ok" title="Ověřená recenze">✔ Ověřeno</span>'
@@ -339,6 +339,11 @@
         </div>
         <p class="review-text">"${r.text}"</p>
         <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
+
+        ${showReport ? `
+          <div class="review-actions">
+            <button class="report-btn" type="button">Nahlásit</button>
+          </div>` : ``}
       `;
     }
 
@@ -356,7 +361,9 @@
           const r = all[uid];
           const card = document.createElement("div");
           card.className = "review-card";
-          card.innerHTML = reviewCardHTML(r, currentUserId && uid === currentUserId);
+          const isMine = !!(currentUserId && uid === currentUserId);
+          const showReport = !!(currentUserId && uid !== currentUserId);
+          card.innerHTML = reviewCardHTML(r, isMine, showReport);
 
           // Attach reporting UI
           card.dataset.reviewerId = uid;                       // who wrote this review
@@ -364,6 +371,21 @@
           card.dataset.rating     = Number(r.rating) || 0;
           card.dataset.createdAt  = r.createdAt || 0;
           card.dataset.authorName = r.authorName || "Uživatel";
+
+          // after setting card.innerHTML and dataset...
+          if (showReport) {
+            const reportBtn = card.querySelector(".report-btn");
+            if (reportBtn) {
+              // mark as already reported (disable & rename)
+              const alreadyRef = ref(db, `reviewReportsQueue/${userId}/${uid}/${currentUserId}`);
+              onValue(alreadyRef, (snap) => {
+                if (snap.exists()) {
+                  reportBtn.disabled = true;
+                  reportBtn.textContent = "Nahlášeno";
+                }
+              }, { onlyOnce: true });
+            }
+          }
 
           if (currentUserId && currentUserId !== uid) {
             const actions = document.createElement("div");
