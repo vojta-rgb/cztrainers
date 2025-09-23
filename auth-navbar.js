@@ -75,7 +75,7 @@ if (hamburger && navLinks) {
 onAuthStateChanged(auth, async (user) => {
   // default state (guest)
   let state = "guest";
-  let name  = "Login";
+  let name  = "Register";
   let pillHref = "register.html";
   let pillClickable = true;
 
