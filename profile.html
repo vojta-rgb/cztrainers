@@ -50,6 +50,26 @@
     <div id="profileCard" class="profilecard"></div>
   </div>
 
+  <!-- ACTION BAR -->
+  <div class="container">
+    <div class="profile-actions" id="profileActions">
+      <button id="backToList" class="action-btn action-btn--ghost" type="button" title="Zpět na seznam trenérů">
+        ← Zpět na trenéry
+      </button>
+
+      <button id="toggleFavourite" class="action-btn action-btn--heart" type="button" disabled title="Uložit trenéra do oblíbených">
+        <span class="heart" aria-hidden="true">♡</span>
+        <span class="label">Uložit</span>
+        <span class="count" id="favCount">0</span>
+      </button>
+
+      <button id="scrollToReviews" class="action-btn action-btn--primary" type="button" title="Skočit na recenze">
+        Zobrazit recenze ↓
+      </button>
+    </div>
+  </div>
+
+
   <div class="container">
   <div id="profileCard" class="profilecard"></div>
 
@@ -82,7 +102,7 @@
   <script type="module">
     /* ===== Firebase imports ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     /* ===== Firebase config ===== */
@@ -104,7 +124,25 @@
     const urlParams   = new URLSearchParams(window.location.search);
     const userId      = urlParams.get("id"); // trainer id whose profile we view
     const profileCard = document.getElementById("profileCard");
-      
+    // Action bar buttons (placed between cards)
+    const btnBack        = document.getElementById("btnBack");
+    const btnFav         = document.getElementById("btnFav");
+    const btnShowReviews = document.getElementById("btnShowReviews");
+    const favCountEl     = document.getElementById("favCount");
+
+    // Hook static buttons
+    if (btnBack) {
+      btnBack.addEventListener("click", () => {
+        if (history.length > 1) history.back();
+        else window.location.href = "index_main.html"; // fallback list page
+      });
+    }
+    if (btnShowReviews) {
+      btnShowReviews.addEventListener("click", () => {
+        document.getElementById("reviewsSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
     function renderSocialLinks(socials = {}) {
       const platforms = {
         instagram: usernameOrUrl =>
@@ -466,11 +504,72 @@
         toast("Nepodařilo se odeslat nahlášení.");
       }
     });
+    /* ===== Favorites: init + toggle ===== */
+    let favOn = false; // local UI state for the current viewer
+
+    function setFavUI(isOn) {
+      favOn = !!isOn;
+      if (btnFav) {
+        btnFav.classList.toggle("is-on", favOn);
+        btnFav.setAttribute("aria-pressed", favOn ? "true" : "false");
+        // optional text tweak (if you want): btnFav.querySelector(".label")?.textContent = favOn ? "Uloženo" : "Do oblíbených";
+      }
+    }
+
+    async function initFavState(viewerUid) {
+      if (!userId) return; // viewed trainer id from URL
+
+      // live count
+      onValue(ref(db, `favoriteCounts/${userId}`), (snap) => {
+        const n = snap.exists() ? Number(snap.val()) || 0 : 0;
+        if (favCountEl) favCountEl.textContent = String(n);
+      });
+
+      // my current state
+      try {
+        const mine = await get(ref(db, `favoritesByUser/${viewerUid}/${userId}`));
+        setFavUI(mine.exists());
+      } catch {}
+
+      // click to toggle
+      if (btnFav) {
+        btnFav.addEventListener("click", async () => {
+          const u = auth.currentUser;
+          if (!u) { toast("Sign in to use favourites."); window.location.href = "register.html"; return; }
+
+          try {
+            // flip my flag
+            const myRef = ref(db, `favoritesByUser/${u.uid}/${userId}`);
+            const newOn = !favOn;
+            if (newOn) {
+              await set(myRef, { addedAt: Date.now() });
+            } else {
+              await set(myRef, null);
+            }
+
+            // adjust global count atomically
+            const countRef = ref(db, `favoriteCounts/${userId}`);
+            await runTransaction(countRef, (cur) => {
+              const n = typeof cur === "number" ? cur : 0;
+              if (newOn) return n + 1;
+              return Math.max(0, n - 1);
+            });
+
+            setFavUI(newOn);
+            toast(newOn ? "Added to favourites." : "Removed from favourites.");
+          } catch (e) {
+            console.error("Fav toggle failed:", e);
+            toast("Couldn’t update favourites.");
+          }
+        }, { once: true }); // bind once per page load
+      }
+    }
 
     // auth gate: self-review blocked, one review per user; allow editing
     onAuthStateChanged(auth, async(user)=>{
       if (user){
         currentUserId = user.uid;
+        await initFavState(user.uid);
 
         if (user.uid === userId){
           reviewNotice.textContent = "Nemůžete psát recenzi na sebe.";
@@ -557,6 +656,7 @@
         reviewNotice.textContent = "Pro psaní recenze se musíte přihlásit.";
         reviewFormContainer.style.display = "none";
         reviewsSection.addEventListener("click", ()=>{ window.location.href = "register.html"; }, { once:true });
+        setFavUI(false);
       }
     });
   </script>

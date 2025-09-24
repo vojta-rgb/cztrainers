@@ -400,3 +400,22 @@ body.dark .anon-row{color:#d1d5db}
   background:rgba(234,88,12,.12);
   color:#c2410c; border:1px solid rgba(234,88,12,.25);
 }
+
+.profile-actions{display:flex;gap:12px;align-items:center;justify-content:center;padding:14px;margin:10px auto 18px;max-width:1100px;background:rgba(255,255,255,.75);backdrop-filter:blur(10px);border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08);}
+body.dark .profile-actions{background:rgba(25,25,25,.65);border-color:rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.4);}
+.action-btn{--primary:#0072CE;display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:12px;border:1px solid transparent;background:#f3f4f6;color:#111827;font-weight:700;cursor:pointer;transition:transform .08s,box-shadow .15s,background .15s,color .15s,border-color .15s;}
+.action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
+.action-btn:active{transform:translateY(0);}
+body.dark .action-btn{background:#1f2937;color:#e5e7eb;border-color:#2b3443;}
+.action-btn--primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.action-btn--primary:hover{filter:brightness(1.05);}
+.action-btn--ghost{background:#fff;border-color:#e5e7eb;}
+body.dark .action-btn--ghost{background:#111418;border-color:#2b3443;}
+.action-btn--heart{position:relative;background:#fff;border-color:#e5e7eb;}
+body.dark .action-btn--heart{background:#111418;border-color:#2b3443;}
+.action-btn--heart .heart{font-size:18px;line-height:1;transform:translateY(-1px);}
+.action-btn--heart.is-on .heart{color:#e11d48;}
+.action-btn--heart .count{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;margin-left:2px;border-radius:999px;background:#f3f4f6;color:#374151;font-weight:800;font-size:12px;}
+body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
+.action-btn[disabled]{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;}
+@media (max-width:720px){.profile-actions{flex-wrap:wrap;gap:10px;padding:12px;}.action-btn{flex:1 1 auto;justify-content:center;}}
