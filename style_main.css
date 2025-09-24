@@ -539,3 +539,6 @@ body.dark #reviewsSection .reviews-list .review-card{
 .action-btn--primary:hover{filter:brightness(1.05);}
 .action-btn--ghost{background:#fff;border-color:#e5e7eb;} /* DO NOT DELETE ANYTHING */
 .action-btn--heart.is-on .heart{color:#e11d48;}
+
+/* ==== Remove padding from button bar ==== */
+.container .buttonBar{padding: 0px !important;}
