@@ -145,3 +145,57 @@ html, body {
     border-color: #2a2a2a;
   }
 }
+
+/* --- Hamburger: visible on all screens, larger tap target on mobile --- */
+.cznav__hamburger{
+  display:inline-flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  width:44px;              /* bigger hit area */
+  height:36px;
+  padding:6px;
+  background:transparent;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+  color:#fff;              /* bars use currentColor */
+  position:relative;
+  z-index:1001;            /* stay above the dropdown sheet */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cznav__hamburger:focus-visible{
+  outline:2px solid rgba(255,255,255,.6);
+  outline-offset:2px;
+}
+
+.cznav__hamburger span{
+  display:block;
+  width:26px;              /* ← the missing piece */
+  height:3px;
+  border-radius:3px;
+  background:currentColor; /* inherits white */
+  transition:transform .22s ease, opacity .22s ease, width .22s ease;
+  transform-origin:center;
+}
+
+/* Nice “X” animation when menu is open */
+.cznav__hamburger.active span:nth-child(1){
+  transform:translateY(9px) rotate(45deg);
+}
+.cznav__hamburger.active span:nth-child(2){
+  opacity:0;
+}
+.cznav__hamburger.active span:nth-child(3){
+  transform:translateY(-9px) rotate(-45deg);
+}
+
+/* Keep contrast in dark mode just in case */
+body.dark .cznav__hamburger{ color:#fff; }
+
+/* Small screens: don’t let layout squeeze the button */
+@media (max-width:767.98px){
+  .cznav__hamburger{ flex-shrink:0; }
+}
