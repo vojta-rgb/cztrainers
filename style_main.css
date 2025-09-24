@@ -419,3 +419,123 @@ body.dark .action-btn--heart{background:#111418;border-color:#2b3443;}
 body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .action-btn[disabled]{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;}
 @media (max-width:720px){.profile-actions{flex-wrap:wrap;gap:10px;padding:12px;}.action-btn{flex:1 1 auto;justify-content:center;}}
+
+/* ==== Reviews: breathing room + premium button (append-only) ==== */
+#reviewsSection .review-form-container{
+  padding:16px 18px;
+  border-radius:14px;
+  background:#f6f8fb;
+  border:1px solid #e6edf5;
+}
+body.dark #reviewsSection .review-form-container{
+  background:#1e232b;
+  border-color:#2a3340;
+}
+
+#reviewsSection label[for="reviewRating"]{
+  margin:0 0 10px;
+  font-weight:700;
+  color:#334155;
+}
+body.dark #reviewsSection label[for="reviewRating"]{ color:#cbd5e1; }
+
+#reviewsSection .star-rating{
+  display:flex;
+  gap:10px;
+  font-size:28px;
+  line-height:1;
+  margin-bottom:12px;
+}
+#reviewsSection .star-rating span{
+  cursor:pointer;
+  filter:grayscale(1);
+  opacity:.75;
+  transition:transform .08s, opacity .15s, filter .15s;
+}
+#reviewsSection .star-rating span.active{
+  filter:none;
+  opacity:1;
+  transform:scale(1.05);
+}
+#reviewsSection .star-rating span:hover{ transform:translateY(-1px) scale(1.08); }
+
+#reviewsSection #reviewText{
+  width:100%;
+  min-height:140px;
+  padding:14px 16px;
+  border-radius:12px;
+  border:1px solid #d6dee8;
+  background:#fff;
+  margin:6px 0 14px;
+}
+#reviewsSection #reviewText:focus{
+  outline:none;
+  border-color:#0072CE;
+  box-shadow:0 0 0 3px rgba(0,114,206,.15);
+}
+body.dark #reviewsSection #reviewText{
+  background:#121518;
+  border-color:#303846;
+  color:#e5e7eb;
+}
+
+#reviewsSection .anon-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:6px 0 16px;
+  font-weight:700;
+  color:#334155;
+}
+#reviewsSection .anon-row input[type="checkbox"]{
+  width:18px; height:18px; accent-color:#0072CE;
+}
+body.dark #reviewsSection .anon-row{ color:#cbd5e1; }
+
+#reviewsSection #submitReview{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:48px;
+  padding:0 20px;
+  border-radius:999px;
+  border:1px solid transparent;
+  background:linear-gradient(180deg, #0ea5e9 0%, #0072CE 100%);
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.2px;
+  box-shadow:0 6px 16px rgba(0,114,206,.25), inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .09s ease, box-shadow .2s ease, filter .2s ease;
+}
+#reviewsSection #submitReview:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(0,114,206,.32);
+  filter:brightness(1.02);
+}
+#reviewsSection #submitReview:active{
+  transform:translateY(0);
+  box-shadow:0 4px 12px rgba(0,114,206,.28);
+}
+#reviewsSection #submitReview:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 4px rgba(0,114,206,.25), 0 8px 22px rgba(0,114,206,.28);
+}
+#reviewsSection #submitReview[disabled]{ opacity:.7; cursor:not-allowed; filter:saturate(.85); }
+
+/* keep list ↔ form spacing tidy */
+.reviews-list + .review-form-container{ margin-top:18px; }
+
+/* optional: mild polish on cards (non-destructive) */
+#reviewsSection .reviews-list .review-card{
+  background:#f8fafc;
+  border:1px solid #eef2f7;
+}
+body.dark #reviewsSection .reviews-list .review-card{
+  background:#171c22;
+  border-color:#222b36;
+}
+
+/* Your requested format examples preserved */
+.action-btn--primary:hover{filter:brightness(1.05);}
+.action-btn--ghost{background:#fff;border-color:#e5e7eb;} /* DO NOT DELETE ANYTHING */
+.action-btn--heart.is-on .heart{color:#e11d48;}
