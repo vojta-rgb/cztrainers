@@ -47,11 +47,48 @@ async function getRole(uid){
 
 // Hamburger toggle
 if (hamburger && navLinks) {
+  // initial a11y state
+  hamburger.setAttribute("aria-expanded", "false");
+
+  const closeMenu = () => {
+    navLinks.classList.remove("active");
+    hamburger.classList.remove("active");
+    hamburger.setAttribute("aria-expanded", "false");
+  };
+
+  const openMenu = () => {
+    navLinks.classList.add("active");
+    hamburger.classList.add("active");
+    hamburger.setAttribute("aria-expanded", "true");
+  };
+
   hamburger.addEventListener("click", () => {
-    navLinks.classList.toggle("active");
+    const open = navLinks.classList.toggle("active");
+    hamburger.classList.toggle("active", open);       // <-- needed for bar → X animation
+    hamburger.setAttribute("aria-expanded", open ? "true" : "false");
   });
+
+  // Close when clicking a link inside
   navLinks.querySelectorAll("a,button").forEach(el => {
-    el.addEventListener("click", () => navLinks.classList.remove("active"));
+    el.addEventListener("click", closeMenu);
+  });
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!navLinks.classList.contains("active")) return;
+    if (e.target === hamburger || hamburger.contains(e.target)) return;
+    if (navLinks.contains(e.target)) return;
+    closeMenu();
+  });
+
+  // Close on Esc
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  // Close if resizing back to desktop
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 768) closeMenu();
   });
 }
 
