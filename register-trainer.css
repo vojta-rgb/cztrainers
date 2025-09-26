@@ -211,6 +211,7 @@ body.dark .ur-foot { color: #cfcfcf; }
 .rt-toast.show{ opacity:1; transform:translateY(0); }
 @media (max-width:640px){
   .rt-toast{ left:12px; right:12px; bottom:12px; }
+  .ur-btn-ghost{ margin-top: 1rem; }
 }
 body.dark .rt-toast{ background:#1e1e1e; }
 
