@@ -52,7 +52,7 @@
     <!-- Filled by JS as before -->
     <div id="profileCard" class="profilecard"></div>
 
-    <!-- Actions now live inside the same top container -->
+    <!-- Actions live inside the same top container -->
     <div id="profileActions" class="profile-actions">
       <button id="btnBack" class="action-btn action-btn--ghost" type="button" title="Zpět na seznam trenérů">
         Zpět na trenéry
@@ -70,10 +70,8 @@
     </div>
   </div>
 
-  <!-- REVIEWS CONTAINER (unchanged) -->
+  <!-- REVIEWS CONTAINER -->
   <div class="container">
-    <div id="profileCard" class="profilecard"></div>
-
     <!-- REVIEW SYSTEM START -->
     <div id="reviewsSection" class="reviews-container">
       <h2>Recenze</h2>
@@ -89,7 +87,7 @@
           <span data-value="5">★</span>
         </div>
 
-        <textarea id="reviewText" placeholder="Napište svou recenzi..." rows="4"></textarea>
+        <textarea id="reviewText" placeholder="Napište svou recenzi..." rows="4" maxlength="1000"></textarea>
         <label class="anon-row"><input type="checkbox" id="reviewAnon"> Odeslat anonymně</label>
         <button id="submitReview" class="btn primary">Odeslat recenzi</button>
       </div>

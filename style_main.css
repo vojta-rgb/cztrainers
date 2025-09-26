@@ -544,93 +544,67 @@ body.dark #reviewsSection .reviews-list .review-card{
 .container .buttonBar{padding: 0px !important;}
 /*aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa*/
 /* Actions row under the profile card */
+/* ---- Actions sub-card that visually pairs with the profile card ---- */
+:root{
+  --actions-bg: #f6f8fc;         /* light mode tint behind buttons */
+  --actions-br: rgba(0,0,0,.06);
+  --actions-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+body.dark{
+  --actions-bg: #151a22;         /* darker tint for dark mode */
+  --actions-br: rgba(255,255,255,.08);
+  --actions-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+.profile-actions-card{
+  background: var(--actions-bg);
+  border: 1px solid var(--actions-br);
+  border-radius: 16px;
+  box-shadow: var(--actions-shadow);
+  padding: 14px;
+  margin: 16px auto 22px;
+  max-width: 1100px;
+}
+
+/* Keep the nice button layout */
 .profile-actions{
   display:flex;
   gap:12px;
   align-items:center;
   justify-content:center;
-  margin:16px auto 0;          /* tight link to the card */
-  padding:12px;
-  max-width:1100px;
-  background:rgba(255,255,255,.75);
-  border:1px solid rgba(0,0,0,.06);
-  border-radius:16px;
-  box-shadow:0 8px 24px rgba(0,0,0,.08);
-  backdrop-filter:blur(10px);
-}
-body.dark .profile-actions{
-  background:rgba(25,25,25,.65);
-  border-color:rgba(255,255,255,.08);
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  flex-wrap:wrap;
 }
 
-/* Buttons */
+/* Buttons (reusing your existing classes but polishing a bit) */
 .action-btn{
-  --btn-h:46px;
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  height:var(--btn-h);
-  padding:0 16px;
-  border-radius:12px;
-  border:1px solid transparent;
-  background:#f3f4f6;
-  color:#111827;
-  font-weight:700;
-  cursor:pointer;
-  transition:transform .08s, box-shadow .15s, background .15s, color .15s, border-color .15s;
+  --primary:#0072CE;
+  display:inline-flex;align-items:center;gap:10px;
+  height:46px;padding:0 16px;border-radius:12px;border:1px solid transparent;
+  background:#f3f4f6;color:#111827;font-weight:700;cursor:pointer;
+  transition:transform .08s,box-shadow .15s,background .15s,color .15s,border-color .15s;
 }
-.action-btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.12); }
-.action-btn:active{ transform:translateY(0); }
-.action-btn[disabled]{ opacity:.6; cursor:not-allowed; transform:none; box-shadow:none; }
+.action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
+.action-btn:active{transform:translateY(0);}
+.action-btn[disabled]{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;}
 
-body.dark .action-btn{ background:#1f2937; color:#e5e7eb; border-color:#2b3443; }
+.action-btn--primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.action-btn--primary:hover{filter:brightness(1.05);}
 
-/* Kinds */
-.action-btn--ghost{
-  background:#fff; border-color:#e5e7eb;
-}
-body.dark .action-btn--ghost{
-  background:#111418; border-color:#2b3443;
-}
+.action-btn--ghost{background:#fff;border-color:#e5e7eb;color:#111827;}
+body.dark .action-btn--ghost{background:#111418;border-color:#2b3443;color:#e5e7eb;}
 
-.action-btn--primary{
-  background:var(--primary); color:#fff; border-color:var(--primary);
-}
-.action-btn--primary:hover{ filter:brightness(1.05); }
-
-/* Heart button */
-.action-btn--heart{
-  position:relative;
-  background:#fff; border-color:#e5e7eb;
-}
-body.dark .action-btn--heart{
-  background:#111418; border-color:#2b3443;
-}
-.action-btn--heart .heart{ font-size:18px; line-height:1; transform:translateY(-1px); }
+.action-btn--heart{position:relative;background:#fff;border-color:#e5e7eb;color:#111827;}
+body.dark .action-btn--heart{background:#111418;border-color:#2b3443;color:#e5e7eb;}
+.action-btn--heart .heart{font-size:18px;line-height:1;transform:translateY(-1px);}
+.action-btn--heart.is-on .heart{color:#e11d48;}
 .action-btn--heart .count{
-  display:inline-flex; align-items:center; justify-content:center;
-  min-width:30px; height:24px; padding:0 8px; margin-left:2px;
-  border-radius:999px; background:#f3f4f6; color:#374151; font-weight:800; font-size:12px;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:30px;height:24px;padding:0 8px;margin-left:2px;border-radius:999px;
+  background:#f3f4f6;color:#374151;font-weight:800;font-size:12px;
 }
-body.dark .action-btn--heart .count{ background:#222a36; color:#cfd5e1; }
-.action-btn--heart.is-on .heart{ color:#e11d48; }
+body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 
-/* Responsive wrapping */
 @media (max-width:720px){
-  .profile-actions{ flex-wrap:wrap; gap:10px; padding:12px; }
-  .action-btn{ flex:1 1 auto; justify-content:center; }
-}
-
-/* Make the first grid track shrinkable and clip any rounding overflow */
-.review-form-container{
-  grid-template-columns: minmax(0, 1fr) auto; /* was: 1fr auto */
-  overflow: hidden; /* smooth corner clipping */
-}
-
-/* Ensure the textarea never exceeds its grid area */
-.review-form-container textarea{
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  .profile-actions{gap:10px}
+  .action-btn{flex:1 1 auto;justify-content:center}
 }
