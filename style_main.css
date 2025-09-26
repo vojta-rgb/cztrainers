@@ -502,7 +502,7 @@ body.dark #reviewsSection .anon-row{ color:#cbd5e1; }
   border:1px solid transparent;
   background:linear-gradient(180deg, #0ea5e9 0%, #0072CE 100%);
   color:#fff;
-  font-weight:800;
+  font-weight:600;
   letter-spacing:.2px;
   box-shadow:0 6px 16px rgba(0,114,206,.25), inset 0 1px 0 rgba(255,255,255,.25);
   transition:transform .09s ease, box-shadow .2s ease, filter .2s ease;
@@ -620,4 +620,17 @@ body.dark .action-btn--heart .count{ background:#222a36; color:#cfd5e1; }
 @media (max-width:720px){
   .profile-actions{ flex-wrap:wrap; gap:10px; padding:12px; }
   .action-btn{ flex:1 1 auto; justify-content:center; }
+}
+
+/* Make the first grid track shrinkable and clip any rounding overflow */
+.review-form-container{
+  grid-template-columns: minmax(0, 1fr) auto; /* was: 1fr auto */
+  overflow: hidden; /* smooth corner clipping */
+}
+
+/* Ensure the textarea never exceeds its grid area */
+.review-form-container textarea{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }

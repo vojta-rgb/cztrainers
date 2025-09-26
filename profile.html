@@ -597,10 +597,15 @@
 
         // submit (create or update)
         submitReview.onclick = async ()=>{
+          const MAX_REVIEW_CHARS = 1000;
           const text = (reviewText?.value || "").trim();
-          if (!text){ alert("Recenze nemůže být prázdná."); return; }
-          if (!selectedRating){ alert("Vyberte hodnocení (1–5 hvězdiček)."); return; }
-          if (await containsBadWords(text)){ alert("Recenze obsahuje zakázaná slova."); return; }
+          if (text.length > MAX_REVIEW_CHARS){ 
+            toast(`Maximální délka recenze je ${MAX_REVIEW_CHARS} znaků.`); 
+            return; 
+          }
+          if (!text){ toast("Recenze nemůže být prázdná."); return; }
+          if (!selectedRating){ toast("Vyberte hodnocení (1–5 hvězdiček)."); return; }
+          if (await containsBadWords(text)){ toast("Recenze obsahuje zakázaná slova."); return; }
 
           // name logic: if anonymous checked -> "Uživatel", else resolved name from DB
           const displayName = reviewAnon.checked ? "Uživatel" : await fetchDisplayName(user.uid);
