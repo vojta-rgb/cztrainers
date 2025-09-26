@@ -528,8 +528,6 @@ async function getNSFWModel() {
       toast("Odesláno – zkontrolujte e-mail.");
       await signOut(auth);
       this.reset();
-      // nechte uživatele vidět kartu a pak přesměrujte
-      setTimeout(()=>{ window.location.href = "login.html"; }, 2500);
 
     } catch (error) {
       alert("Chyba při registraci: " + error.message);
