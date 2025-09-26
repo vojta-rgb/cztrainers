@@ -129,6 +129,18 @@
     const btnShowReviews = document.getElementById("btnShowReviews");
     const favCountEl     = document.getElementById("favCount");
 
+    // Make the heart clickable even for guests → redirect to register
+    if (btnFav) {
+      btnFav.removeAttribute("disabled"); // just in case
+      btnFav.addEventListener("click", () => {
+        const u = auth.currentUser;
+        if (!u) {
+          toast("Pro ukládání do oblíbených se přihlaste.");
+          window.location.href = "register.html";
+        }
+      });
+    }
+
     // Hook static buttons
     if (btnBack) {
       btnBack.addEventListener("click", () => {
@@ -517,7 +529,20 @@
     }
 
     async function initFavState(viewerUid) {
-      if (!userId) return; // viewed trainer id from URL
+      if (!userId || !btnFav) return; // viewed trainer id from URL
+
+      // ⛔ Block self-favorite
+      if (viewerUid === userId) {
+        setFavUI(false);
+        btnFav.disabled = true;
+        btnFav.setAttribute("aria-disabled", "true");
+        btnFav.title = "Nemůžete uložit sebe do oblíbených";
+        return; // do not attach the toggle handler
+      } else {
+        btnFav.disabled = false;
+        btnFav.removeAttribute("aria-disabled");
+        btnFav.title = "Uložit trenéra do oblíbených";
+      }
 
       // live count
       onValue(ref(db, `favoriteCounts/${userId}`), (snap) => {
@@ -532,37 +557,31 @@
       } catch {}
 
       // click to toggle
-      if (btnFav) {
-        btnFav.addEventListener("click", async () => {
-          const u = auth.currentUser;
-          if (!u) { toast("Sign in to use favourites."); window.location.href = "register.html"; return; }
+      btnFav.addEventListener("click", async () => {
+        const u = auth.currentUser;
+        if (!u) return; // safety (guest handler above will redirect)
 
-          try {
-            // flip my flag
-            const myRef = ref(db, `favoritesByUser/${u.uid}/${userId}`);
-            const newOn = !favOn;
-            if (newOn) {
-              await set(myRef, { addedAt: Date.now() });
-            } else {
-              await set(myRef, null);
-            }
+        try {
+          const myRef = ref(db, `favoritesByUser/${u.uid}/${userId}`);
+          const newOn = !favOn;
 
-            // adjust global count atomically
-            const countRef = ref(db, `favoriteCounts/${userId}`);
-            await runTransaction(countRef, (cur) => {
-              const n = typeof cur === "number" ? cur : 0;
-              if (newOn) return n + 1;
-              return Math.max(0, n - 1);
-            });
+          if (newOn) { await set(myRef, { addedAt: Date.now() }); }
+          else { await set(myRef, null); }
 
-            setFavUI(newOn);
-            toast(newOn ? "Added to favourites." : "Removed from favourites.");
-          } catch (e) {
-            console.error("Fav toggle failed:", e);
-            toast("Couldn’t update favourites.");
-          }
-        }, { once: true }); // bind once per page load
-      }
+          // adjust global count atomically
+          const countRef = ref(db, `favoriteCounts/${userId}`);
+          await runTransaction(countRef, (cur) => {
+            const n = typeof cur === "number" ? cur : 0;
+            return newOn ? n + 1 : Math.max(0, n - 1);
+          });
+
+          setFavUI(newOn);
+          toast(newOn ? "Přidáno do oblíbených." : "Odebráno z oblíbených.");
+        } catch (e) {
+          console.error("Fav toggle failed:", e);
+          toast("Nepodařilo se upravit oblíbené.");
+        }
+      }, { once: true });
     }
 
     // auth gate: self-review blocked, one review per user; allow editing
