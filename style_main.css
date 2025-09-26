@@ -636,3 +636,16 @@ body.dark .profile-actions{
   border-color:#2a2a2a;
   box-shadow:0 12px 28px rgba(0,0,0,.38);
 }
+
+/* Make the first grid track shrinkable and clip any rounding overflow */
+.review-form-container{
+  grid-template-columns: minmax(0, 1fr) auto; /* was: 1fr auto */
+  overflow: hidden; /* smooth corner clipping */
+}
+
+/* Ensure the textarea never exceeds its grid area */
+.review-form-container textarea{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
