@@ -388,64 +388,65 @@
           reviewsList.innerHTML = "<p>Zatím žádné recenze.</p>";
           return;
         }
-        const all = snap.val();
-        Object.keys(all).forEach(uid=>{
-          const r = all[uid];
-          const card = document.createElement("div");
-          card.className = "review-card";
-          card.innerHTML = reviewCardHTML(r, currentUserId && uid === currentUserId);
+      const all = snap.val();
 
-          // Attach reporting UI
-          card.dataset.reviewerId = uid;                       // who wrote this review
-          card.dataset.text       = r.text || "";
-          card.dataset.rating     = Number(r.rating) || 0;
-          card.dataset.createdAt  = r.createdAt || 0;
-          card.dataset.authorName = r.authorName || "Uživatel";
+      // [uid, review] pairs → sort: verified first, then newest first
+      const entries = Object.entries(all).sort(([, a], [, b]) => {
+        const vDiff = (b?.verified === true) - (a?.verified === true); // true first
+        if (vDiff) return vDiff;
+        return (b?.createdAt || 0) - (a?.createdAt || 0);              // newer first
+      });
 
-          if (currentUserId && currentUserId !== uid) {
-            const actions = document.createElement("div");
-            actions.className = "review-actions";
+      // render in sorted order
+      entries.forEach(([uid, r]) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+        card.innerHTML = reviewCardHTML(r, currentUserId && uid === currentUserId);
 
-            const reportBtn = document.createElement("button");
-            reportBtn.className = "report-btn";
-            reportBtn.type = "button";
-            reportBtn.textContent = "Nahlásit";
-            reportBtn.dataset.rid = uid; // reviewerId
+        // dataset for reporting
+        card.dataset.reviewerId = uid;
+        card.dataset.text       = r.text || "";
+        card.dataset.rating     = Number(r.rating) || 0;
+        card.dataset.createdAt  = r.createdAt || 0;
+        card.dataset.authorName = r.authorName || "Uživatel";
 
-            actions.appendChild(reportBtn);
-            card.appendChild(actions);
+        // report button (only for others' reviews)
+        if (currentUserId && currentUserId !== uid) {
+          const actions   = document.createElement("div");
+          const reportBtn = document.createElement("button");
+          actions.className = "review-actions";
+          reportBtn.className = "report-btn";
+          reportBtn.type = "button";
+          reportBtn.textContent = "Nahlásit";
+          reportBtn.dataset.rid = uid;
+          actions.appendChild(reportBtn);
+          card.appendChild(actions);
 
-            // mark as already reported (disable & rename) — keep inside same scope as reportBtn
-            const alreadyRef = ref(db, `reviewReportsQueue/${userId}/${uid}/${currentUserId}`);
-            onValue(alreadyRef, (snap) => {
-              if (snap.exists()) {
-                reportBtn.disabled = true;
-                reportBtn.textContent = "Nahlášeno";
-              }
-            }, { onlyOnce: true });
-          }
+          const alreadyRef = ref(db, `reviewReportsQueue/${userId}/${uid}/${currentUserId}`);
+          onValue(alreadyRef, (s) => {
+            if (s.exists()) { reportBtn.disabled = true; reportBtn.textContent = "Nahlášeno"; }
+          }, { onlyOnce: true });
+        }
 
-          // hook edit button if it's ours
-          if (currentUserId && uid === currentUserId){
-            const btn = card.querySelector(".edit-review");
-            if (btn){
-              btn.addEventListener("click", ()=>{
-                // enter edit mode: prefill form
-                editMode = true;
-                selectedRating = Number(r.rating)||0;
-                starRating?.querySelectorAll("span").forEach(s=>{
-                  s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
-                });
-                reviewText.value = r.text || "";
-                reviewAnon.checked = !!r.anonymous;
-                originalCreatedAt = r.createdAt || Date.now();
-                reviewFormContainer.style.display = "block";
-                reviewNotice.textContent = "Upravujete svou recenzi.";
-                submitReview.textContent = "Uložit změny";
+        // hook edit button for my own review
+        if (currentUserId && uid === currentUserId) {
+          const btn = card.querySelector(".edit-review");
+          if (btn) {
+            btn.addEventListener("click", () => {
+              editMode = true;
+              selectedRating = Number(r.rating) || 0;
+              starRating?.querySelectorAll("span").forEach(s => {
+                s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
               });
-            }
+              reviewText.value = r.text || "";
+              reviewAnon.checked = !!r.anonymous;
+              originalCreatedAt = r.createdAt || Date.now();
+              reviewFormContainer.style.display = "block";
+              reviewNotice.textContent = "Upravujete svou recenzi.";
+              submitReview.textContent = "Uložit změny";
+            });
           }
-
+        }
           reviewsList.appendChild(card);
         });
       }, err=>{
