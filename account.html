@@ -110,7 +110,7 @@
         const providerId = user.providerData?.[0]?.providerId || "password";
         if (providerId === "password") {
           const email = prompt("Pro potvrzení zadejte svůj e-mail:");
-          const pass  = prompt("Zadejte své heslo:");
+          const pass  = prompt("Zadejte své aktuální heslo:");
           if (!email || !pass) throw new Error("Chybí údaje.");
           const cred = EmailAuthProvider.credential(email, pass);
           await reauthenticateWithCredential(user, cred);
