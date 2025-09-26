@@ -132,25 +132,6 @@
       }
     });
 
-    // Change email → send verify link to NEW email
-    document.getElementById("btnChangeEmail").addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) return toast("Nejste přihlášen.");
-      const newEmail = document.getElementById("newEmail").value.trim();
-      if (!newEmail) return toast("Zadejte nový e-mail.");
-
-      if (!(await reauth(user))) return;
-
-      try {
-        await verifyBeforeUpdateEmail(user, newEmail); // sends link to new email
-        toast("Odeslán ověřovací odkaz na nový e-mail.");
-        // (optional) still-verified on old email:
-        await sendEmailVerification(user).catch(()=>{});
-      } catch (e) {
-        toast("Chyba změny e-mailu: " + e.message);
-      }
-    });
-
     // Change password:
     // - if field empty → send reset email
     // - if filled → set directly after reauth
