@@ -607,7 +607,7 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 }
 
 /* --- Make all cards the same width as .container --- */
-.container{ max-width:1200px; } /* you already have this; keep as is */
+.container{ max-width:1100px; } /* you already have this; keep as is */
 
 /* Unify card look */
 .profile-container,
