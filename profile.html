@@ -44,17 +44,18 @@
       <a href="#" class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
     </div>
   </nav>
-
+  
+  <!-- UPPER CONTAINER: title + profile card + actions -->
   <div class="container">
     <h1 class="animate__animated animate__fadeInUp">Profil uživatele</h1>
-    <div id="profileCard" class="profilecard"></div>
-  </div>
 
-  <!-- ACTION BAR -->
-  <div class="container buttonBar">
-    <div class="profile-actions" id="profileActions">
+    <!-- Filled by JS as before -->
+    <div id="profileCard" class="profilecard"></div>
+
+    <!-- Actions now live inside the same top container -->
+    <div id="profileActions" class="profile-actions">
       <button id="btnBack" class="action-btn action-btn--ghost" type="button" title="Zpět na seznam trenérů">
-        ←  Zpět na trenéry
+        Zpět na trenéry
       </button>
 
       <button id="btnFav" class="action-btn action-btn--heart" type="button" title="Uložit trenéra do oblíbených">
@@ -64,19 +65,19 @@
       </button>
 
       <button id="btnShowReviews" class="action-btn action-btn--primary" type="button" title="Skočit na recenze">
-        Zobrazit recenze  ↓
+        Zobrazit recenze
       </button>
     </div>
   </div>
 
-
+  <!-- REVIEWS CONTAINER (unchanged) -->
   <div class="container">
-  <div id="profileCard" class="profilecard"></div>
+    <div id="profileCard" class="profilecard"></div>
 
     <!-- REVIEW SYSTEM START -->
     <div id="reviewsSection" class="reviews-container">
       <h2>Recenze</h2>
-    <div id="reviewsList" class="reviews-list"></div>
+      <div id="reviewsList" class="reviews-list"></div>
 
       <div id="reviewFormContainer" class="review-form-container" style="display:none;">
         <label for="reviewRating">Hodnocení:</label>
