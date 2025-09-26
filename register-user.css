@@ -72,6 +72,7 @@
   background: #f9fafb;
   transition: transform .12s ease, filter .12s ease, background .15s ease, color .15s ease;
   margin-right: 10px;
+  margin-top: 1rem;
 }
 .ur-btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
 
