@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CZTRAINERS | Účet & Zabezpečení</title>
   <link rel="stylesheet" href="account.css" />
+  <link rel="stylesheet" href="showPassword.css">
   <link rel="stylesheet" href="navbar.css">
 </head>
 <body>
+  <script type="module" src="showPassword.js"></script>
 <!-- Navbar (isolated) -->
   <nav class="cznav" aria-label="Hlavní navigace">
     <div class="cznav__logo">
@@ -55,7 +57,7 @@
 -->
     <section class="panel">
       <h2>Změnit heslo</h2>
-      <input type="password" id="newPassword" placeholder="Nové heslo (nebo nechte prázdné pro e-mailový odkaz)" />
+      <input type="password" id="newPassword" placeholder="Nové heslo (nebo nechte prázdné pro e-mailový odkaz)" data-showpw placeholder="••••••••"/>
       <button id="btnChangePassword" class="btn-primary">Změnit heslo</button>
     </section>
 

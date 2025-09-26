@@ -10,10 +10,12 @@
   <link rel="stylesheet" href="style_main.css" />
   <!-- Page styles -->
   <link rel="stylesheet" href="register-user.css" />
+  <link rel="stylesheet" href="showPassword.css">
   <link rel="stylesheet" href="navbar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 </head>
 <body>
+  <script type="module" src="showPassword.js"></script>
 <!-- Navbar (isolated) -->
   <nav class="cznav" aria-label="Hlavní navigace">
     <div class="cznav__logo">
@@ -71,7 +73,7 @@
 
         <label class="ur-field">
           <span>Heslo</span>
-          <input type="password" id="password" placeholder="Min. 6 znaků" minlength="6" required />
+          <input type="password" id="password" placeholder="Min. 6 znaků" minlength="6" data-showpw placeholder="••••••••" required />
         </label>
 
         <!-- NEW: Age confirmation (required) -->
