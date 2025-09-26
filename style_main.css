@@ -608,3 +608,33 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
   .profile-actions{gap:10px}
   .action-btn{flex:1 1 auto;justify-content:center}
 }
+
+/* --- Make all cards the same width as .container --- */
+.container{ max-width:1200px; } /* you already have this; keep as is */
+
+/* Unify card look */
+.profile-container,
+.reviews-container,
+.profile-actions{
+  border-radius:16px;
+  background:#fff;
+  border:1px solid rgba(0,0,0,.06);
+  box-shadow:0 10px 24px rgba(0,0,0,.08);
+}
+
+/* The fix: remove narrow max-width, stretch to full container */
+.profile-actions{
+  width:100%;
+  max-width:none;      /* override the old 1100px */
+  padding:16px 24px;   /* same breathing room as other cards */
+  margin:12px 0 22px;  /* align spacing with neighbors */
+}
+
+/* Dark mode match */
+body.dark .profile-container,
+body.dark .reviews-container,
+body.dark .profile-actions{
+  background:#1e1e1e;
+  border-color:#2a2a2a;
+  box-shadow:0 12px 28px rgba(0,0,0,.38);
+}
