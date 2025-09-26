@@ -215,7 +215,7 @@ body.dark .ur-foot { color: #cfcfcf; }
 }
 body.dark .rt-toast{ background:#1e1e1e; }
 
-/* ==== Success card after registration ==== */
+/* ===== Success card after registration ===== */
 .rt-success-card{
   margin-top: 12px;
   border:1px solid #bbf7d0;
