@@ -13,7 +13,7 @@
 <!-- Navbar (isolated) -->
   <nav class="cznav" aria-label="Hlavní navigace">
     <div class="cznav__logo">
-      <a href="index_main.html">
+      <a href="index.html">
         <img src="CZtrainers new better.png" alt="CZTRAINERS Logo" />
       </a>
     </div>
@@ -39,7 +39,7 @@
 
     <!-- Dropdown -->
     <div id="navLinks" class="cznav__menu" role="menu" aria-label="Navigace">
-      <a href="index_main.html" class="cznav__link">Domů</a>
+      <a href="index.html" class="cznav__link">Domů</a>
       <a href="o-nas.html" class="cznav__link">O nás</a>
       <a href="login.html" class="cznav__link" id="loginBtn">Přihlášení</a>
       <a href="#" class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
@@ -157,7 +157,7 @@
       try {
         await updatePassword(user, newPass);
         toast("Heslo změněno.");
-        window.location.href = "index_main.html";
+        window.location.href = "index.html";
       } catch (e) {
         toast("Chyba změny hesla: " + e.message);
       }
@@ -237,7 +237,7 @@
         await deleteUser(user);
 
         toast("Účet smazán.");
-        setTimeout(() => (window.location.href = "index_main.html"), 1200);
+        setTimeout(() => (window.location.href = "index.html"), 1200);
       } catch (e) {
         toast("Chyba při mazání účtu: " + e.message);
       }

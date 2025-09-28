@@ -150,7 +150,7 @@ if (logoutBtn) {
     e.preventDefault();
     try {
       await signOut(auth);
-      window.location.href = "index_main.html";
+      window.location.href = "index.html";
     } catch (err) {
       alert("Chyba při odhlášení: " + (err?.message || err));
     }
