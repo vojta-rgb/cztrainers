@@ -6,7 +6,7 @@ body.dark{--actions-bg:#151a22;--actions-br:rgba(255,255,255,.08);--actions-shad
 
 /* =============== Base =============== */
 body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;position:relative;transition:background .3s,color .3s;}
-body::before{content:"";position:fixed;inset:0;background:url("https://github.com/vojta-rgb/cztrainers/raw/main/dumbell%20art.png") repeat 0 0/200px;opacity:.08;z-index:-1;}
+body::before{content:"";position:fixed;inset:0;background:url("assets/dumbell-art.png") repeat 0 0/200px;opacity:.08;z-index:-1;}
 body.dark{background:#121212;color:var(--light);}
 body.dark::before{opacity:.04;}
 .container{max-width:1200px;margin:0 auto;padding:2rem;}
