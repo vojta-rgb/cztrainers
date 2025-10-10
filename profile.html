@@ -217,7 +217,7 @@
                 </div>
               </div>
               <div class="profile-right">
-                <p class="bio-text"><strong>🧍‍♂️ O mně:</strong> ${user.bio || "-"}</p>
+                <p class="bio-text"><strong>🧍‍♂️ O mně:</strong><br> ${user.bio || "-"}</p>
                 <p><strong>💪 Specializace:</strong></p>
                 <div class="tag-list">
                   ${(Array.isArray(user.specializations) ? user.specializations : (user.specializations || "").split(","))
@@ -231,7 +231,7 @@
                 </div>
 
                 <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
-                <p class="pricing-text"><strong>💰 Cena:</strong> ${user.pricing || "-"}</p>
+                <p class="pricing-text"><strong>💰 Cenník:</strong><br> ${user.pricing || "-"}</p>
               </div>
             </div>
           `;
