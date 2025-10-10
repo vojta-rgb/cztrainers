@@ -219,9 +219,10 @@
 
     // ---------- Cloudinary / Worker ----------
     const CLOUD_NAME = "dkt3pdcbe";
-    const SIGNER_URL = "https://wandering-sunset-c489.aiman18192.workers.dev/";
+    const SIGNER_URL = "/api/sign";
     const MAX_FILE_SIZE = 500 * 1024;
     const MAX_DIM = 800;
+    let CLOUD_FROM_FN = null;
 
     // ---------- DOM ----------
     const form = document.getElementById("profileForm");
@@ -229,12 +230,12 @@
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
 
-    // ---------- Image preview ----------
+    // ---------- Image preview (no pre-size check) ----------
     imageInput.addEventListener("change", () => {
       const file = imageInput.files[0];
       if (!file) return;
-      if (file.size > MAX_FILE_SIZE) {
-        alert("Obrázek je moc velký (max 500 KB).");
+      if (!file.type.startsWith("image/")) {
+        alert("Vybraný soubor není obrázek.");
         imageInput.value = "";
         preview.style.display = "none";
         return;
@@ -343,7 +344,9 @@
       });
       const txt = await r.text().catch(()=>"(no body)");
       if (!r.ok) throw new Error(`Signer HTTP ${r.status}: ${txt}`);
-      return JSON.parse(txt);
+        const json = JSON.parse(txt);
+      if (json.cloudName) CLOUD_FROM_FN = json.cloudName;
+        return json;
     }
 
     async function uploadPfpSigned({ file, uid }){
@@ -360,7 +363,11 @@
       formData.append("invalidate", "true");
       formData.append("signature", signature);
 
-      const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+      const cloud = CLOUD_FROM_FN || CLOUD_NAME;
+      const resp = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, {
+        method: "POST",
+        body: formData
+      });    
       const txt = await resp.text().catch(()=>"(no body)");
       if (!resp.ok) throw new Error(`Cloudinary chyba ${resp.status}: ${txt}`);
       return JSON.parse(txt);
@@ -403,14 +410,35 @@
 
         if (imageInput.files.length > 0) {
           const raw = imageInput.files[0];
-          if (raw.size > MAX_FILE_SIZE) { alert("Obrázek je příliš velký."); return; }
+
+          // 1) quick guard: file must be an image
+          if (!raw.type.startsWith("image/")) {
+            alert("Vybraný soubor není obrázek.");
+            return;
+          }
 
           try {
-            const jpg = await downscaleImage(raw);
+            // 2) downscale first (so big phone photos are reduced)
+            const jpg = await downscaleImage(raw);              // returns a JPEG Blob/File
+
+            // 3) optional cap AFTER downscale (keep if you want a hard limit)
+            const MAX_FILE_SIZE = 500 * 1024; // 500 KB
+            if (jpg.size > MAX_FILE_SIZE) {
+              alert("Obrázek je příliš velký i po zmenšení (max 500 KB).");
+              return;
+            }
+
+            // 4) NSFW check
             const safe = await isImageSafe(jpg);
-            if (!safe) { alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný."); return; }
+            if (!safe) {
+              alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
+              return;
+            }
+
+            // 5) Signed upload to Cloudinary
             const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
             newUrl = secure_url;
+
           } catch (err) {
             alert("Nepodařilo se nahrát obrázek: " + err.message);
             return;
