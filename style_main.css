@@ -266,3 +266,6 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
   .badge--new { background:linear-gradient(180deg,#351622 0%,#2f121d 100%); color:#fecdd3; border-color:#9f1239; }
   .name .v-tick { background:#059669; }
 }
+/* keep the name line and the tick on the same baseline */
+.card-body .name{display:inline-flex;align-items:center;gap:.4rem;line-height:1.15;}
+.card-body .name .v-tick{margin:0;width:18px;height:18px;flex:0 0 18px;vertical-align:middle;}
