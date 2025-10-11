@@ -170,6 +170,20 @@
     toastEl.classList.add("show");
     setTimeout(()=>toastEl.classList.remove("show"), 1800);
   };
+  // badge catalog (you can extend it)
+  const BADGE_META = {
+    verified:   { label: 'Ověřený', icon: '✔️', cls: 'b-verified' },
+    'top-rated':{ label: 'Top',      icon: '⭐',  cls: 'b-top'      },
+    pro:        { label: 'Pro',      icon: '🏅',  cls: 'b-pro'      },
+    recommended:{ label: 'Doporučujeme', icon: '👍', cls: 'b-rec'  },
+    new:        { label: 'Nový',     icon: '🆕',  cls: 'b-new'      },
+  };
+
+  function badgePiece(key){
+    const m = BADGE_META[key] || { label: key, icon: '🏷️', cls: 'b-generic' };
+    // class uses the key so “top-rated” becomes “badge--top-rated” (valid css)
+    return `<span class="badge badge--${key} ${m.cls}" title="${m.label}"><i>${m.icon}</i>${m.label}</span>`;
+  }
 
   // --- State ---
   let allUsers = [];                 // [ [uid, user], ... ]
@@ -395,61 +409,81 @@
       card.setAttribute("data-aos", "fade-up");
       card.setAttribute("data-aos-delay", String(delay));
       card.setAttribute("data-aos-anchor-placement", "top-bottom");
-      
-      // badges: you can store either booleans (e.g. user.verified) and/or an array user.badges = ["pro","recommended"]
+
+      // ===== BADGES (merge old boolean/array with new object style) =====
+      // start from your existing array logic
       const badges = [];
+
+      // old boolean (keep)
       if (user.verified === true) {
         badges.push({ key: "verified", label: "Ověřený", icon: "✔" });
       }
+
+      // old array (keep)
       if (Array.isArray(user.badges)) {
         user.badges.forEach(b => {
           const k = String(b).toLowerCase();
-          if (k === "pro") badges.push({ key:"pro", label:"Pro", icon:"★" });
-          if (k === "recommended") badges.push({ key:"recommended", label:"Doporučujeme", icon:"★" });
-          if (k === "top") badges.push({ key:"top", label:"Top", icon:"🏆" });
-          if (k === "new") badges.push({ key:"new", label:"Nový", icon:"🆕" });
+          if (k === "pro")          badges.push({ key:"pro",          label:"Pro",           icon:"★"  });
+          if (k === "recommended")  badges.push({ key:"recommended",  label:"Doporučujeme",  icon:"★"  });
+          if (k === "top")          badges.push({ key:"top",          label:"Top",           icon:"🏆" });
+          if (k === "new")          badges.push({ key:"new",          label:"Nový",          icon:"🆕" });
         });
       }
-      // show max 3 on the card (you can change)
+
+      // NEW: object map { key: true } like { "top-rated": true, "verified": true }
+      if (user.badges && typeof user.badges === "object" && !Array.isArray(user.badges)) {
+        for (const [k, v] of Object.entries(user.badges)) {
+          if (!v) continue;
+          // prefer catalog meta if we know the key; otherwise use the key as label
+          const meta = BADGE_META[k];
+          badges.push({
+            key: k,
+            label: meta?.label || k,
+            icon: meta?.icon || "🏷️"
+          });
+        }
+      }
+
+      // render max 3 badges (you can change the number)
       const shownBadges = badges.slice(0, 3)
         .map(b => `<span class="badge badge--${b.key}" title="${b.label}"><i>${b.icon}</i>${b.label}</span>`)
         .join("");
 
       card.innerHTML = `
-      <div class="card-header"></div>
+        <div class="card-header"></div>
 
-      <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
-        <span class="heart">${favOn ? "♥" : "♡"}</span>
-        <span class="count">${count}</span>
-      </button>
+        <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
+          <span class="heart">${favOn ? "♥" : "♡"}</span>
+          <span class="count">${count}</span>
+        </button>
 
-      <div class="avatar-wrap">
-        <img class="avatar"
-            src="${photoURL}"
-            alt="Profilový obrázek"
-            onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
-      </div>
-
-      <div class="card-body">
-        <h3 class="name">
-          ${name} ${lastName}
-          ${user.verified ? `<span class="v-tick" title="Ověřený">✓</span>` : ``}  <!-- NEW: tiny tick -->
-        </h3>
-
-        <div class="meta">
-          <span>📍 ${user.location || "-"}</span>
-          <span class="sep">•</span>
-          <span>🧠 ${user.experience ?? "-"} let praxe</span>
+        <div class="avatar-wrap">
+          <img class="avatar"
+              src="${photoURL}"
+              alt="Profilový obrázek"
+              onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
         </div>
 
-        ${shownBadges ? `<div class="badges">${shownBadges}</div>` : ""}          <!-- NEW: badges row -->
+        <div class="card-body">
+          <h3 class="name">
+            ${name} ${lastName}
+            ${(user.verified || user.badges?.verified) ? `<span class="v-tick" title="Ověřený">✓</span>` : ``}
+          </h3>
 
-        <div class="tags">
-          ${show.map(t => `<span class="tag">${t}</span>`).join("")}
-          ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
+          <div class="meta">
+            <span>📍 ${user.location || "-"}</span>
+            <span class="sep">•</span>
+            <span>🧠 ${user.experience ?? "-"} let praxe</span>
+          </div>
+
+          ${shownBadges ? `<div class="badges">${shownBadges}</div>` : ""}
+
+          <div class="tags">
+            ${show.map(t => `<span class="tag">${t}</span>`).join("")}
+            ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
       userList.appendChild(card);
     });
