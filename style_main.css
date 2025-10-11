@@ -237,3 +237,56 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .action-btn--primary:hover{filter:brightness(1.05);}
 .action-btn--ghost{background:#fff;border-color:#e5e7eb;} /* DO NOT DELETE ANYTHING */
 .action-btn--heart.is-on .heart{color:#e11d48;}
+
+/* ===== Badges ===== */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: 12px;
+  line-height: 1;
+  padding: .35rem .55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: #f7f7fb;
+  color: #1f2937;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04), inset 0 1px 0 rgba(255,255,255,.6);
+  user-select: none;
+  white-space: nowrap;
+}
+.badge svg,
+.badge i { font-style: normal; display:inline-block; transform: translateY(.5px); }
+
+/* Variants */
+.badge--verified { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+.badge--recommended { background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
+.badge--top { background: linear-gradient(90deg,#fff7ed,#fef3c7); color:#92400e; border-color:#fde68a; }
+.badge--pro { background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; }
+.badge--new { background:#fff1f2; color:#be123c; border-color:#fecdd3; }
+
+/* tiny verified tick next to the name */
+.name .v-tick {
+  display:inline-flex; align-items:center; justify-content:center;
+  width: 18px; height: 18px; margin-left: .35rem;
+  border-radius: 50%;
+  background:#10b981; color:#fff; font-size:12px; font-weight:700;
+  box-shadow: 0 1px 0 rgba(0,0,0,.08);
+}
+
+/* Dark mode friendly (if you toggle themes) */
+@media (prefers-color-scheme: dark) {
+  .badge { background:#1f2430; color:#e5e7eb; border-color:#2b3342; }
+  .badge--verified { background:#0b2e25; color:#34d399; border-color:#064e3b; }
+  .badge--recommended { background:#1f2547; color:#a5b4fc; border-color:#303a6a; }
+  .badge--top { background: linear-gradient(90deg,#2a2115,#3a2d17); color:#fcd34d; border-color:#b45309; }
+  .badge--pro { background:#261d3a; color:#c4b5fd; border-color:#4c1d95; }
+  .badge--new { background:#351622; color:#fecdd3; border-color:#9f1239; }
+  .name .v-tick { background:#059669; }
+}

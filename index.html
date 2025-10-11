@@ -395,35 +395,61 @@
       card.setAttribute("data-aos", "fade-up");
       card.setAttribute("data-aos-delay", String(delay));
       card.setAttribute("data-aos-anchor-placement", "top-bottom");
+      
+      // badges: you can store either booleans (e.g. user.verified) and/or an array user.badges = ["pro","recommended"]
+      const badges = [];
+      if (user.verified === true) {
+        badges.push({ key: "verified", label: "Ověřený", icon: "✔" });
+      }
+      if (Array.isArray(user.badges)) {
+        user.badges.forEach(b => {
+          const k = String(b).toLowerCase();
+          if (k === "pro") badges.push({ key:"pro", label:"Pro", icon:"★" });
+          if (k === "recommended") badges.push({ key:"recommended", label:"Doporučujeme", icon:"★" });
+          if (k === "top") badges.push({ key:"top", label:"Top", icon:"🏆" });
+          if (k === "new") badges.push({ key:"new", label:"Nový", icon:"🆕" });
+        });
+      }
+      // show max 3 on the card (you can change)
+      const shownBadges = badges.slice(0, 3)
+        .map(b => `<span class="badge badge--${b.key}" title="${b.label}"><i>${b.icon}</i>${b.label}</span>`)
+        .join("");
 
       card.innerHTML = `
-        <div class="card-header"></div>
+      <div class="card-header"></div>
 
-        <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
-          <span class="heart">${favOn ? "♥" : "♡"}</span>
-          <span class="count">${count}</span>
-        </button>
+      <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
+        <span class="heart">${favOn ? "♥" : "♡"}</span>
+        <span class="count">${count}</span>
+      </button>
 
-        <div class="avatar-wrap">
-          <img class="avatar"
-              src="${photoURL}"
-              alt="Profilový obrázek"
-              onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
+      <div class="avatar-wrap">
+        <img class="avatar"
+            src="${photoURL}"
+            alt="Profilový obrázek"
+            onerror="this.onerror=null;this.src='https://placehold.co/300x300?text=Profil';">
+      </div>
+
+      <div class="card-body">
+        <h3 class="name">
+          ${name} ${lastName}
+          ${user.verified ? `<span class="v-tick" title="Ověřený">✓</span>` : ``}  <!-- NEW: tiny tick -->
+        </h3>
+
+        <div class="meta">
+          <span>📍 ${user.location || "-"}</span>
+          <span class="sep">•</span>
+          <span>🧠 ${user.experience ?? "-"} let praxe</span>
         </div>
 
-        <div class="card-body">
-          <h3 class="name">${name} ${lastName}</h3>
-          <div class="meta">
-            <span>📍 ${user.location || "-"}</span>
-            <span class="sep">•</span>
-            <span>🧠 ${user.experience ?? "-"} let praxe</span>
-          </div>
-          <div class="tags">
-            ${show.map(t => `<span class="tag">${t}</span>`).join("")}
-            ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
-          </div>
+        ${shownBadges ? `<div class="badges">${shownBadges}</div>` : ""}          <!-- NEW: badges row -->
+
+        <div class="tags">
+          ${show.map(t => `<span class="tag">${t}</span>`).join("")}
+          ${moreCount ? `<span class="tag tag-more">+${moreCount}</span>` : ""}
         </div>
-      `;
+      </div>
+    `;
 
       userList.appendChild(card);
     });
