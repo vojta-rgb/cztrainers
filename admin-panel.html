@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin panel – CZTRAINERS</title>
+  <style>
+    :root { --bg:#0b1220; --card:#111827; --muted:#9ca3af; --accent:#3b82f6; }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;background:#0f172a;color:#e5e7eb}
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111827;border-bottom:1px solid #1f2937}
+    header h1{margin:0;font-size:18px}
+    .main{display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px}
+    .muted{color:#9ca3af}
+    input,select,button,textarea{font:inherit}
+    input[type="text"],select{width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb;cursor:pointer}
+    button.primary{background:var(--accent);border-color:var(--accent);color:white}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .list{max-height:70vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .trainer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border:1px solid #1f2937;border-radius:10px;background:#0b1220}
+    .badges{display:flex;gap:6px;flex-wrap:wrap}
+    .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;background:#121826}
+    .pill{padding:2px 8px;border-radius:999px;background:#0ea5e9;color:#06232c}
+    .tabs{display:flex;gap:8px;margin-bottom:10px}
+    .tabs button[aria-selected="true"]{background:#1d4ed8;border-color:#1d4ed8}
+    .section{display:none}
+    .section.active{display:block}
+    .tiny{font-size:12px}
+    .danger{background:#7f1d1d;border-color:#991b1b}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛡️ Admin panel</h1>
+    <div class="row">
+      <span id="who" class="muted tiny">Nepřihlášen</span>
+      <button id="btnLogout">Odhlásit</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT: Tabs -->
+    <aside class="card">
+      <div class="tabs">
+        <button class="primary" data-tab="t-trainers" aria-selected="true">Trenéři & odznaky</button>
+        <button data-tab="t-reports">Nahlášené recenze</button>
+      </div>
+
+      <!-- Trainers tools -->
+      <div id="t-trainers" class="section active">
+        <p class="muted tiny">Vyhledávání je jednoduché (pro menší počet uživatelů). Pro velké množství by se dělaly servery-side indexy.</p>
+        <input id="q" type="text" placeholder="Hledat podle jména, příjmení, e-mailu…" />
+        <div class="row" style="margin-top:8px">
+          <label class="tiny muted">Předdefinované odznaky:</label>
+          <select id="presetBadge">
+            <option value="">— vyber —</option>
+            <option value="verified">verified</option>
+            <option value="pro">pro</option>
+            <option value="top-rated">top-rated</option>
+            <option value="new">new</option>
+          </select>
+          <input id="customBadge" type="text" placeholder="vlastní-odznak" />
+        </div>
+        <p class="tiny muted" style="margin-top:8px">Klikni na trenéra → uvidíš jeho odznaky a tlačítka „Přidat/odebrat“.</p>
+        <div id="trainersList" class="list" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Reports tools -->
+      <div id="t-reports" class="section">
+        <p class="muted tiny">Zde moderuješ nahlášené recenze. Můžeš smazat recenzi nebo jen vyčistit hlášení.</p>
+        <div id="reportsList" class="list"></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Detail -->
+    <section class="card" id="detail">
+      <h3 id="detailTitle" style="margin:0 0 8px">Detail</h3>
+      <div id="detailBody" class="muted tiny">Vyber trenéra vlevo.</div>
+    </section>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getDatabase, ref, get, set, update, remove, onValue
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // --- Your project (same as on your site) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // --- UI refs ---
+    const tabsBtns = document.querySelectorAll(".tabs button");
+    const sections = document.querySelectorAll(".section");
+    const who = document.getElementById("who");
+    const btnLogout = document.getElementById("btnLogout");
+
+    const q = document.getElementById("q");
+    const trainersList = document.getElementById("trainersList");
+    const presetBadge = document.getElementById("presetBadge");
+    const customBadge = document.getElementById("customBadge");
+
+    const reportsList = document.getElementById("reportsList");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailBody  = document.getElementById("detailBody");
+
+    // Tabs
+    tabsBtns.forEach(b=>{
+      b.addEventListener("click", ()=>{
+        tabsBtns.forEach(x=>x.setAttribute("aria-selected","false"));
+        sections.forEach(s=>s.classList.remove("active"));
+        b.setAttribute("aria-selected","true");
+        document.getElementById(b.dataset.tab).classList.add("active");
+      });
+    });
+
+    btnLogout.addEventListener("click", ()=> signOut(auth));
+
+    // --- Admin gate: /app-users/{uid}/role == 'admin' ---
+    onAuthStateChanged(auth, async (user)=>{
+      if (!user) {
+        who.textContent = "Nepřihlášen – přejdi na Login";
+        alert("Pro vstup do admin panelu se přihlaste.");
+        window.location.href = "login.html";
+        return;
+      }
+      who.textContent = user.email || user.uid;
+
+      const roleSnap = await get(ref(db, "app-users/" + user.uid + "/role"));
+      const isAdmin  = roleSnap.exists() && roleSnap.val() === "admin";
+      if (!isAdmin) {
+        alert("Nemáte oprávnění (admin role).");
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Init admin features
+      loadTrainers();
+      liveReports();
+    });
+
+    // ------- TRAINERS (search + badges) -------
+    let allTrainers = []; // [{uid, name, prijmeni, email, badges, ...}]
+    async function loadTrainers(){
+      // Pull all trainers in /users (small/medium projects; for big use indexed backend)
+      const s = await get(ref(db, "users"));
+      allTrainers = s.exists() ? Object.entries(s.val()).map(([uid, data])=>({ uid, ...(data||{}) })) : [];
+      renderTrainers();
+    }
+
+    function renderTrainers(){
+      const term = (q.value||"").toLowerCase().trim();
+      trainersList.innerHTML = "";
+
+      const filtered = allTrainers.filter(t=>{
+        const hay = [t.name, t.prijmeni, t.email].map(x=>(x||"").toLowerCase()).join(" ");
+        return term ? hay.includes(term) : true;
+      });
+
+      filtered.forEach(t=>{
+        const el = document.createElement("div");
+        el.className = "trainer";
+
+        const full = [t.name, t.prijmeni].filter(Boolean).join(" ") || "(bez jména)";
+        const badges = t.badges || {};
+        const badgesArr = Object.keys(badges).filter(k => badges[k]);
+
+        el.innerHTML = `
+          <div>
+            <div class="row">
+              <strong>${full}</strong>
+              <span class="muted tiny">${t.email || ""}</span>
+            </div>
+            <div class="badges" style="margin-top:6px">
+              ${badgesArr.length ? badgesArr.map(b=>`<span class="badge">${b}</span>`).join("") : `<span class="muted tiny">Žádné odznaky</span>`}
+            </div>
+          </div>
+          <div class="row">
+            <button data-act="select">Upravit</button>
+          </div>
+        `;
+        el.querySelector("[data-act='select']").addEventListener("click", ()=> showDetail(t));
+        trainersList.appendChild(el);
+      });
+    }
+
+    q.addEventListener("input", renderTrainers);
+
+    function showDetail(t){
+      detailTitle.textContent = "Trenér: " + ([t.name,t.prijmeni].filter(Boolean).join(" ") || t.uid);
+      const badges = t.badges || {};
+      const list = Object.keys(badges).filter(k=>badges[k]);
+
+      detailBody.innerHTML = `
+        <div class="row">
+          <div><span class="muted tiny">UID:</span> ${t.uid}</div>
+        </div>
+        <div style="margin:8px 0">
+          <div class="muted tiny">Aktivní odznaky:</div>
+          <div class="badges" id="detailBadges">
+            ${list.length ? list.map(b=>`<span class="badge">${b}</span>`).join("") : '<span class="muted tiny">—</span>'}
+          </div>
+        </div>
+
+        <div class="row" style="margin:8px 0">
+          <select id="detailPreset">
+            <option value="">— předvolba —</option>
+            <option value="verified">verified</option>
+            <option value="pro">pro</option>
+            <option value="top-rated">top-rated</option>
+            <option value="new">new</option>
+          </select>
+          <input id="detailCustom" type="text" placeholder="vlastní-odznak" />
+          <button id="btnAdd" class="primary">Přidat odznak</button>
+          <button id="btnRemove">Odebrat odznak</button>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnVerify" class="primary">Nastavit verified</button>
+          <button id="btnUnverify">Zrušit verified</button>
+        </div>
+      `;
+
+      // actions
+      const detailBadges = document.getElementById("detailBadges");
+      const preset = document.getElementById("detailPreset");
+      const custom = document.getElementById("detailCustom");
+
+      function refreshBadges(bmap){
+        const arr = Object.keys(bmap || {}).filter(k => bmap[k]);
+        detailBadges.innerHTML = arr.length ? arr.map(b=>`<span class="badge">${b}</span>`).join("") : '<span class="muted tiny">—</span>';
+      }
+
+      document.getElementById("btnAdd").onclick = async ()=>{
+        const b = (preset.value || custom.value || "").trim();
+        if (!b) return alert("Vyber nebo napiš odznak.");
+        const path = ref(db, `users/${t.uid}/badges/${b}`);
+        await set(path, true);
+        t.badges = t.badges || {};
+        t.badges[b] = true;
+        refreshBadges(t.badges);
+        loadTrainers();
+      };
+
+      document.getElementById("btnRemove").onclick = async ()=>{
+        const b = (preset.value || custom.value || "").trim();
+        if (!b) return alert("Vyber nebo napiš odznak.");
+        const path = ref(db, `users/${t.uid}/badges/${b}`);
+        await remove(path);
+        if (t.badges) delete t.badges[b];
+        refreshBadges(t.badges||{});
+        loadTrainers();
+      };
+
+      document.getElementById("btnVerify").onclick = async ()=>{
+        await update(ref(db, `users/${t.uid}`), { verified: true });
+        await set(ref(db, `users/${t.uid}/badges/verified`), true);
+        t.verified = true;
+        t.badges = { ...(t.badges||{}), verified:true };
+        refreshBadges(t.badges);
+        loadTrainers();
+      };
+      document.getElementById("btnUnverify").onclick = async ()=>{
+        await update(ref(db, `users/${t.uid}`), { verified: false });
+        await remove(ref(db, `users/${t.uid}/badges/verified`));
+        t.verified = false;
+        if (t.badges) delete t.badges.verified;
+        refreshBadges(t.badges||{});
+        loadTrainers();
+      };
+    }
+
+    // ------- REPORTS (moderation queue) -------
+    function liveReports(){
+      onValue(ref(db, "reviewReportsQueue"), (snap)=>{
+        reportsList.innerHTML = "";
+        if (!snap.exists()) {
+          reportsList.innerHTML = `<div class="muted tiny">Žádná nahlášení.</div>`;
+          return;
+        }
+        const data = snap.val(); // trainerId -> reviewerId -> reporterUid -> payload
+        for (const trainerId of Object.keys(data)){
+          for (const reviewerId of Object.keys(data[trainerId])){
+            // show only the newest one (one per reporter too)
+            const reporters = data[trainerId][reviewerId];
+            const first = Object.values(reporters)[0] || {};
+            const card = document.createElement("div");
+            card.className = "trainer";
+
+            // read live snapshot of the review (optional)
+            card.innerHTML = `
+              <div>
+                <div><strong>Trenér:</strong> ${trainerId}</div>
+                <div><strong>Autor recenze:</strong> ${reviewerId}</div>
+                <div class="muted tiny" style="margin-top:6px">
+                  ${first.reviewSnapshot?.text ? first.reviewSnapshot.text : "(bez ukázky)"}  
+                </div>
+              </div>
+              <div class="row">
+                <button class="danger" data-act="del-review">Smazat recenzi</button>
+                <button data-act="clear">Označit jako vyřízené</button>
+              </div>
+            `;
+            card.querySelector('[data-act="del-review"]').onclick = async ()=>{
+              if (!confirm("Smazat tuto recenzi?")) return;
+              await remove(ref(db, `reviews/${trainerId}/${reviewerId}`));
+              await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
+            };
+            card.querySelector('[data-act="clear"]').onclick = async ()=>{
+              await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
+            };
+            reportsList.appendChild(card);
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
