@@ -489,7 +489,7 @@
     });
 
     // Tell AOS new nodes were added
-    if (window.AOS) AOS.refreshHard();
+    if (window.AOS && !window.__aosBooted) { window.__aosBooted = true; AOS.refresh(); }
   }
 
   // --- Favorite toggling ---
