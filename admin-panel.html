@@ -4,31 +4,64 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin panel – CZTRAINERS</title>
-  <style>
-    :root { --bg:#0b1220; --card:#111827; --muted:#9ca3af; --accent:#3b82f6; }
+<style>
+    :root{--bg:#0b1220;--card:#111827;--muted:#9ca3af;--accent:#3b82f6}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;background:#0f172a;color:#e5e7eb}
     header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111827;border-bottom:1px solid #1f2937}
     header h1{margin:0;font-size:18px}
-    .main{display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px}
+
+    /* responsive grid: left pane grows beyond 360px on desktop */
+    .main{display:grid;grid-template-columns:clamp(320px,35vw,560px) 1fr;gap:16px;padding:16px}
+
     .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px}
     .muted{color:#9ca3af}
     input,select,button,textarea{font:inherit}
     input[type="text"],select{width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb}
     button{padding:8px 12px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb;cursor:pointer}
-    button.primary{background:var(--accent);border-color:var(--accent);color:white}
+    button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .list{max-height:70vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .trainer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border:1px solid #1f2937;border-radius:10px;background:#0b1220}
     .badges{display:flex;gap:6px;flex-wrap:wrap}
     .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;background:#121826}
     .pill{padding:2px 8px;border-radius:999px;background:#0ea5e9;color:#06232c}
-    .tabs{display:flex;gap:8px;margin-bottom:10px}
+    .tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
     .tabs button[aria-selected="true"]{background:#1d4ed8;border-color:#1d4ed8}
     .section{display:none}
     .section.active{display:block}
     .tiny{font-size:12px}
+    .huge{font-size:20px}
     .danger{background:#7f1d1d;border-color:#991b1b}
-  </style>
+    .report-item{border:1px solid #1f2937;background:#0b1220;border-radius:10px;padding:10px;cursor:pointer}
+    .report-item+.report-item{margin-top:8px}
+    .report-item.active{outline:2px solid #2563eb;outline-offset:0}
+    .report-line{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .report-line .stars{margin-left:auto;margin-right:6px}
+    .excerpt{margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bubble{min-width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#1e40af;border:1px solid #1d4ed8;color:#fff;font-size:12px;padding:0 6px}
+
+    /* bigger lists on very large screens */
+    @media (min-width:1400px){
+    .main{grid-template-columns:clamp(360px,32vw,640px) 1fr}
+    }
+
+    /* mobile: stack, roomy touch targets, lists fill height without scroll-jumps */
+    @media (max-width:900px){
+    .main{grid-template-columns:1fr;padding:12px}
+    .list{max-height:none}
+    header{padding:10px 12px}
+    .card{padding:12px}
+    .trainer{grid-template-columns:1fr;gap:6px}
+    .tabs{gap:6px}
+    button, input[type="text"], select{padding:10px}
+    }
+
+    /* tiny phones */
+    @media (max-width:480px){
+    header h1{font-size:16px}
+    .row{gap:6px}
+    }
+</style>
 </head>
 <body>
   <header>
@@ -287,48 +320,117 @@
     }
 
     // ------- REPORTS (moderation queue) -------
+    // Tiny helpers
+    const starify = (n) => n ? "★".repeat(n) + "☆".repeat(5-n) : "";
+    const fmt = (ts) => ts ? new Date(ts).toLocaleString() : "";
+    const esc = (s="") => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+    // Cache trainer names so we don't fetch repeatedly
+    const __nameCache = {};
+    async function getTrainerLabel(uid){
+    if (__nameCache[uid]) return __nameCache[uid];
+    const s = await get(ref(db, "users/" + uid));
+    const u = s.exists() ? s.val() : {};
+    const label = [u.name, u.prijmeni].filter(Boolean).join(" ") || u.email || uid;
+    __nameCache[uid] = label;
+    return label;
+    }
+
+    // Renders the right-hand detail card
+    async function renderReportDetail(item){
+    const { trainerId, reviewerId, snapshot, reasons, reportersCount } = item;
+    const trainerName = await getTrainerLabel(trainerId);
+
+    detailTitle.textContent = "Detail nahlášené recenze";
+    detailBody.innerHTML = `
+        <div class="row" style="margin-bottom:8px">
+        <div><strong>Trenér:</strong> ${esc(trainerName)}</div>
+        <div class="tiny muted">UID: ${esc(trainerId)}</div>
+        </div>
+        <div class="row" style="margin-bottom:8px">
+        <div><strong>Autor recenze:</strong> ${esc(snapshot.authorName || reviewerId)}</div>
+        <div class="tiny muted">${fmt(snapshot.createdAt)}</div>
+        </div>
+        <div class="tiny" aria-label="Hodnocení">${starify(Number(snapshot.rating||0))}</div>
+        <div style="margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere" class="huge">${esc(snapshot.text || "(bez textu)")}</div>
+        ${reasons.length ? `<div class="tiny muted" style="margin-top:10px">Důvody: ${reasons.map(esc).join(" • ")}</div>` : ""}
+        <div class="tiny muted" style="margin-top:4px">Počet nahlášení: ${reportersCount}</div>
+
+        <div class="row" style="margin-top:14px">
+        <button class="danger" id="detailDel">Smazat recenzi</button>
+        <button id="detailClear">Označit jako vyřízené</button>
+        </div>
+    `;
+
+    // actions
+    document.getElementById("detailDel").onclick = async () => {
+        if (!confirm("Smazat tuto recenzi?")) return;
+        await remove(ref(db, `reviews/${trainerId}/${reviewerId}`));
+        await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
+    };
+    document.getElementById("detailClear").onclick = async () => {
+        await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
+    };
+    }
+
+    // LEFT LIST: compact tiles; click -> detail on right
     function liveReports(){
-      onValue(ref(db, "reviewReportsQueue"), (snap)=>{
+    onValue(ref(db, "reviewReportsQueue"), async (snap) => {
         reportsList.innerHTML = "";
         if (!snap.exists()) {
-          reportsList.innerHTML = `<div class="muted tiny">Žádná nahlášení.</div>`;
-          return;
+        reportsList.innerHTML = `<div class="muted tiny">Žádná nahlášení.</div>`;
+        detailTitle.textContent = "Detail";
+        detailBody.textContent = "Vyber trenéra vlevo.";
+        return;
         }
-        const data = snap.val(); // trainerId -> reviewerId -> reporterUid -> payload
-        for (const trainerId of Object.keys(data)){
-          for (const reviewerId of Object.keys(data[trainerId])){
-            // show only the newest one (one per reporter too)
-            const reporters = data[trainerId][reviewerId];
-            const first = Object.values(reporters)[0] || {};
-            const card = document.createElement("div");
-            card.className = "trainer";
 
-            // read live snapshot of the review (optional)
-            card.innerHTML = `
-              <div>
-                <div><strong>Trenér:</strong> ${trainerId}</div>
-                <div><strong>Autor recenze:</strong> ${reviewerId}</div>
-                <div class="muted tiny" style="margin-top:6px">
-                  ${first.reviewSnapshot?.text ? first.reviewSnapshot.text : "(bez ukázky)"}  
-                </div>
-              </div>
-              <div class="row">
-                <button class="danger" data-act="del-review">Smazat recenzi</button>
-                <button data-act="clear">Označit jako vyřízené</button>
-              </div>
-            `;
-            card.querySelector('[data-act="del-review"]').onclick = async ()=>{
-              if (!confirm("Smazat tuto recenzi?")) return;
-              await remove(ref(db, `reviews/${trainerId}/${reviewerId}`));
-              await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
-            };
-            card.querySelector('[data-act="clear"]').onclick = async ()=>{
-              await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
-            };
-            reportsList.appendChild(card);
-          }
+        const items = []; // each: {trainerId, reviewerId, snapshot, reasons[], reportersCount}
+        const root = snap.val();
+
+        for (const trainerId of Object.keys(root)) {
+        for (const reviewerId of Object.keys(root[trainerId])) {
+            const reportersMap = root[trainerId][reviewerId] || {};
+            const reports = Object.values(reportersMap);
+
+            // pick newest snapshot for preview
+            const newest = [...reports].sort((a,b)=>(b?.createdAt||0)-(a?.createdAt||0))[0] || {};
+            const snapshot = newest.reviewSnapshot || {};
+
+            items.push({
+            trainerId,
+            reviewerId,
+            snapshot,
+            reportersCount: reports.length,
+            reasons: [...new Set(reports.map(r => r?.reason).filter(Boolean))],
+            });
         }
-      });
+        }
+
+        // Render compact tiles (like an inbox)
+        items.forEach((it, idx) => {
+        const tile = document.createElement("div");
+        tile.className = "report-item";
+        tile.innerHTML = `
+            <div class="report-line">
+            <strong>${esc(it.snapshot.authorName || it.reviewerId || "Autor")}</strong>
+            <span class="stars tiny">${starify(Number(it.snapshot.rating||0))}</span>
+            <span class="time tiny muted">${fmt(it.snapshot.createdAt)}</span>
+            <span class="bubble">${it.reportersCount}</span>
+            </div>
+            <div class="excerpt muted tiny">${esc((it.snapshot.text || "").slice(0,80))}${(it.snapshot.text||"").length>80?"…":""}</div>
+        `;
+        tile.addEventListener("click", async () => {
+            // highlight selection
+            document.querySelectorAll(".report-item.active").forEach(x=>x.classList.remove("active"));
+            tile.classList.add("active");
+            await renderReportDetail(it);
+        });
+        reportsList.appendChild(tile);
+
+        // Auto-select first item
+        if (idx === 0) { tile.click(); }
+        });
+    });
     }
   </script>
 </body>
