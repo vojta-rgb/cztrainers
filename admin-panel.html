@@ -69,6 +69,7 @@
     <div class="row">
       <span id="who" class="muted tiny">Nepřihlášen</span>
       <button id="btnLogout">Odhlásit</button>
+      <button id="btnBack">Domů</button>
     </div>
   </header>
 
@@ -164,6 +165,9 @@
     });
 
     btnLogout.addEventListener("click", ()=> signOut(auth));
+
+      document.getElementById('btnBack')
+    .addEventListener('click', () => { window.location.href = 'index.html'; });
 
     // --- Admin gate: /app-users/{uid}/role == 'admin' ---
     onAuthStateChanged(auth, async (user)=>{
