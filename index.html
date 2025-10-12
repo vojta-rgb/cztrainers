@@ -120,7 +120,7 @@
 <script type="module">
   import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getDatabase, ref, onValue, set, remove, runTransaction
+    getDatabase, ref, get, set, remove, runTransaction
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -566,20 +566,23 @@
 
   // --- Data subscriptions ---
   // trainers
-  onValue(ref(db, "users/"), (snapshot) => {
+  async function loadUsersOnce() {
     loader.style.display = "none";
-    const data = snapshot.val() || {};
+    const snap = await get(ref(db, "users"));
+    const data = snap.val() || {};
     allUsers = Object.entries(data).filter(([_, user]) => user && user.email);
     facets = buildFacets(allUsers);
     populateFilters();
     doFilter();
-  });
+  }
+  loadUsersOnce();
 
-  // counts (public)
-  onValue(ref(db, "favoriteCounts"), (snap) => {
+  async function loadFavCounts() {
+    const snap = await get(ref(db, "favoriteCounts"));
     favCounts = snap.val() || {};
     doFilter();
-  });
+  }
+  loadFavCounts();
 
   // auth + my favorites
   onAuthStateChanged(auth, (user) => {
