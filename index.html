@@ -191,7 +191,8 @@
   let me = null;                     // current auth user
   let myFavSet = new Set();          // trainer UIDs I favorited
   let favCounts = {};                // { trainerUid: number }
-
+  const favBusy = new Set();
+  
   // toggle filters panel
   filtersToggle.addEventListener("click", () => {
     const isHidden = filtersPanel.hasAttribute("hidden");
@@ -491,35 +492,65 @@
     // Tell AOS new nodes were added
     if (window.AOS && !window.__aosBooted) { window.__aosBooted = true; AOS.refresh(); }
   }
-
   // --- Favorite toggling ---
-  async function toggleFavorite(trainerId){
-    // Gate strangers
-    if (!me) {
-      toast("Pro ukládání oblíbených je potřeba účet.");
-      window.location.href = "register.html";
-      return;
-    }
-    if (trainerId === me.uid) return; // cannot favorite yourself
+  async function toggleFavorite(trainerId, btn){
+    const user = auth.currentUser;
+    if (!user) { toast("Pro ukládání oblíbených se přihlaste."); window.location.href = "register.html"; return; }
+    if (trainerId === user.uid) return;
+    if (favBusy.has(trainerId)) return;
+    favBusy.add(trainerId);
+    if (btn) btn.disabled = true;
 
-    const favRef  = ref(db, `favoritesByUser/${me.uid}/${trainerId}`);
-    const countRef= ref(db, `favoriteCounts/${trainerId}`);
-    const already = myFavSet.has(trainerId);
+    const favRef   = ref(db, `favoritesByUser/${user.uid}/${trainerId}`);
+    const countRef = ref(db, `favoriteCounts/${trainerId}`);
 
     try {
+      const snap = await get(favRef);
+      const already = snap.exists();
+
+      // grab current UI parts
+      const countEl = btn?.querySelector(".count");
+      const heartEl = btn?.querySelector(".heart");
+      const cur = parseInt(countEl?.textContent || "0", 10) || 0;
+
       if (already) {
-        // remove favorite
         await remove(favRef);
-        await runTransaction(countRef, (cur) => Math.max(0, (cur || 0) - 1));
+        await runTransaction(countRef, cur => Math.max(0, (cur || 0) - 1));
+
+        // local state + UI
+        myFavSet.delete(trainerId);
+        if (countEl) countEl.textContent = String(Math.max(0, cur - 1));
+        if (heartEl) heartEl.textContent = "♡";
+        if (btn) {
+          btn.classList.remove("on");
+          btn.setAttribute("aria-pressed","false");
+        }
         toast("Odebráno z oblíbených");
       } else {
-        // add favorite
-        await set(favRef, { addedAt: Math.floor(Date.now()/1000) });
-        await runTransaction(countRef, (cur) => (cur || 0) + 1);
+        await set(favRef, { addedAt: Date.now() });
+        await runTransaction(countRef, cur => (cur || 0) + 1);
+
+        // local state + UI
+        myFavSet.add(trainerId);
+        if (countEl) countEl.textContent = String(cur + 1);
+        if (heartEl) heartEl.textContent = "♥";
+        if (btn) {
+          btn.classList.add("on");
+          btn.setAttribute("aria-pressed","true");
+        }
         toast("Přidáno do oblíbených ✓");
       }
+      await Promise.all([loadUsersOnce(), loadFavCounts()]);
+      const f = getFiltersFromUI();
+      renderChips(f);
+      renderUsers(applyFilters(allUsers, f));
+
     } catch (e) {
+      console.error(e);
       alert("Nepodařilo se změnit oblíbené: " + (e?.message || e));
+    } finally {
+      favBusy.delete(trainerId);
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -531,7 +562,7 @@
     e.stopPropagation();
     const id = btn.getAttribute("data-id");
     if (!id) return;
-    toggleFavorite(id);
+    toggleFavorite(id, btn); // pass btn
   });
 
   // --- Filter reactiveness ---
