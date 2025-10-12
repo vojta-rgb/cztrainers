@@ -101,7 +101,7 @@
   <script type="module">
     /* ===== Firebase imports ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, set, onValue, runTransaction, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     /* ===== Firebase config ===== */
@@ -384,7 +384,12 @@
         <div class="review-top">
           <div class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
           ${badge}
-          ${isMine ? '<button class="btn-plain edit-review" type="button">Upravit</button>' : ""}
+          ${isMine ? `
+            <div class="review-actions-inline">
+              <button class="btn-plain edit-review" type="button">Upravit</button>
+              <button class="btn-plain delete-review" type="button">Smazat</button>
+            </div>
+          ` : ""}
         </div>
         <p class="review-text">"${r.text}"</p>
         <p class="review-meta">— ${r.authorName || "Uživatel"}, ${new Date(r.createdAt).toLocaleDateString("cs-CZ")}</p>
@@ -516,6 +521,31 @@
         toast("Nepodařilo se odeslat nahlášení.");
       }
     });
+    // DELETE my own review
+    reviewsList.addEventListener("click", async (e) => {
+      const delBtn = e.target.closest(".delete-review");
+      if (!delBtn) return;
+
+      const user = auth.currentUser;
+      if (!user) { toast("Pro smazání recenze se přihlaste."); return; }
+      if (user.uid !== currentUserId) return; // safety
+
+      // The review node lives at reviews/<trainerId>/<reviewerUid>
+      const myReviewRef = ref(db, `reviews/${userId}/${user.uid}`);
+      const myReportThreadRef = ref(db, `reviewReportsQueue/${userId}/${user.uid}`);
+
+      if (!confirm("Opravdu chcete svou recenzi smazat?")) return;
+
+      try {
+        await remove(myReviewRef);        // delete the review itself
+        await remove(myReportThreadRef);  // clear any reports related to this review (optional)
+        toast("Recenze byla smazána.");
+      } catch (err) {
+        console.error("Delete review failed:", err);
+        alert("Nepodařilo se smazat recenzi (práva k databázi).");
+      }
+    });
+
     /* ===== Favorites: init + toggle ===== */
     let favOn = false; // local UI state for the current viewer
 

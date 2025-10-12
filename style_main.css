@@ -269,3 +269,11 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 /* keep the name line and the tick on the same baseline */
 .card-body .name{display:inline-flex;align-items:center;gap:.4rem;line-height:1.15;}
 .card-body .name .v-tick{margin:0;width:18px;height:18px;flex:0 0 18px;vertical-align:middle;}
+
+.review-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.review-actions-inline{display:flex;gap:.4rem;margin-left:auto}
+/*delete button*/
+.btn-plain{border:1px solid rgba(0,0,0,.08);background:#f8fafc;color:#0f172a;padding:.35rem .55rem;border-radius:8px;cursor:pointer;font-size:.9rem}
+.btn-plain:hover{background:#eef2ff;border-color:#c7d2fe}
+.btn-plain.delete-review{color:#b91c1c;border-color:rgba(185,28,28,.25);background:#fff5f5}
+.btn-plain.delete-review:hover{background:#ffe4e6;border-color:#fb7185}
