@@ -103,3 +103,27 @@ body.dark .ur-field input { background: #222; border-color: #2b2b2b; color: #eee
 body.dark .ur-btn { background: #232323; color: #eaeaea; border-color: #2b2b2b; }
 body.dark .ur-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 body.dark .ur-foot { color: #cfcfcf; }
+
+/* ===== Success card after registration ===== */
+.rt-success-card{
+  margin-top: 12px;
+  border:1px solid #bbf7d0;
+  background:#ecfdf5; color:#065f46;
+  border-radius:14px; padding:14px 16px;
+}
+.rt-success-card h3{ margin:.2rem 0 .4rem; font-weight:700; }
+.rt-success-card p{ margin:.2rem 0; }
+.rt-success-actions{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.6rem; }
+.rt-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:42px; padding:0 14px; border-radius:10px;
+  background:#fff; color:#0b63b5; text-decoration:none; border:1px solid #dbeafe;
+  font-weight:600;
+}
+.rt-btn:hover{ filter:brightness(1.03); }
+.rt-btn-primary{ background:#0072CE; color:#fff; border-color:#0072CE; }
+body.dark .rt-success-card{
+  background:#093a2e; color:#c7f9e5; border-color:#1b5f4f;
+}
+body.dark .rt-btn{ background:#1e293b; color:#cfe0ff; border-color:#334155; }
+body.dark .rt-btn-primary{ background:#2b7de9; border-color:#2b7de9; }
