@@ -93,6 +93,18 @@
         <button id="submitBtn" type="submit" class="ur-btn ur-btn-primary">Vytvořit účet</button>
         <a class="ur-btn ur-btn-ghost" href="register.html">Zpět na výběr registrace</a>
       </form>
+
+      <!-- ✅ SUCCESS CARD (hidden by default) -->
+      <div id="successCard" class="rt-success-card" style="display:none">
+        <h3>✅ Účet vytvořen – ověřte e-mail</h3>
+        <p>Poslali jsme vám ověřovací e-mail. Otevřete schránku a klikněte na odkaz pro aktivaci účtu.</p>
+        <p style="opacity:.9">Nevidíte zprávu? Zkontrolujte Spam/Promo a počkejte pár minut.</p>
+        <div class="rt-success-actions">
+          <a class="rt-btn rt-btn-primary" href="login.html">Přejít na přihlášení</a>
+          <a class="rt-btn" href="index.html">Zpět na hlavní stránku</a>
+        </div>
+      </div>
+      <!-- /SUCCESS CARD -->
     </section>
   </main>
 
@@ -126,6 +138,13 @@
 
     const form = document.getElementById("userRegisterForm");
     const submitBtn = document.getElementById("submitBtn");
+
+    // --- helper: show success card (hide form, show card) ---
+    function showSuccessCard(){
+      const card = document.getElementById("successCard");
+      if(form) form.style.display = "none";
+      if(card) card.style.display = "block";
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -168,7 +187,7 @@
         // Flat roles map for quick checks/rules
         await set(ref(db, "roles/" + uid), "user");
 
-        // NEW: store consent version + timestamp
+        // Store consent version + timestamp
         const consentVersion = "2025-09-21"; // bump when you change texts
         await set(ref(db, "app-users/" + uid + "/consent"), {
           tos: true,
@@ -177,12 +196,14 @@
           at: Date.now()
         });
 
+        // Send verification email
         await sendEmailVerification(cred.user);
-        alert("Účet byl vytvořen. Poslali jsme vám ověřovací e-mail. Po ověření se přihlaste.");
-        await signOut(auth);
 
+        // ✅ Show success card instead of redirecting away
+        showSuccessCard();
+        await signOut(auth);
         form.reset();
-        window.location.href = "login.html";
+
       } catch (err) {
         alert("Chyba při registraci: " + (err?.message || err));
       } finally {
