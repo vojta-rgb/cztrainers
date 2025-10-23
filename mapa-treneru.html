@@ -283,12 +283,12 @@
       populateFilters();
       initPanel();
 
-      // Map centered on CZ
-      map = new google.maps.Map(document.getElementById("map"), {
+        // Map centered on CZ (use the current theme's MapID)
+        map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 49.8175, lng: 15.4730 },
         zoom: 6,
-        mapId: currentMapId() // optional; remove or replace with your MapID
-      });
+        mapId: currentMapId()
+        });
 
       // Places Autocomplete for quick pan-to
 //      const input = document.getElementById("searchPlace");
