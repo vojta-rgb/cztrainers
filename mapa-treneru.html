@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mapa trenérů | CZTRAINERS</title>
+
+  <!-- Fonts + global site styles -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+  <link rel="stylesheet" href="style_main.css" />
+  <link rel="stylesheet" href="navbar.css" />
+
+  <!-- Page styles -->
+  <link rel="stylesheet" href="mapa-treneru.css" />
+</head>
+<body>
+  <!-- Navbar (isolated) -->
+  <nav class="cznav" aria-label="Hlavní navigace">
+    <div class="cznav__logo">
+      <a href="index.html">
+        <img src="assets/CZTrainersNew.png" alt="CZTRAINERS Logo" />
+      </a>
+    </div>
+
+    <!-- Right cluster: profile pill + theme + burger -->
+    <div class="cznav__right">
+      <a id="profilePill" class="cznav__pill" href="register.html" aria-label="Přihlásit / registrace">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M6 20a6 6 0 0112 0"></path>
+        </svg>
+        <span id="pillText">Login</span>
+      </a>
+
+      <button id="themeToggle" class="cznav__theme" type="button" aria-label="Přepnout motiv">
+        <span id="themeIcon">☀️</span>
+      </button>
+
+      <button id="hamburger" class="cznav__hamburger" type="button" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Dropdown -->
+    <div id="navLinks" class="cznav__menu" role="menu" aria-label="Navigace">
+      <a href="index.html" class="cznav__link">Domů</a>
+      <a href="o-nas.html" class="cznav__link">O nás</a>
+      <a href="login.html" class="cznav__link" id="loginBtn">Přihlášení</a>
+      <a href="#" class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
+      <!-- Add this link in your live navbar too: -->
+      <!-- <a href="mapa-treneru.html" class="cznav__link">Mapa trenérů</a> -->
+    </div>
+  </nav>
+
+  <!-- Layout: sidebar + map -->
+  <main class="map-layout">
+    <!-- Sidebar / Filters -->
+    <aside class="map-panel" aria-label="Filtry">
+      <div class="map-panel__header">
+        <h1>Mapa trenérů</h1>
+        <button id="panelClose" class="map-panel__close" aria-label="Zavřít panel">×</button>
+      </div>
+
+      <div class="map-panel__section">
+        <label class="map-field">
+          <span>Hledat město nebo adresu</span>
+          <input id="searchPlace" type="text" placeholder="Praha, Brno, Ostrava…" />
+        </label>
+      </div>
+
+      <div class="map-panel__section">
+        <label class="map-field">
+          <span>Kraj</span>
+          <select id="filterKraj">
+            <option value="">Všechny kraje</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="map-panel__section">
+        <label class="map-field">
+          <span>Specializace</span>
+          <select id="filterSpec">
+            <option value="">Vše</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="map-panel__section">
+        <label class="map-field">
+          <span>Jazyky</span>
+          <select id="filterLang">
+            <option value="">Vše</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="map-panel__section">
+        <label class="map-check">
+          <input id="filterApprox" type="checkbox" />
+          <span>Zahrnout jen přibližné polohy</span>
+        </label>
+      </div>
+
+      <div class="map-panel__section">
+        <button id="applyFilters" class="ur-btn ur-btn-primary" type="button">Filtrovat</button>
+        <button id="resetFilters" class="ur-btn ur-btn-ghost" type="button">Vymazat</button>
+      </div>
+
+      <p class="map-panel__hint">Tip: Klikněte na pin pro detail trenéra a odkaz na profil.</p>
+    </aside>
+
+    <!-- Map container -->
+    <section class="map-canvas-wrap">
+      <div id="map" class="map-canvas" role="application" aria-label="Mapa trenérů v České republice"></div>
+
+      <!-- Floating open-button for mobile -->
+      <button id="panelOpen" class="map-fab" aria-label="Otevřít filtry">Filtry</button>
+    </section>
+  </main>
+
+  <!-- Auth-aware navbar logic (your existing script) -->
+  <script type="module" src="auth-navbar.js"></script>
+
+  <!-- Marker clustering (tiny, no build step) -->
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
+  <!-- Firebase + Google Maps: inline module -->
+  <script type="module">
+    /* ---------------- Firebase (read-only) ---------------- */
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+      authDomain: "cztrainers-dat1.firebaseapp.com",
+      databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cztrainers-dat1",
+      storageBucket: "cztrainers-dat1.appspot.com",
+      messagingSenderId: "369200533487",
+      appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+    };
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    /* ---------------- Google Maps globals ---------------- */
+    let map, clusterer, autocomplete;
+    let allMarkers = [];
+    let trainersData = [];
+
+    const KRAJE = [
+      "Hlavní město Praha","Středočeský kraj","Jihočeský kraj","Plzeňský kraj","Karlovarský kraj",
+      "Ústecký kraj","Liberecký kraj","Královéhradecký kraj","Pardubický kraj","Vysočina",
+      "Jihomoravský kraj","Olomoucký kraj","Zlínský kraj","Moravskoslezský kraj"
+    ];
+
+    const SPECIALIZACE = [
+      "Fitness","Kondiční trénink","Silový trénink","Hubnutí","Výživa","Rehabilitace",
+      "Běhání","Jóga","Pilates","Skupinové lekce"
+    ];
+
+    const JAZYKY = ["CZ","EN","DE","SK","RU","FR"];
+
+    function populateFilters() {
+      const krajSel = document.getElementById("filterKraj");
+      KRAJE.forEach(k => {
+        const o = document.createElement("option");
+        o.value = k; o.textContent = k;
+        krajSel.appendChild(o);
+      });
+      const specSel = document.getElementById("filterSpec");
+      SPECIALIZACE.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s; o.textContent = s;
+        specSel.appendChild(o);
+      });
+      const langSel = document.getElementById("filterLang");
+      JAZYKY.forEach(l => {
+        const o = document.createElement("option");
+        o.value = l; o.textContent = l;
+        langSel.appendChild(o);
+      });
+    }
+
+    function buildInfoHtml(t, uid) {
+      const name = [t.name, t.prijmeni].filter(Boolean).join(" ");
+      const specs = (t.specializations || "").toString();
+      const langs = (t.languages || "").toString();
+      const img = t.profilePicture || "assets/placeholder.jpg";
+      return `
+        <div class="map-iw">
+          <div class="map-iw__row">
+            <img class="map-iw__avatar" src="${img}" alt="${name}">
+            <div class="map-iw__meta">
+              <strong>${name || "Trenér"}</strong>
+              <small>${specs}</small>
+              <small>${langs ? "Jazyky: " + langs : ""}</small>
+            </div>
+          </div>
+          <a class="rt-btn rt-btn-primary map-iw__btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
+        </div>`;
+    }
+
+    function applyFilters() {
+      const kraj = document.getElementById("filterKraj").value;
+      const spec = document.getElementById("filterSpec").value;
+      const lang = document.getElementById("filterLang").value;
+      const onlyApprox = document.getElementById("filterApprox").checked;
+
+      // Remove markers from clusterer
+      if (clusterer) clusterer.clearMarkers();
+      allMarkers.forEach(m => m.setMap(null));
+      allMarkers = [];
+
+      const markers = [];
+
+      Object.entries(trainersData).forEach(([uid, t]) => {
+        const loc = t?.location;
+        if (!loc || loc.lat == null || loc.lng == null) return;
+        if (t.visibleOnMap === false) return;
+
+        if (kraj && (loc.region !== kraj)) return;
+        if (spec && !(t.specializations || "").includes(spec)) return;
+        if (lang && !(t.languages || "").includes(lang)) return;
+        if (onlyApprox && loc.precision !== "approx") return;
+
+        const pos = { lat: Number(loc.lat), lng: Number(loc.lng) };
+        const marker = new google.maps.Marker({ position: pos, title: (t.name || "") + " " + (t.prijmeni || "") });
+        const iw = new google.maps.InfoWindow({ content: buildInfoHtml(t, uid) });
+        marker.addListener("click", () => iw.open({ anchor: marker, map }));
+        markers.push(marker);
+      });
+
+      // Attach markers
+      allMarkers = markers;
+      allMarkers.forEach(m => m.setMap(map));
+
+      // Cluster
+      if (markers.length) {
+        // eslint-disable-next-line no-undef
+        clusterer = new markerClusterer.MarkerClusterer({ map, markers });
+      }
+    }
+
+    async function fetchTrainers() {
+      // Prefer a sanitized mirror if you create it:
+      //   public-trainers/{uid} => minimal public fields
+      let snap = await get(child(ref(db), "public-trainers"));
+      if (!snap.exists()) {
+        // Fallback to trainers/ (make sure rules keep it safe)
+        snap = await get(child(ref(db), "trainers"));
+      }
+      trainersData = snap.exists() ? snap.val() : {};
+    }
+
+    function initPanel() {
+      const open = document.getElementById("panelOpen");
+      const close = document.getElementById("panelClose");
+      const panel = document.querySelector(".map-panel");
+      const wrap = document.querySelector(".map-canvas-wrap");
+      open.addEventListener("click", () => { panel.classList.add("open"); wrap.classList.add("panel-open"); });
+      close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
+      document.getElementById("applyFilters").addEventListener("click", applyFilters);
+      document.getElementById("resetFilters").addEventListener("click", () => {
+        document.getElementById("filterKraj").value = "";
+        document.getElementById("filterSpec").value = "";
+        document.getElementById("filterLang").value = "";
+        document.getElementById("filterApprox").checked = false;
+        applyFilters();
+      });
+    }
+
+    // Expose callback for Google script
+    window.initTrainersMap = async function initTrainersMap() {
+      populateFilters();
+      initPanel();
+
+      // Map centered on CZ
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 49.8175, lng: 15.4730 },
+        zoom: 6,
+        mapId: "DEMO_MAP_ID" // optional; remove or replace with your MapID
+      });
+
+      // Places Autocomplete for quick pan-to
+      const input = document.getElementById("searchPlace");
+      // eslint-disable-next-line no-undef
+      autocomplete = new google.maps.places.Autocomplete(input, {
+        fields: ["geometry"],
+        componentRestrictions: { country: ["cz"] },
+        types: ["geocode"]
+      });
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place?.geometry?.location) {
+          map.panTo(place.geometry.location);
+          map.setZoom(12);
+        }
+      });
+
+      // Load trainers & render
+      try {
+        await fetchTrainers();
+      } catch (e) {
+        console.warn("Cannot load trainers:", e);
+      }
+      applyFilters();
+    };
+  </script>
+
+  <!-- Load Google Maps JS (PUT YOUR KEY) -->
+    <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_NEW_KEY&libraries=places&language=cs&region=CZ&callback=initTrainersMap"></script>
+</body>
+</html>
