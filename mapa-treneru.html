@@ -228,7 +228,7 @@
         const pos = { lat: Number(loc.lat), lng: Number(loc.lng) };
         const marker = new google.maps.Marker({ position: pos, title: (t.name || "") + " " + (t.prijmeni || "") });
         const iw = new google.maps.InfoWindow({ content: buildInfoHtml(t, uid) });
-        marker.addListener("click", () => iw.open({ anchor: marker, map }));
+        marker.addEventListener?.("click", () => iw.open({ anchor: marker, map })) || marker.addListener("click", () => iw.open({ anchor: marker, map }));
         markers.push(marker);
       });
 
@@ -271,8 +271,8 @@
       });
     }
 
-    // Expose callback for Google script
-    window.initTrainersMap = async function initTrainersMap() {
+    // Real init (module scope)
+    window.initTrainersMapReal = async function () {
       populateFilters();
       initPanel();
 
@@ -309,7 +309,21 @@
     };
   </script>
 
+  <!-- Bridge so the callback exists BEFORE Maps loads -->
+  <script>
+    (function () {
+      function start() {
+        if (typeof window.initTrainersMapReal === 'function') {
+          window.initTrainersMapReal();
+        } else {
+          setTimeout(start, 30);
+        }
+      }
+      window.initTrainersMap = start;
+    })();
+  </script>
+
   <!-- Load Google Maps JS (PUT YOUR KEY) -->
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainersMap"></script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainersMap"></script>
 </body>
 </html>
