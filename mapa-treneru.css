@@ -1,76 +1,95 @@
-/* Page layout */
+/* ---------- Layout ---------- */
+:root {
+  /* tweak if your navbar height differs */
+  --navbar-h: 64px;
+  --panel-w: 340px;
+
+  /* light defaults */
+  --panel-bg: #fff;
+  --panel-text: #111;
+  --panel-border: rgba(0,0,0,.08);
+  --input-bg: #fff;
+  --input-text: #111;
+  --input-border: rgba(0,0,0,.14);
+  --hint-text: rgba(0,0,0,.7);
+  --fab-bg: #0072CE;
+  --fab-text: #fff;
+}
+
 .map-layout {
   position: relative;
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: var(--panel-w) 1fr;
   gap: 0;
-  height: calc(100vh - 64px); /* subtract navbar height (adjust if needed) */
+  height: calc(100vh - var(--navbar-h));
 }
 
-/* Sidebar panel */
+/* ---------- Sidebar (LIGHT by default) ---------- */
 .map-panel {
-  background: var(--card-bg, #fff);
-  border-right: 1px solid rgba(0,0,0,.06);
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border-right: 1px solid var(--panel-border);
   padding: 16px;
   overflow: auto;
 }
 .map-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
   margin-bottom: 8px;
 }
-.map-panel__header h1 {
-  font-size: 1.25rem;
-  margin: 0;
-}
+.map-panel__header h1 { font-size: 1.25rem; margin: 0; }
 .map-panel__close {
-  border: none;
-  background: transparent;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  opacity: .7;
+  border: none; background: transparent; font-size: 1.5rem; line-height: 1;
+  cursor: pointer; opacity: .7;
 }
 .map-panel__close:hover { opacity: 1; }
-
 .map-panel__section { margin: 12px 0; }
+.map-panel__hint { font-size: .85rem; color: var(--hint-text); margin-top: 10px; }
 
+/* Fields */
 .map-field { display: grid; gap: 6px; }
 .map-field span { font-size: .9rem; opacity: .9; }
-.map-field input, .map-field select {
+.map-field input,
+.map-field select {
   width: 100%;
-  border: 1px solid rgba(0,0,0,.12);
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
   border-radius: 10px;
   padding: 10px 12px;
   font: inherit;
-  background: var(--input-bg, #fff);
+  outline: none;
+}
+.map-field input:focus,
+.map-field select:focus {
+  border-color: rgba(0,114,206,.6);
+  box-shadow: 0 0 0 3px rgba(0,114,206,.15);
 }
 .map-check { display: flex; align-items: center; gap: 8px; }
 
-.map-panel__hint { font-size: .85rem; opacity: .8; margin-top: 10px; }
-
-/* Map area */
-.map-canvas-wrap {
-  position: relative;
-}
-.map-canvas {
+/* Make sure the location search fits the panel */
+#searchPlace {
+  display: block;
   width: 100%;
-  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Floating action button (mobile filter opener) */
+/* Google Places dropdown (when enabled later) should overlay correctly */
+.pac-container {
+  z-index: 2000 !important;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---------- Map area ---------- */
+.map-canvas-wrap { position: relative; }
+.map-canvas { width: 100%; height: 100%; }
+
+/* Floating action button for mobile to open filters */
 .map-fab {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  border-radius: 999px;
-  padding: 10px 14px;
-  border: none;
-  background: #0072CE;
-  color: #fff;
-  font-weight: 600;
+  position: absolute; bottom: 16px; left: 16px;
+  border: none; border-radius: 999px;
+  padding: 10px 14px; font-weight: 600;
+  background: var(--fab-bg); color: var(--fab-text);
   box-shadow: 0 4px 16px rgba(0,0,0,.2);
   cursor: pointer;
 }
@@ -79,23 +98,20 @@
 /* InfoWindow content */
 .map-iw { min-width: 220px; }
 .map-iw__row { display: flex; gap: 10px; align-items: center; }
-.map-iw__avatar {
-  width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
-}
+.map-iw__avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
 .map-iw__meta small { display: block; opacity: .8; line-height: 1.2; margin-top: 2px; }
 .map-iw__btn { display: inline-block; margin-top: 8px; }
 
-/* Responsive: sidebar becomes drawer */
+/* ---------- Responsive: panel becomes drawer on mobile ---------- */
 @media (max-width: 980px) {
   .map-layout {
     grid-template-columns: 1fr;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 56px); /* many mobile navbars are slightly shorter */
   }
   .map-panel {
-    position: absolute;
-    z-index: 5;
+    position: absolute; z-index: 5;
     top: 0; bottom: 0; left: 0;
-    width: min(90vw, 360px);
+    width: min(92vw, 380px);
     transform: translateX(-100%);
     transition: transform .24s ease;
     box-shadow: 0 10px 24px rgba(0,0,0,.25);
@@ -104,17 +120,33 @@
   }
   .map-panel.open { transform: translateX(0); }
   .map-canvas-wrap.panel-open .map-fab { display: none; }
+
+  /* Make the Places dropdown align with the panel on mobile too */
+  .pac-container { max-width: min(92vw, 380px); }
 }
 
-/* Dark mode support (if your site toggles classes/variables) */
-@media (prefers-color-scheme: dark) {
-  .map-panel {
-    background: var(--card-bg, #161616);
-    border-right-color: rgba(255,255,255,.06);
-  }
-  .map-field input, .map-field select {
-    background: var(--input-bg, #121212);
-    border-color: rgba(255,255,255,.12);
-    color: #fff;
-  }
+/* ---------- Dark mode (only when your site sets it) ---------- */
+/* Supports: <html data-theme="dark"> OR <body data-theme="dark"> OR .theme-dark on html/body */
+html[data-theme="dark"] .map-panel,
+body[data-theme="dark"] .map-panel,
+.theme-dark .map-panel {
+  background: #161616;
+  color: #fff;
+  border-right-color: rgba(255,255,255,.08);
 }
+html[data-theme="dark"] .map-field input,
+html[data-theme="dark"] .map-field select,
+body[data-theme="dark"] .map-field input,
+body[data-theme="dark"] .map-field select,
+.theme-dark .map-field input,
+.theme-dark .map-field select {
+  background: #121212;
+  color: #fff;
+  border-color: #2a2a2a;
+}
+html[data-theme="dark"] .map-panel__hint,
+body[data-theme="dark"] .map-panel__hint,
+.theme-dark .map-panel__hint { color: rgba(255,255,255,.75); }
+html[data-theme="dark"] .map-fab,
+body[data-theme="dark"] .map-fab,
+.theme-dark .map-fab { background: #2b7dff; color: #fff; }
