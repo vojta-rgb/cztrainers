@@ -144,6 +144,13 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    const MAP_ID_LIGHT = "934413df346d8684b8b20ffb";
+    const MAP_ID_DARK  = "934413df346d8684e809c715";
+
+    function currentMapId() {
+        return document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
+    }
+
     /* ---------------- Google Maps globals ---------------- */
     let map, clusterer, autocomplete;
     let allMarkers = [];
@@ -280,7 +287,7 @@
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 49.8175, lng: 15.4730 },
         zoom: 6,
-        mapId: "DEMO_MAP_ID" // optional; remove or replace with your MapID
+        mapId: currentMapId() // optional; remove or replace with your MapID
       });
 
       // Places Autocomplete for quick pan-to
@@ -307,6 +314,19 @@
       }
       applyFilters();
     };
+    // Re-apply mapId when theme changes
+    const applyThemeToMap = () => map.setOptions({ mapId: currentMapId() });
+
+    // Hook into your existing toggle button
+    document.getElementById("themeToggle")?.addEventListener("click", () => {
+    // Your navbar code already toggles body.dark; we just react to it:
+    // Delay a tick so the class is applied before reading it
+    setTimeout(applyThemeToMap, 0);
+    });
+
+    // Also apply once on load (in case persisted "dark" in localStorage)
+    applyThemeToMap();
+
   </script>
 
   <!-- Bridge so the callback exists BEFORE Maps loads -->
