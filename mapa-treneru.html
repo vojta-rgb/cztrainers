@@ -284,20 +284,20 @@
       });
 
       // Places Autocomplete for quick pan-to
-      const input = document.getElementById("searchPlace");
+//      const input = document.getElementById("searchPlace");
       // eslint-disable-next-line no-undef
-      autocomplete = new google.maps.places.Autocomplete(input, {
-        fields: ["geometry"],
-        componentRestrictions: { country: ["cz"] },
-        types: ["geocode"]
-      });
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place?.geometry?.location) {
-          map.panTo(place.geometry.location);
-          map.setZoom(12);
-        }
-      });
+//      autocomplete = new google.maps.places.Autocomplete(input, {
+//        fields: ["geometry"],
+//        componentRestrictions: { country: ["cz"] },
+//        types: ["geocode"]
+//      });
+//      autocomplete.addListener("place_changed", () => {
+//        const place = autocomplete.getPlace();
+//        if (place?.geometry?.location) {
+//          map.panTo(place.geometry.location);
+//          map.setZoom(12);
+//        }
+//      });
 
       // Load trainers & render
       try {
@@ -324,6 +324,6 @@
   </script>
 
   <!-- Load Google Maps JS (PUT YOUR KEY) -->
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainersMap"></script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainersMap&loading=async"></script>
 </body>
 </html>
