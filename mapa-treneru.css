@@ -14,7 +14,7 @@
   --fab-text:#fff;
 }
 
-/* --------- DARK via body.dark (your toggle) --------- */
+/* --------- DARK via body.dark --------- */
 body.dark{
   --panel-bg:#161616;
   --panel-text:#fff;
@@ -83,7 +83,7 @@ body.dark .map-panel{ color-scheme:dark; }
 /* Make the location search fit the panel */
 #searchPlace{ display:block;width:100%; }
 
-/* Google Places dropdown (when enabled later) */
+/* Google Places dropdown (when enabled) */
 .pac-container{
   z-index:2000 !important;
   border-radius:10px;
@@ -140,5 +140,6 @@ body.dark .pac-item:hover{ background:rgba(255,255,255,.07); }
   .pac-container{ max-width:min(92vw,380px); }
 }
 
+/* Hint Maps for auto light/dark rendering with a dual-mode Map ID */
 .map-canvas { color-scheme: light; }
 body.dark .map-canvas { color-scheme: dark; }
