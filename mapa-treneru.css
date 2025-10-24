@@ -140,5 +140,5 @@ body.dark .pac-item:hover{ background:rgba(255,255,255,.07); }
   .pac-container{ max-width:min(92vw,380px); }
 }
 
-.map-canvas { color-scheme: light !important; }
-body.dark .map-canvas { color-scheme: dark !important; }
+.map-canvas { color-scheme: light; }
+body.dark .map-canvas { color-scheme: dark; }

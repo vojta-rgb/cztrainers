@@ -126,171 +126,184 @@
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 
   <!-- Firebase + Google Maps: inline module -->
-    <script type="module">
-    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const firebaseConfig = {
-    apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
-    authDomain: "cztrainers-dat1.firebaseapp.com",
-    databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "cztrainers-dat1",
-    storageBucket: "cztrainers-dat1.appspot.com",
-    messagingSenderId: "369200533487",
-    appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
+  authDomain: "cztrainers-dat1.firebaseapp.com",
+  databaseURL: "https://cztrainers-dat1-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cztrainers-dat1",
+  storageBucket: "cztrainers-dat1.appspot.com",
+  messagingSenderId: "369200533487",
+  appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
+};
 
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db  = getDatabase(app);
 
-    // ✅ Single dual-mode Map ID (has both light/dark in Map Styles)
-    const MAP_ID = "af6046a265f967e41ff3345f";
+/* -------------------------------------------------------
+   USE TWO MAP IDs (one light, one dark)
+   Paste YOUR actual IDs from Map Management:
+   - From your screenshot they are approximately:
+     DARK:  af6046a265f967e41ff3345f
+     LIGHT: af6046a265f967e45e85c84d
+------------------------------------------------------- */
+const MAP_ID_LIGHT = "af6046a265f967e45e85c84d"; // TODO: confirm in your console
+const MAP_ID_DARK  = "af6046a265f967e41ff3345f"; // TODO: confirm in your console
 
-    /* ---------------- Google Maps globals ---------------- */
-    let map, clusterer;
-    let allMarkers = [];
-    let trainersData = [];
+/* ---------------- Google Maps globals ---------------- */
+let map, clusterer;
+let allMarkers = [];
+let trainersData = [];
 
-    const KRAJE = [
-    "Hlavní město Praha","Středočeský kraj","Jihočeský kraj","Plzeňský kraj","Karlovarský kraj",
-    "Ústecký kraj","Liberecký kraj","Královéhradecký kraj","Pardubický kraj","Vysočina",
-    "Jihomoravský kraj","Olomoucký kraj","Zlínský kraj","Moravskoslezský kraj"
-    ];
-    const SPECIALIZACE = [
-    "Fitness","Kondiční trénink","Silový trénink","Hubnutí","Výživa","Rehabilitace",
-    "Běhání","Jóga","Pilates","Skupinové lekce"
-    ];
-    const JAZYKY = ["CZ","EN","DE","SK","RU","FR"];
+const KRAJE = [
+  "Hlavní město Praha","Středočeský kraj","Jihočeský kraj","Plzeňský kraj","Karlovarský kraj",
+  "Ústecký kraj","Liberecký kraj","Královéhradecký kraj","Pardubický kraj","Vysočina",
+  "Jihomoravský kraj","Olomoucký kraj","Zlínský kraj","Moravskoslezský kraj"
+];
+const SPECIALIZACE = [
+  "Fitness","Kondiční trénink","Silový trénink","Hubnutí","Výživa","Rehabilitace",
+  "Běhání","Jóga","Pilates","Skupinové lekce"
+];
+const JAZYKY = ["CZ","EN","DE","SK","RU","FR"];
 
-    function populateFilters(){
-    const krajSel = document.getElementById("filterKraj");
-    KRAJE.forEach(k => krajSel.append(new Option(k, k)));
-    const specSel = document.getElementById("filterSpec");
-    SPECIALIZACE.forEach(s => specSel.append(new Option(s, s)));
-    const langSel = document.getElementById("filterLang");
-    JAZYKY.forEach(l => langSel.append(new Option(l, l)));
-    }
+function populateFilters() {
+  const krajSel = document.getElementById("filterKraj");
+  KRAJE.forEach(k => krajSel.append(new Option(k, k)));
+  const specSel = document.getElementById("filterSpec");
+  SPECIALIZACE.forEach(s => specSel.append(new Option(s, s)));
+  const langSel = document.getElementById("filterLang");
+  JAZYKY.forEach(l => langSel.append(new Option(l, l)));
+}
 
-    function buildInfoHtml(t, uid){
-    const name = [t.name, t.prijmeni].filter(Boolean).join(" ");
-    const specs = (t.specializations || "").toString();
-    const langs = (t.languages || "").toString();
-    const img = t.profilePicture || "assets/placeholder.jpg";
-    return `
+function buildInfoHtml(t, uid) {
+  const name = [t.name, t.prijmeni].filter(Boolean).join(" ");
+  const specs = (t.specializations || "").toString();
+  const langs = (t.languages || "").toString();
+  const img = t.profilePicture || "assets/placeholder.jpg";
+  return `
     <div class="map-iw">
-        <div class="map-iw__row">
+      <div class="map-iw__row">
         <img class="map-iw__avatar" src="${img}" alt="${name}">
         <div class="map-iw__meta">
-            <strong>${name || "Trenér"}</strong>
-            <small>${specs}</small>
-            <small>${langs ? "Jazyky: " + langs : ""}</small>
+          <strong>${name || "Trenér"}</strong>
+          <small>${specs}</small>
+          <small>${langs ? "Jazyky: " + langs : ""}</small>
         </div>
-        </div>
-        <a class="rt-btn rt-btn-primary map-iw__btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
+      </div>
+      <a class="rt-btn rt-btn-primary map-iw__btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
     </div>`;
-    }
+}
 
-    function applyFilters(){
-    const kraj = document.getElementById("filterKraj").value;
-    const spec = document.getElementById("filterSpec").value;
-    const lang = document.getElementById("filterLang").value;
-    const onlyApprox = document.getElementById("filterApprox").checked;
+/* Pick the right Map ID based on your body.dark class */
+function currentMapId() {
+  return document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
+}
 
-    if (clusterer) clusterer.clearMarkers();
-    allMarkers.forEach(m => m.setMap(null));
-    allMarkers = [];
+/* Re-create map (required because mapId is immutable) */
+function rebuildMap() {
+  const mapDiv = document.getElementById("map");
+  const center = map ? map.getCenter() : { lat: 49.8175, lng: 15.4730 };
+  const zoom   = map ? map.getZoom()   : 6;
 
-    const markers = [];
-    Object.entries(trainersData).forEach(([uid, t]) => {
-        const loc = t?.location;
-        if (!loc || loc.lat == null || loc.lng == null) return;
-        if (t.visibleOnMap === false) return;
-        if (kraj && (loc.region !== kraj)) return;
-        if (spec && !(t.specializations || "").includes(spec)) return;
-        if (lang && !(t.languages || "").includes(lang)) return;
-        if (onlyApprox && loc.precision !== "approx") return;
+  if (clusterer) { clusterer.clearMarkers(); clusterer = null; }
+  allMarkers.forEach(m => m.setMap(null));
 
-        const pos = { lat: Number(loc.lat), lng: Number(loc.lng) };
-        const marker = new google.maps.Marker({ position: pos, title: (t.name || "") + " " + (t.prijmeni || "") });
-        const iw = new google.maps.InfoWindow({ content: buildInfoHtml(t, uid) });
-        marker.addListener("click", () => iw.open({ anchor: marker, map }));
-        markers.push(marker);
-    });
+  map = new google.maps.Map(mapDiv, {
+    center,
+    zoom,
+    mapId: currentMapId()
+  });
 
-    allMarkers = markers;
-    allMarkers.forEach(m => m.setMap(map));
-    if (markers.length) clusterer = new markerClusterer.MarkerClusterer({ map, markers });
-    }
+  applyFilters(); // put markers back
+}
 
-    async function fetchTrainers(){
-    let snap = await get(child(ref(db), "public-trainers"));
-    if (!snap.exists()) snap = await get(child(ref(db), "trainers"));
-    trainersData = snap.exists() ? snap.val() : {};
-    }
+function applyFilters() {
+  const kraj = document.getElementById("filterKraj").value;
+  const spec = document.getElementById("filterSpec").value;
+  const lang = document.getElementById("filterLang").value;
+  const onlyApprox = document.getElementById("filterApprox").checked;
 
-    /* --- NEW: minimal helper to rebuild map when theme flips --- */
-    function rebuildMap() {
-    if (!window.google || !map) return;
-    const mapDiv = document.getElementById("map");
-    const center = map.getCenter();
-    const zoom   = map.getZoom();
+  if (clusterer) clusterer.clearMarkers();
+  allMarkers.forEach(m => m.setMap(null));
+  allMarkers = [];
 
-    if (clusterer) { clusterer.clearMarkers(); clusterer = null; }
-    allMarkers.forEach(m => m.setMap(null));
+  const markers = [];
+  Object.entries(trainersData).forEach(([uid, t]) => {
+    const loc = t?.location;
+    if (!loc || loc.lat == null || loc.lng == null) return;
+    if (t.visibleOnMap === false) return;
+    if (kraj && (loc.region !== kraj)) return;
+    if (spec && !(t.specializations || "").includes(spec)) return;
+    if (lang && !(t.languages || "").includes(lang)) return;
+    if (onlyApprox && loc.precision !== "approx") return;
 
-    map = new google.maps.Map(mapDiv, {
-        center,
-        zoom,
-        mapId: MAP_ID // same ID; it reads CSS color-scheme again
-    });
+    const pos = { lat: Number(loc.lat), lng: Number(loc.lng) };
+    const marker = new google.maps.Marker({ position: pos, title: (t.name || "") + " " + (t.prijmeni || "") });
+    const iw = new google.maps.InfoWindow({ content: buildInfoHtml(t, uid) });
+    marker.addListener("click", () => iw.open({ anchor: marker, map }));
+    markers.push(marker);
+  });
 
+  allMarkers = markers;
+  allMarkers.forEach(m => m.setMap(map));
+  if (markers.length) {
+    // eslint-disable-next-line no-undef
+    clusterer = new markerClusterer.MarkerClusterer({ map, markers });
+  }
+}
+
+async function fetchTrainers() {
+  let snap = await get(child(ref(db), "public-trainers"));
+  if (!snap.exists()) snap = await get(child(ref(db), "trainers"));
+  trainersData = snap.exists() ? snap.val() : {};
+}
+
+function initPanel() {
+  const open = document.getElementById("panelOpen");
+  const close = document.getElementById("panelClose");
+  const panel = document.querySelector(".map-panel");
+  const wrap  = document.querySelector(".map-canvas-wrap");
+  open.addEventListener("click", () => { panel.classList.add("open"); wrap.classList.add("panel-open"); });
+  close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
+  document.getElementById("applyFilters").addEventListener("click", applyFilters);
+  document.getElementById("resetFilters").addEventListener("click", () => {
+    document.getElementById("filterKraj").value = "";
+    document.getElementById("filterSpec").value = "";
+    document.getElementById("filterLang").value = "";
+    document.getElementById("filterApprox").checked = false;
     applyFilters();
-    }
+  });
+}
 
-    function initPanel(){
-    const open = document.getElementById("panelOpen");
-    const close = document.getElementById("panelClose");
-    const panel = document.querySelector(".map-panel");
-    const wrap  = document.querySelector(".map-canvas-wrap");
-    open.addEventListener("click", () => { panel.classList.add("open"); wrap.classList.add("panel-open"); });
-    close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
-    document.getElementById("applyFilters").addEventListener("click", applyFilters);
-    document.getElementById("resetFilters").addEventListener("click", () => {
-        document.getElementById("filterKraj").value = "";
-        document.getElementById("filterSpec").value = "";
-        document.getElementById("filterLang").value = "";
-        document.getElementById("filterApprox").checked = false;
-        applyFilters();
-    });
-    }
+/* INIT */
+window.initTrainersMapReal = async function () {
+  populateFilters();
+  initPanel();
 
-    // Real init (module scope)
-    window.initTrainersMapReal = async function () {
-    populateFilters();
-    initPanel();
+  // Create the map once with the correct ID for the current theme
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 49.8175, lng: 15.4730 },
+    zoom: 6,
+    mapId: currentMapId()
+  });
 
-    // Create map ONCE with the dual-mode Map ID
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 49.8175, lng: 15.4730 },
-        zoom: 6,
-        mapId: MAP_ID
-    });
+  try { await fetchTrainers(); } catch(e) { console.warn("Cannot load trainers:", e); }
+  applyFilters();
 
-    // Load data + render markers
-    try { await fetchTrainers(); } catch(e){ console.warn("Cannot load trainers:", e); }
-    applyFilters();
+  // Rebuild the map whenever your theme button flips body.dark
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    // your own code toggles body.dark; rebuild right after it flips
+    setTimeout(rebuildMap, 0);
+  });
 
-    // When your theme button flips body.dark, rebuild the map
-    document.getElementById("themeToggle")?.addEventListener("click", () => {
-        // let your existing toggle run, then rebuild
-        setTimeout(rebuildMap, 0);
-    });
-
-    // Also watch body.class changes (covers programmatic/theme restore)
-    new MutationObserver(() => rebuildMap())
-        .observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    };
-    </script>
+  // Also rebuild if body class changes programmatically (e.g., on load from localStorage)
+  new MutationObserver(() => rebuildMap())
+    .observe(document.body, { attributes: true, attributeFilter: ['class'] });
+};
+</script>
 
   <!-- Bridge so the callback exists BEFORE Maps loads -->
   <script>
