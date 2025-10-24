@@ -233,65 +233,9 @@
         clusterer = new markerClusterer.MarkerClusterer({ map, markers });
       }
     }
-
-    async function fetchTrainers() {
-        const rootRef = ref(db);
-        let snap = null;
-
-        // Try public mirror first, but ignore permission errors
-        try {
-            snap = await get(child(rootRef, "public-trainers"));
-        } catch (_) {
-            // ignore – will fall back
-        }
-
-        // If missing/denied/empty, fall back to main users
-        if (!snap || !snap.exists()) {
-            snap = await get(child(rootRef, "users")); // you store trainers in 'users'
-        }
-
-        trainersData = snap.exists() ? snap.val() : {};
-    }
-
-    function initPanel(){
-      const open  = document.getElementById("panelOpen");
-      const close = document.getElementById("panelClose");
-      const panel = document.querySelector(".map-panel");
-      const wrap  = document.querySelector(".map-canvas-wrap");
-      open.addEventListener("click",  () => { panel.classList.add("open");  wrap.classList.add("panel-open"); });
-      close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
-      document.getElementById("applyFilters").addEventListener("click", applyFilters);
-      document.getElementById("resetFilters").addEventListener("click", () => {
-        document.getElementById("filterKraj").value = "";
-        document.getElementById("filterSpec").value = "";
-        document.getElementById("filterLang").value = "";
-        document.getElementById("filterApprox").checked = false;
-        applyFilters();
-      });
-    }
-
-    /* INIT */
-    window.initTrainersMapReal = async function(){
-      populateFilters();
-      initPanel();
-
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 49.8175, lng: 15.4730 },
-        zoom: 6,
-        mapId: currentMapId()
-      });
-
-      try { await fetchTrainers(); } catch (e) { console.warn("Cannot load trainers:", e); }
-      applyFilters();
-
-      // Rebuild when theme flips body.dark
-      document.getElementById("themeToggle")?.addEventListener("click", () => setTimeout(rebuildMap, 0));
-
-      // Also handle class changes programmatically
-      new MutationObserver(() => rebuildMap())
-        .observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    };
-  </script>
+    window.initTrainersMap = start;
+  })();
+</script>
 
   <!-- Make sure our callback exists before Maps loads -->
   <script>
