@@ -100,6 +100,14 @@
   const logoutBtn   = document.getElementById("logoutBtn");
   const btnLogout   = document.getElementById("btnLogout");
 
+  function locationText(loc) {
+    if (!loc) return "";
+    if (typeof loc === "string") return loc;
+    const city   = (loc.city   || "").trim();
+    const region = (loc.region || "").trim();
+    return city && region ? `${city}, ${region}` : (city || region || "");
+  }
+
   function socialsFrom(user){
     const s = user.socials || {};
     return {
@@ -138,7 +146,7 @@
         <div class="profile-left">
           <img class="profile-avatar" src="${user.profilePicture || 'https://placehold.co/300x300?text=Profil'}" alt="Profilová fotka">
           <h2>${user.name || "Neznámý"} ${user.prijmeni || ""}</h2>
-          <p><strong>📍 Lokalita:</strong> ${user.location || "-"}</p>
+          <p><strong>📍 Lokalita:</strong> ${locationText(user.location) || "-"}</p>
           <p><strong>📞 Telefon:</strong> ${user.phone || "-"}</p>
           <p><strong>📧 Email:</strong> ${user.email || "-"}</p>
           <p><strong>🌐 Moje sociální sítě:</strong></p>
