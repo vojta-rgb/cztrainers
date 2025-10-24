@@ -201,7 +201,56 @@
             <a href="ochrana-osobnich-udaju.html" target="_blank" rel="noopener">Zásadami ochrany osobních údajů</a>.
           </span>
         </label>
-        
+        <!-- ======= Mapa & poloha trenéra ======= -->
+        <h3 class="section">Poloha na mapě</h3>
+
+        <div class="rt-mapbox">
+          <label class="map-field">
+            <span>Najdi adresu / město</span>
+            <input id="mapSearch" type="text" placeholder="Zadejte adresu nebo město" />
+          </label>
+
+          <div id="trainerMap" class="map-picker" aria-label="Výběr polohy trenéra"></div>
+
+          <div class="map-toggles">
+            <label class="rt-check">
+              <input type="checkbox" id="showOnMap" checked>
+              <span>Zobrazit na mapě</span>
+            </label>
+
+            <div class="map-precision">
+              <label class="rt-check">
+                <input type="radio" name="locPrecision" value="exact" checked>
+                <span>Přesná poloha</span>
+              </label>
+              <label class="rt-check">
+                <input type="radio" name="locPrecision" value="approx">
+                <span>Přibližná poloha</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="map-meta">
+            <label class="field-small">
+              <span>Město (auto)</span>
+              <input id="cityDisplay" type="text" readonly placeholder="—" />
+            </label>
+            <label class="field-small">
+              <span>Kraj (auto vyplní výběr výše)</span>
+              <input id="regionDisplay" type="text" readonly placeholder="—" />
+            </label>
+          </div>
+
+          <!-- Hidden fields JS fills before save -->
+          <input type="hidden" id="loc_lat" />
+          <input type="hidden" id="loc_lng" />
+          <input type="hidden" id="loc_city" />
+          <input type="hidden" id="loc_region" />
+          <input type="hidden" id="loc_geohash" />
+          <input type="hidden" id="loc_precision" value="exact" />
+          <input type="hidden" id="loc_visible" value="true" />
+        </div>
+
         <!-- Actions -->
         <div class="actions">
         <button id="submitBtn" type="submit" class="ur-btn ur-btn-primary">Vytvořit účet</button>
@@ -537,8 +586,10 @@ async function getNSFWModel() {
     }
   });
   </script>
-
+  
   <script type="module" src="auth-navbar.js"></script>
+  <script type="module" src="register-trainer-map.js"></script>
+  
   <div id="rt-toast" class="rt-toast" role="status" aria-live="polite"></div>
 </body>
 </html>

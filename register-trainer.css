@@ -253,3 +253,66 @@ body.dark .rt-btn-primary{ background:#2b7de9; border-color:#2b7de9; }
 }
 .rt-check input{ width:18px; height:18px; margin-top:2px; accent-color:var(--primary); }
 body.dark .rt-check{ color:#d1d5db; }
+
+/* --- Map block --- */
+.rt-mapbox{
+  margin: 16px 0 8px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  background: var(--card-bg, #fff);
+}
+body.dark .rt-mapbox{
+  background: #161616;
+  border-color: rgba(255,255,255,.10);
+}
+
+.map-field{ display:grid; gap:6px; margin-bottom:10px; }
+.map-field span{ font-size:.9rem; opacity:.9; }
+.map-field input{
+  width:100%; box-sizing:border-box;
+  padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,.14);
+  background:#fff; color:#111; font:inherit; outline:none;
+}
+body.dark .map-field input{ background:#121212; color:#fff; border-color:#2a2a2a; }
+.map-field input:focus{ border-color:rgba(0,114,206,.6); box-shadow:0 0 0 3px rgba(0,114,206,.15); }
+
+/* Map canvas */
+.map-picker{
+  height: 300px;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  color-scheme: light; /* default tiles if using dual-mode MapID */
+}
+body.dark .map-picker{ color-scheme: dark; }
+
+/* Places dropdown on top */
+.pac-container{
+  z-index: 2000 !important;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+body.dark .pac-container{ background:#161616; color:#fff; border:1px solid rgba(255,255,255,.1); }
+
+.map-toggles{
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:10px 0;
+}
+.map-precision{ display:flex; gap:12px; }
+
+.map-meta{
+  display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:6px;
+}
+.field-small{ display:grid; gap:6px; }
+.field-small input{
+  width:100%; box-sizing:border-box; padding:8px 10px; border-radius:8px;
+  border:1px solid rgba(0,0,0,.12); background:#f8f8f8; color:#333;
+}
+body.dark .field-small input{ background:#0f0f0f; color:#eee; border-color:#2a2a2a; }
+
+/* Mobile */
+@media (max-width: 600px){
+  .map-picker{ height: 240px; }
+  .map-meta{ grid-template-columns: 1fr; }
+}
