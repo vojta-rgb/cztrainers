@@ -143,3 +143,56 @@ body.dark .pac-item:hover{ background:rgba(255,255,255,.07); }
 /* Hint Maps for auto light/dark rendering with a dual-mode Map ID */
 .map-canvas { color-scheme: light; }
 body.dark .map-canvas { color-scheme: dark; }
+
+/* === Avatar pin (AdvancedMarker content) === */
+.trainer-pin {
+  position: relative;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 999px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  transform: translateY(-6px); /* lift pin slightly */
+}
+.trainer-pin img.pin-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* dark mode */
+body.dark .trainer-pin {
+  background: #0b0f14;
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 1px 6px rgba(0,0,0,.8);
+}
+
+/* === InfoWindow card === */
+.iw-card {
+  width: 260px;
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: start;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.iw-card .iw-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.iw-card .iw-name {
+  font-weight: 700;
+  margin: 2px 0 4px;
+}
+.iw-card .iw-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 2px 0;
+}
+.iw-card .iw-btn {
+  margin-top: 8px;
+  display: inline-block;
+}
+body.dark .iw-card .iw-meta { color: #9aa4b2; }
