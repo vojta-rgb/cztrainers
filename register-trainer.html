@@ -497,6 +497,29 @@ async function getNSFWModel() {
       }
     }
 
+    function collectMapLocation() {
+    const visible   = document.getElementById("showOnMap")?.checked ?? true;
+    const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
+
+    const lat = parseFloat(document.getElementById("loc_lat")?.value ?? "");
+    const lng = parseFloat(document.getElementById("loc_lng")?.value ?? "");
+    const city = document.getElementById("loc_city")?.value || "";
+    const regionAuto = document.getElementById("loc_region")?.value || "";
+    const geohash = document.getElementById("loc_geohash")?.value || "";
+
+    return {
+      visibleOnMap: visible,
+      precision,
+      lat:  visible && Number.isFinite(lat) ? lat : null,
+      lng:  visible && Number.isFinite(lng) ? lng : null,
+      city,
+      // prefer reverse-geocoded region, fall back to manual Kraj select
+      region: regionAuto || (document.getElementById("location")?.value || ""),
+      geohash: visible ? geohash : "",
+      updatedAt: Date.now()
+    };
+  }
+
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
@@ -550,7 +573,13 @@ async function getNSFWModel() {
         datum: document.getElementById("datum").value,
         phone: document.getElementById("phone").value,
         gender: document.getElementById("gender").value,
-        location: document.getElementById("location").value,
+
+        // keep the manual Kraj select as its own field
+        region: document.getElementById("location").value,
+
+        // full map payload (lat/lng/city/region/precision/visible/geohash)
+        location: collectMapLocation(),
+
         bio: document.getElementById("bio").value,
         specializations: Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(el => el.value).join(", "),
         pricing: document.getElementById("pricing").value,
@@ -563,14 +592,11 @@ async function getNSFWModel() {
       // 5) Write to "unverified-users" (may be blocked if App Check is enforced,
       //    but the verification email has already been sent)
       try {
-        await set(ref(db, 'unverified-users/' + user.uid), userData);
-        const consentVersion = "2025-09-21"; // zvyšte při změně textů
-        await set(ref(db, 'unverified-users/' + user.uid + '/consent'), {
-          tos: true,
-          privacy: true,
-          version: consentVersion,
-          at: Date.now()
-        });
+      await set(ref(db, 'unverified-users/' + user.uid), userData);
+      await set(ref(db, 'unverified-users/' + user.uid + '/consent'), {
+        tos: true, privacy: true, version: "2025-09-21", at: Date.now()
+      });
+
       } catch (dbErr) {
         console.warn("DB write failed (will still allow email verification):", dbErr);
         // carry on — they can verify email and you can migrate on first login
