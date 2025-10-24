@@ -234,12 +234,23 @@
       }
     }
 
-    async function fetchTrainers(){
-      // Primary: public dataset (readable by anyone)
-      let snap = await get(child(ref(db), "public-trainers"));
-      // Fallback for legacy data (optional; OK if this path doesn't exist)
-      if (!snap.exists()) snap = await get(child(ref(db), "trainers"));
-      trainersData = snap.exists() ? snap.val() : {};
+    async function fetchTrainers() {
+        const rootRef = ref(db);
+        let snap = null;
+
+        // Try public mirror first, but ignore permission errors
+        try {
+            snap = await get(child(rootRef, "public-trainers"));
+        } catch (_) {
+            // ignore – will fall back
+        }
+
+        // If missing/denied/empty, fall back to main users
+        if (!snap || !snap.exists()) {
+            snap = await get(child(rootRef, "users")); // you store trainers in 'users'
+        }
+
+        trainersData = snap.exists() ? snap.val() : {};
     }
 
     function initPanel(){
