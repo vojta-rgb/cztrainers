@@ -141,9 +141,53 @@
   const currentMapId = () =>
     document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
 
-  /* Globals */
-  let map, clusterer, allMarkers = [], trainersData = [];
-  let infoWindow;
+    /* Globals */
+    let map, clusterer, allMarkers = [], trainersData = [];
+    let infoWindow;
+    let geocoder;
+
+    // add this helper anywhere in the module (above init is fine)
+    function setupSearch() {
+    const input = document.getElementById("searchPlace");
+    if (!input || !window.google || !google.maps) return;
+
+    // Legacy Autocomplete (still supported). We already load libraries=places.
+    // Restrict to CZ; add more countries if you like.
+    const ac = new google.maps.places.Autocomplete(input, {
+        fields: ["geometry"],
+        componentRestrictions: { country: ["cz"] },
+        types: ["geocode"]
+    });
+
+    ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        const loc = place?.geometry?.location;
+        if (loc) {
+        map.panTo(loc);
+        map.setZoom(12);
+        }
+    });
+
+    // Fallback: user presses Enter without picking a suggestion
+    input.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const q = input.value.trim();
+        if (!q) return;
+
+        geocoder = geocoder || new google.maps.Geocoder();
+        geocoder.geocode(
+        { address: q, componentRestrictions: { country: "cz" } },
+        (results, status) => {
+            const loc = (status === "OK" && results[0]?.geometry?.location) ? results[0].geometry.location : null;
+            if (loc) {
+            map.panTo(loc);
+            map.setZoom(12);
+            }
+        }
+        );
+    });
+    }
 
   const KRAJE = [
     "Hlavní město Praha","Středočeský kraj","Jihočeský kraj","Plzeňský kraj","Karlovarský kraj",
@@ -318,7 +362,7 @@
       mapId: currentMapId()
     });
     infoWindow = new google.maps.InfoWindow();
-
+    setupSearch();
     try { await fetchTrainers(); } catch (e) { console.warn("Cannot load trainers:", e); }
     applyFilters();
 
