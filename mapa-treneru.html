@@ -147,6 +147,28 @@
     const MAP_ID_LIGHT = "934413df346d8684b8b20ffb";
     const MAP_ID_DARK  = "934413df346d8684e809c715";
 
+    // Rebuild the map with the right MapID (keeps center/zoom; re-adds markers)
+    function rebuildMapWithTheme() {
+    if (!window.google || !map) return;           // map not ready yet
+
+    const center = map.getCenter();
+    const zoom   = map.getZoom();
+
+    // Clear clusters & detach old markers
+    if (clusterer) { clusterer.clearMarkers(); clusterer = null; }
+    allMarkers.forEach(m => m.setMap(null));
+
+    // Recreate the map in the same div with the new mapId
+    map = new google.maps.Map(document.getElementById("map"), {
+        center,
+        zoom,
+        mapId: currentMapId()
+    });
+
+    // Re-add markers & clustering with current filters
+    applyFilters();
+    }
+
     function currentMapId() {
         return document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
     }
@@ -317,16 +339,14 @@
     // Re-apply mapId when theme changes
     const applyThemeToMap = () => map.setOptions({ mapId: currentMapId() });
 
-    // Hook into your existing toggle button
+    // When the user toggles theme, rebuild map with the other MapID
     document.getElementById("themeToggle")?.addEventListener("click", () => {
-    // Your navbar code already toggles body.dark; we just react to it:
-    // Delay a tick so the class is applied before reading it
-    setTimeout(applyThemeToMap, 0);
+    // Your own code flips body.dark; rebuild after it flips
+    setTimeout(rebuildMapWithTheme, 0);
     });
 
-    // Also apply once on load (in case persisted "dark" in localStorage)
-    applyThemeToMap();
-
+    // Also apply once on load in case theme persisted from localStorage
+    setTimeout(rebuildMapWithTheme, 0);
   </script>
 
   <!-- Bridge so the callback exists BEFORE Maps loads -->
