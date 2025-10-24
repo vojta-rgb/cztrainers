@@ -267,3 +267,121 @@ body.dark .rt-toast{ background:#161c26; }
 /* Utility */
 .text-muted{ color:var(--muted); }
 .hide{ display:none !important; }
+
+/* ====== Small UI polish for register page ====== */
+
+/* Buttons (generic so it catches your current ones) */
+button, .ur-btn, input[type="submit"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .12s ease, box-shadow .15s ease, transform .06s ease;
+}
+button:active, .ur-btn:active, input[type="submit"]:active { transform: translateY(1px); }
+
+/* Primary submit */
+#registerSubmit, /* if you have an ID */
+button[type="submit"],
+.ur-btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0,114,206,.25);
+}
+#registerSubmit:hover,
+button[type="submit"]:hover,
+.ur-btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+/* Ghost / secondary buttons (e.g., Back link if styled as button) */
+.ur-btn-ghost,
+button.ghost {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.ur-btn-ghost:hover,
+button.ghost:hover { filter: brightness(1.03); }
+
+/* Map toggles: “Zobrazit na mapě”, “Přesná / Přibližná” */
+.map-toggles,
+.map-precision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+.map-toggles label,
+.map-precision label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 600;
+}
+.map-toggles input[type="checkbox"],
+.map-precision input[type="radio"] {
+  width: 18px; height: 18px;
+  accent-color: var(--primary);
+}
+
+/* “Souhlasím se smluvními podmínkami…” block */
+.consent, .legal, .terms-block {
+  margin-top: 10px;
+  color: var(--muted);        /* make it a bit quieter */
+  font-size: 0.96rem;
+}
+.consent label, .legal label, .terms-block label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.consent input[type="checkbox"],
+.legal input[type="checkbox"],
+.terms-block input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--primary);
+}
+.consent a, .legal a, .terms-block a {
+  color: inherit;             /* keep grey tone */
+  text-decoration: underline;
+}
+.consent a:hover, .legal a:hover, .terms-block a:hover {
+  color: var(--text);         /* readable on hover */
+}
+
+/* The “Back to registration choice” link next to submit */
+.form-actions, .actions {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;
+}
+.actions .link-muted, .form-actions .link-muted {
+  align-self: center;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 700;
+}
+.actions .link-muted:hover, .form-actions .link-muted:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* Make the Google map picker look crisp in both themes (already present but keep here) */
+.map-picker { color-scheme: light; }
+body.dark .map-picker { color-scheme: dark; }
+
+/* Inputs inside the “auto city/region” part to match the rest */
+.map-meta .field-small input {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  padding: 0 10px;
+}

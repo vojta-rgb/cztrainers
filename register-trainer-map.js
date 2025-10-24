@@ -7,24 +7,23 @@ const app  = getApps().length ? getApp() : null;
 const auth = app ? getAuth(app) : null;
 const db   = app ? getDatabase(app) : null;
 
-// Use your dual-mode Map ID (works with light/dark via CSS color-scheme)
-const MAP_ID_PICKER = "af6046a265f967e41ff3345f";
+const MAP_ID_PICKER = "af6046a265f967e41ff3345f"; // dual-mode MapID
 
 let gmap, gmarker, geocoder, autocomplete;
 let wroteForUid = null;
 
-// --- tiny geohash encoder (base32) ---
+// -------- geohash (short) ----------
 const _base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 function geohashEncode(lat, lon, precision = 9) {
   let idx = 0, bit = 0, evenBit = true, geohash = "";
-  let latMin = -90, latMax = 90, lonMin = -180, lonMax = 180;
+  let latMin=-90, latMax=90, lonMin=-180, lonMax=180;
   while (geohash.length < precision) {
     if (evenBit) {
-      const lonMid = (lonMin + lonMax) / 2;
-      if (lon >= lonMid) { idx = idx * 2 + 1; lonMin = lonMid; } else { idx = idx * 2; lonMax = lonMid; }
+      const lonMid = (lonMin + lonMax)/2;
+      if (lon >= lonMid) { idx = idx*2+1; lonMin = lonMid; } else { idx = idx*2; lonMax = lonMid; }
     } else {
-      const latMid = (latMin + latMax) / 2;
-      if (lat >= latMid) { idx = idx * 2 + 1; latMin = latMid; } else { idx = idx * 2; latMax = latMid; }
+      const latMid = (latMin + latMax)/2;
+      if (lat >= latMid) { idx = idx*2+1; latMin = latMid; } else { idx = idx*2; latMax = latMid; }
     }
     evenBit = !evenBit;
     if (++bit === 5) { geohash += _base32.charAt(idx); bit = 0; idx = 0; }
@@ -32,28 +31,29 @@ function geohashEncode(lat, lon, precision = 9) {
   return geohash;
 }
 
+// -------- helpers ----------
 function approxLatLng(lat, lng) {
-  // ~±300 m blur
+  // blur ≈ ±300 m
   const R = 6378137;
-  const dx = (Math.random() - 0.5) * 600;
-  const dy = (Math.random() - 0.5) * 600;
-  const newLat = lat + (dy / R) * (180 / Math.PI);
-  const newLng = lng + (dx / (R * Math.cos(lat * Math.PI / 180))) * (180 / Math.PI);
+  const dx = (Math.random()-0.5)*600;
+  const dy = (Math.random()-0.5)*600;
+  const newLat = lat + (dy/R)*(180/Math.PI);
+  const newLng = lng + (dx/(R*Math.cos(lat*Math.PI/180)))*(180/Math.PI);
   return { lat: newLat, lng: newLng };
 }
 
-function extractCityRegion(components = []) {
+function extractCityRegion(components) {
   let city = "", region = "";
-  components.forEach(c => {
-    if (c.types?.includes("locality")) city = c.long_name;
-    if (!city && c.types?.includes("postal_town")) city = c.long_name;
-    if (c.types?.includes("administrative_area_level_1")) region = c.long_name;
+  (components || []).forEach(c => {
+    if (c.types.includes("locality")) city = c.long_name;
+    if (!city && c.types.includes("postal_town")) city = c.long_name;
+    if (c.types.includes("administrative_area_level_1")) region = c.long_name;
   });
   return { city, region };
 }
 
 function updateRegionSelect(region) {
-  const sel = document.getElementById("location"); // your "Kraj" <select>
+  const sel = document.getElementById("location"); // your Kraj <select>
   if (!sel || !region) return;
   const found = Array.from(sel.options).find(o => o.textContent.trim() === region);
   if (found) sel.value = found.value;
@@ -66,12 +66,12 @@ function setHidden(lat, lng, city, region) {
   let outLat = lat, outLng = lng;
   if (precision === "approx") ({ lat: outLat, lng: outLng } = approxLatLng(lat, lng));
 
-  // hidden fields (must exist in HTML)
+  // hidden fields for saving
   document.getElementById("loc_lat").value       = Number(outLat).toFixed(6);
   document.getElementById("loc_lng").value       = Number(outLng).toFixed(6);
   document.getElementById("loc_city").value      = city || "";
   document.getElementById("loc_region").value    = region || "";
-  document.getElementById("loc_geohash").value   = visible ? geohashEncode(outLat, outLng, 9) : "";
+  document.getElementById("loc_geohash").value   = geohashEncode(outLat, outLng, 9);
   document.getElementById("loc_precision").value = precision;
   document.getElementById("loc_visible").value   = String(visible);
 
@@ -81,45 +81,63 @@ function setHidden(lat, lng, city, region) {
   if (regEl)  regEl.value  = region || "";
 }
 
-async function setMarkerAndReverse(latLng, addrComps) {
+function setMarker(latLng) {
+  if (!gmarker) return;
   gmarker.setPosition(latLng);
+}
+
+async function reverseGeocode(lat, lng) {
+  // Requires Geocoding API to be enabled + allowed on your key
+  try {
+    const { results } = await geocoder.geocode({ location: { lat, lng } });
+    const best = results?.[0];
+    if (!best) return { city: "", region: "" };
+    return extractCityRegion(best.address_components || []);
+  } catch (e) {
+    console.warn("[map] Reverse geocode failed (enable Geocoding API?):", e);
+    return { city: "", region: "" };
+  }
+}
+
+async function setMarkerAndFill(latLng, componentsFromPlace) {
+  setMarker(latLng);
   const lat = latLng.lat(), lng = latLng.lng();
 
   let city = "", region = "";
-  if (addrComps) {
-    ({ city, region } = extractCityRegion(addrComps));
+  if (componentsFromPlace) {
+    ({ city, region } = extractCityRegion(componentsFromPlace));
   } else {
-    const res = await geocoder.geocode({ location: { lat, lng } }).catch(() => null);
-    const comps = res?.results?.[0]?.address_components || [];
-    ({ city, region } = extractCityRegion(comps));
+    ({ city, region } = await reverseGeocode(lat, lng));
   }
 
   setHidden(lat, lng, city, region);
   updateRegionSelect(region);
 }
 
+// -------- init ----------
 function initTrainerMap() {
   const mapEl = document.getElementById("trainerMap");
   if (!mapEl || !window.google) return;
 
+  geocoder = new google.maps.Geocoder();
   gmap = new google.maps.Map(mapEl, {
     center: { lat: 49.8175, lng: 15.4730 },
     zoom: 7,
     mapId: MAP_ID_PICKER
   });
 
-  geocoder = new google.maps.Geocoder();
+  // marker (draggable)
   gmarker  = new google.maps.Marker({
     map: gmap,
     draggable: true,
     position: { lat: 49.83, lng: 15.47 }
   });
 
-  // Click / drag to set
-  gmap.addListener("click", (e) => setMarkerAndReverse(e.latLng));
-  gmarker.addListener("dragend", (e) => setMarkerAndReverse(e.latLng));
+  // click / drag update
+  gmap.addListener("click", (e) => setMarkerAndFill(e.latLng));
+  gmarker.addListener("dragend", (e) => setMarkerAndFill(e.latLng));
 
-  // Places autocomplete
+  // Places Autocomplete
   const input = document.getElementById("mapSearch");
   if (input) {
     // eslint-disable-next-line no-undef
@@ -133,29 +151,27 @@ function initTrainerMap() {
       if (p?.geometry?.location) {
         gmap.panTo(p.geometry.location);
         gmap.setZoom(13);
-        setMarkerAndReverse(p.geometry.location, p.address_components || []);
+        setMarkerAndFill(p.geometry.location, p.address_components || []);
       }
     });
     autocomplete = ac;
   }
 
-  // defaults fill hidden
+  // initial fill for defaults
   setHidden(49.83, 15.47, "", "");
 
-  // React to toggles (recompute blur etc.)
+  // react to toggles (recompute blur/visibility immediately)
   document.getElementById("showOnMap")?.addEventListener("change", () => {
-    const pos = gmarker.getPosition();
-    if (pos) setHidden(pos.lat(), pos.lng(), document.getElementById("loc_city").value, document.getElementById("loc_region").value);
+    const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
   });
   document.querySelectorAll('input[name="locPrecision"]').forEach(r => {
     r.addEventListener("change", () => {
-      const pos = gmarker.getPosition();
-      if (pos) setHidden(pos.lat(), pos.lng(), document.getElementById("loc_city").value, document.getElementById("loc_region").value);
+      const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
     });
   });
 }
 
-// Save location for the freshly created user
+// save to RTDB under unverified-users/{uid}/location
 async function writeLocation(uid) {
   if (!db || !uid) return;
   const visible = document.getElementById("showOnMap")?.checked ?? true;
@@ -176,6 +192,7 @@ async function writeLocation(uid) {
   }
 }
 
+// mirror your sign-in flow: as soon as the user exists, write current location
 if (auth) {
   onAuthStateChanged(auth, (user) => {
     if (user && user.uid !== wroteForUid) {
@@ -185,5 +202,5 @@ if (auth) {
   });
 }
 
-// Expose the callback for the Google loader
+// exported callback for the loader script
 window.initTrainerPickMap = function () { initTrainerMap(); };
