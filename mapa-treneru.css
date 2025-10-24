@@ -140,9 +140,5 @@ body.dark .pac-item:hover{ background:rgba(255,255,255,.07); }
   .pac-container{ max-width:min(92vw,380px); }
 }
 
-/* tell Maps which scheme to render in */
-.map-canvas { color-scheme: light; }     /* default */
-body.dark .map-canvas { color-scheme: dark; }  /* when your toggle adds body.dark */
-
-/* optional: allow UA to know both are supported */
-.map-canvas { color-scheme: light dark; }
+.map-canvas { color-scheme: light !important; }
+body.dark .map-canvas { color-scheme: dark !important; }

@@ -267,6 +267,11 @@
         google.maps.event.trigger(map, "resize");
         });
     };
+    
+    document.getElementById("themeToggle")?.addEventListener("click", () => {
+    // your code flips body.dark; this forces an immediate repaint
+    google.maps.event.trigger(map, "resize");
+    });
     </script>
 
   <!-- Bridge so the callback exists BEFORE Maps loads -->
