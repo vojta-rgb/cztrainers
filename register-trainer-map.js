@@ -7,12 +7,13 @@ const app  = getApps().length ? getApp() : null;
 const auth = app ? getAuth(app) : null;
 const db   = app ? getDatabase(app) : null;
 
-const MAP_ID_PICKER = "af6046a265f967e41ff3345f"; // dual-mode MapID
+// Your dual-mode Map ID
+const MAP_ID_PICKER = "af6046a265f967e41ff3345f";
 
-let gmap, gmarker, geocoder, autocomplete;
+let gmap, gmarker, geocoder;
 let wroteForUid = null;
 
-// -------- geohash (short) ----------
+/* ---------------- geohash (short) ---------------- */
 const _base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 function geohashEncode(lat, lon, precision = 9) {
   let idx = 0, bit = 0, evenBit = true, geohash = "";
@@ -31,7 +32,7 @@ function geohashEncode(lat, lon, precision = 9) {
   return geohash;
 }
 
-// -------- helpers ----------
+/* ---------------- helpers ---------------- */
 function approxLatLng(lat, lng) {
   // blur ≈ ±300 m
   const R = 6378137;
@@ -42,9 +43,9 @@ function approxLatLng(lat, lng) {
   return { lat: newLat, lng: newLng };
 }
 
-function extractCityRegion(components) {
+function extractCityRegion(components = []) {
   let city = "", region = "";
-  (components || []).forEach(c => {
+  components.forEach(c => {
     if (c.types.includes("locality")) city = c.long_name;
     if (!city && c.types.includes("postal_town")) city = c.long_name;
     if (c.types.includes("administrative_area_level_1")) region = c.long_name;
@@ -66,7 +67,6 @@ function setHidden(lat, lng, city, region) {
   let outLat = lat, outLng = lng;
   if (precision === "approx") ({ lat: outLat, lng: outLng } = approxLatLng(lat, lng));
 
-  // hidden fields for saving
   document.getElementById("loc_lat").value       = Number(outLat).toFixed(6);
   document.getElementById("loc_lng").value       = Number(outLng).toFixed(6);
   document.getElementById("loc_city").value      = city || "";
@@ -82,19 +82,17 @@ function setHidden(lat, lng, city, region) {
 }
 
 function setMarker(latLng) {
-  if (!gmarker) return;
-  gmarker.setPosition(latLng);
+  if (gmarker) gmarker.setPosition(latLng);
 }
 
 async function reverseGeocode(lat, lng) {
-  // Requires Geocoding API to be enabled + allowed on your key
+  // Needs Geocoding API enabled + allowed on your key
   try {
     const { results } = await geocoder.geocode({ location: { lat, lng } });
     const best = results?.[0];
-    if (!best) return { city: "", region: "" };
-    return extractCityRegion(best.address_components || []);
+    return best ? extractCityRegion(best.address_components) : { city: "", region: "" };
   } catch (e) {
-    console.warn("[map] Reverse geocode failed (enable Geocoding API?):", e);
+    console.warn("[map] Reverse geocode failed:", e);
     return { city: "", region: "" };
   }
 }
@@ -114,7 +112,7 @@ async function setMarkerAndFill(latLng, componentsFromPlace) {
   updateRegionSelect(region);
 }
 
-// -------- init ----------
+/* ---------------- init ---------------- */
 function initTrainerMap() {
   const mapEl = document.getElementById("trainerMap");
   if (!mapEl || !window.google) return;
@@ -126,41 +124,43 @@ function initTrainerMap() {
     mapId: MAP_ID_PICKER
   });
 
-  // marker (draggable)
-  gmarker  = new google.maps.Marker({
+  // draggable marker
+  gmarker = new google.maps.Marker({
     map: gmap,
     draggable: true,
     position: { lat: 49.83, lng: 15.47 }
   });
 
-  // click / drag update
+  // Update on map click or marker drag — ALWAYS reverse-geocode.
   gmap.addListener("click", (e) => setMarkerAndFill(e.latLng));
   gmarker.addListener("dragend", (e) => setMarkerAndFill(e.latLng));
 
-  // Places Autocomplete
+  // Simple search: press Enter → geocode the typed address (no Places lib)
   const input = document.getElementById("mapSearch");
   if (input) {
-    // eslint-disable-next-line no-undef
-    const ac = new google.maps.places.Autocomplete(input, {
-      fields: ["geometry", "address_components"],
-      componentRestrictions: { country: ["cz"] },
-      types: ["geocode"]
-    });
-    ac.addListener("place_changed", () => {
-      const p = ac.getPlace();
-      if (p?.geometry?.location) {
-        gmap.panTo(p.geometry.location);
-        gmap.setZoom(13);
-        setMarkerAndFill(p.geometry.location, p.address_components || []);
+    input.addEventListener("keydown", async (ev) => {
+      if (ev.key !== "Enter") return;
+      ev.preventDefault();
+      const q = input.value.trim();
+      if (!q) return;
+      try {
+        const { results } = await geocoder.geocode({ address: q, region: "cz" });
+        const best = results?.[0];
+        if (best?.geometry?.location) {
+          gmap.panTo(best.geometry.location);
+          gmap.setZoom(13);
+          await setMarkerAndFill(best.geometry.location, best.address_components);
+        }
+      } catch (e) {
+        console.warn("[map] Address geocode failed:", e);
       }
     });
-    autocomplete = ac;
   }
 
-  // initial fill for defaults
+  // Initial hidden values (for default position)
   setHidden(49.83, 15.47, "", "");
 
-  // react to toggles (recompute blur/visibility immediately)
+  // Recompute blur/visibility immediately when the toggles change
   document.getElementById("showOnMap")?.addEventListener("change", () => {
     const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
   });
@@ -171,7 +171,7 @@ function initTrainerMap() {
   });
 }
 
-// save to RTDB under unverified-users/{uid}/location
+/* ---------------- save location to RTDB ---------------- */
 async function writeLocation(uid) {
   if (!db || !uid) return;
   const visible = document.getElementById("showOnMap")?.checked ?? true;
@@ -192,7 +192,7 @@ async function writeLocation(uid) {
   }
 }
 
-// mirror your sign-in flow: as soon as the user exists, write current location
+// As soon as user is signed in during your flow, write the current location once.
 if (auth) {
   onAuthStateChanged(auth, (user) => {
     if (user && user.uid !== wroteForUid) {
@@ -202,5 +202,5 @@ if (auth) {
   });
 }
 
-// exported callback for the loader script
+// Export the init callback for the Google loader script in your HTML
 window.initTrainerPickMap = function () { initTrainerMap(); };
