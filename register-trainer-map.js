@@ -185,4 +185,4 @@ onAuthStateChanged(auth, (user)=>{
 // Expose callback for Google loader
 window.initTrainerPickMap = function(){ initTrainerMap(); };
 
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainerPickMap"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainersMap&loading=async"></script>
