@@ -120,3 +120,63 @@ body.dark .checkbox-group label:hover{ background:#242424; }
   opacity:0; transform:translateY(12px); transition:.35s;
 }
 .toast.show{ opacity:1; transform:translateY(0); }
+
+/* --- Map picker (same as register page) --- */
+.rt-mapbox{
+  display:flex; flex-direction:column; gap:12px;
+  padding:12px; border-radius:12px;
+  background:#fff; border:1px solid #e5e7eb;
+}
+body.dark .rt-mapbox{ background:#1f1f1f; border-color:#333; }
+
+.map-field{ display:flex; flex-direction:column; gap:6px; }
+.map-field > span{ font-weight:600; font-size:.95rem; }
+.map-field input{
+  width:100%; padding:.78rem .9rem; border-radius:12px;
+  border:1px solid #dcdcdc; background:#fff; color:#111;
+  transition:border-color .2s, box-shadow .2s;
+}
+.map-field input:focus{
+  outline:none; border-color:#9cc8ff; box-shadow:0 0 0 3px rgba(0,114,206,.18);
+}
+body.dark .map-field input{
+  background:#1f1f1f; color:#f4f4f4; border-color:#3a3a3a;
+}
+body.dark .map-field input:focus{
+  border-color:#2c72cc; box-shadow:0 0 0 3px rgba(44,114,204,.24);
+}
+
+/* the map itself */
+.map-picker{
+  height:330px; width:100%;
+  border-radius:12px; border:1px solid #e5e7eb; overflow:hidden;
+  color-scheme: light;
+}
+body.dark .map-picker{ border-color:#333; color-scheme: dark; }
+
+/* toggles row */
+.map-toggles{
+  display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+}
+.map-precision{ display:flex; gap:14px; align-items:center; }
+
+.rt-check{ display:flex; align-items:center; gap:.5rem; cursor:pointer; }
+.rt-check input[type="checkbox"], .rt-check input[type="radio"]{
+  accent-color:#0072CE; width:18px; height:18px;
+}
+
+/* meta row with the auto-filled city/region */
+.map-meta{
+  display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+@media (max-width:700px){ .map-meta{ grid-template-columns:1fr; } }
+
+.field-small{ display:flex; flex-direction:column; gap:6px; }
+.field-small input{
+  width:100%; padding:.7rem .85rem; border-radius:10px;
+  border:1px solid #e5e7eb; background:#fafafa; color:#111;
+}
+body.dark .field-small input{
+  border-color:#333; background:#161616; color:#f4f4f4;
+}
