@@ -144,34 +144,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const MAP_ID_LIGHT = "af6046a265f967e45e85c84d";
-    const MAP_ID_DARK  = "af6046a265f967e41ff3345f";
-
-    // Rebuild the map with the right MapID (keeps center/zoom; re-adds markers)
-    function rebuildMapWithTheme() {
-    if (!window.google || !map) return;           // map not ready yet
-
-    const center = map.getCenter();
-    const zoom   = map.getZoom();
-
-    // Clear clusters & detach old markers
-    if (clusterer) { clusterer.clearMarkers(); clusterer = null; }
-    allMarkers.forEach(m => m.setMap(null));
-
-    // Recreate the map in the same div with the new mapId
-    map = new google.maps.Map(document.getElementById("map"), {
-        center,
-        zoom,
-        mapId: currentMapId()
-    });
-
-    // Re-add markers & clustering with current filters
-    applyFilters();
-    }
-
-    function currentMapId() {
-        return document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
-    }
+    const MAP_ID = "af6046a265f967e41ff3345f"; // your Map ID that supports both modes
 
     /* ---------------- Google Maps globals ---------------- */
     let map, clusterer, autocomplete;
@@ -309,7 +282,8 @@
         map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 49.8175, lng: 15.4730 },
         zoom: 6,
-        mapId: currentMapId()
+        mapId: MAP_ID
+
         });
 
       // Places Autocomplete for quick pan-to
@@ -336,17 +310,6 @@
       }
       applyFilters();
     };
-    // Re-apply mapId when theme changes
-    const applyThemeToMap = () => map.setOptions({ mapId: currentMapId() });
-
-    // When the user toggles theme, rebuild map with the other MapID
-    document.getElementById("themeToggle")?.addEventListener("click", () => {
-    // Your own code flips body.dark; rebuild after it flips
-    setTimeout(rebuildMapWithTheme, 0);
-    });
-
-    // Also apply once on load in case theme persisted from localStorage
-    setTimeout(rebuildMapWithTheme, 0);
   </script>
 
   <!-- Bridge so the callback exists BEFORE Maps loads -->
