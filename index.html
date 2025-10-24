@@ -165,6 +165,15 @@
   const btnApply = document.getElementById("filtersApply");
   const btnClear = document.getElementById("filtersClear");
 
+  // Normalizes location to a displayable string ("City, Region")
+  function locationText(loc) {
+    if (!loc) return "";
+    if (typeof loc === "string") return loc;
+    const city   = (loc.city   || "").trim();
+    const region = (loc.region || "").trim();
+    return city && region ? `${city}, ${region}` : (city || region || "");
+  }
+
   const toastEl = document.getElementById("toast");
   const toast = (msg) => {
     toastEl.textContent = msg;
@@ -209,7 +218,7 @@
     let expMin = Infinity, expMax = -Infinity;
 
     users.forEach(([_, u]) => {
-      uniqPush(locations, u.location);
+      uniqPush(locations, locationText(u.location));
       uniqPush(genders,   u.gender);
 
       const sArr = Array.isArray(u.specializations) ? u.specializations :
@@ -269,14 +278,15 @@
     const q = f.q;
     let out = users.filter(([id, u]) => {
       if (q) {
-        const hay = [
-          u.name, u.prijmeni, u.bio,
-          Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
-          u.location
-        ].filter(Boolean).join(" ").toLowerCase();
+      const locStr = locationText(u.location);
+      const hay = [
+        u.name, u.prijmeni, u.bio,
+        Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
+        locStr
+      ].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (f.loc.length && !f.loc.includes(u.location)) return false;
+      if (f.loc.length && !f.loc.includes(locStr)) return false;
 
       if (f.spec.length) {
         const sArr = Array.isArray(u.specializations) ? u.specializations :
@@ -473,7 +483,7 @@
           </h3>
 
           <div class="meta">
-            <span>📍 ${user.location || "-"}</span>
+            <span>📍 ${locationText(user.location) || "-"}</span>
             <span class="sep">•</span>
             <span>🧠 ${user.experience ?? "-"} let praxe</span>
           </div>
