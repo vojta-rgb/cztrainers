@@ -1,387 +1,257 @@
+/* ==========================================================================
+   Trainer Registration — complete, scoped, dark-mode ready
+   Brand palette and tokens
+   ========================================================================== */
 :root{
-  --primary: #0072CE;        /* brand blue */
-  --primary-600:#0b63b5;
-  --text: #111827;
-  --muted:#6b7280;
-  --border:#e5e7eb;
-  --bg:#f7f9fc;
-  --card:#ffffff;
-  --radius:14px;
-  --shadow: 0 8px 28px rgba(16,24,40,.08);
+  --rt-primary: #0072CE;
+  --rt-primary-600:#0b63b5;
+  --rt-primary-700:#094f8a;
+
+  --rt-bg:#ffffff;
+  --rt-fg:#0f172a;         /* slate-900 */
+  --rt-muted:#6b7280;      /* gray-500 */
+  --rt-border:#e5e7eb;     /* gray-200 */
+  --rt-surface:#f9fafb;    /* gray-50 */
+  --rt-success:#12a150;
+  --rt-danger:#e11d48;
+
+  --rt-radius:14px;
+  --rt-radius-sm:10px;
+  --rt-shadow: 0 10px 28px rgba(2,6,23,.08);
+  --rt-focus: 0 0 0 3px color-mix(in srgb, var(--rt-primary) 20%, transparent);
 }
 
-/* ---------- Base ---------- */
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
-  color:var(--text);
-  background:var(--bg);
-  margin:0;
-  line-height:1.45;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  transition: background .25s ease, color .25s ease;
-}
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background-image:url("assets/dumbell-art.png");
-  background-size:180px; background-repeat:repeat;
-  opacity:.05; pointer-events:none; z-index:-1;
-}
-
-/* Dark */
 body.dark{
-  --text:#e5e7eb;
-  --muted:#9aa4b2;
-  --border:#2a3342;
-  --bg:#111418;
-  --card:#171a20;
-  --shadow: 0 10px 34px rgba(0,0,0,.45);
-}
-body.dark::before{ opacity:.03; }
-
-/* ---------- Page wrapper ---------- */
-.page-wrapper{
-  max-width:1100px;
-  margin:24px auto;
-  padding:0 18px 36px;
-}
-.form-container{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
-  box-shadow:var(--shadow);
-  padding:22px;
+  --rt-bg:#121418;
+  --rt-fg:#e5e7eb;         /* slate-200 */
+  --rt-muted:#a3aab8;      /* slate-400 */
+  --rt-border:#252a34;     /* darker border */
+  --rt-surface:#161a20;
+  --rt-shadow: 0 10px 28px rgba(0,0,0,.45);
+  --rt-focus: 0 0 0 3px color-mix(in srgb, var(--rt-primary) 35%, transparent);
 }
 
-/* ---------- Title / subtitles ---------- */
-.title{
-  display:flex; align-items:center; gap:10px;
-  font-size:clamp(22px, 2.8vw, 32px);
-  font-weight:800;
-  letter-spacing:.2px;
-  color:var(--primary);
-  margin:6px 2px 14px;
+/* ==========================================================================
+   Page frame
+   ========================================================================== */
+.rt-wrap{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px 18px 40px;
 }
-.subtitle{
-  margin:0 2px 18px;
-  color:var(--muted);
+.rt-card{
+  background: var(--rt-bg);
+  border: 1px solid var(--rt-border);
+  border-radius: var(--rt-radius);
+  box-shadow: var(--rt-shadow);
+  padding: clamp(14px, 2vw, 20px);
 }
-
-/* ---------- Sections ---------- */
-.section{
-  margin:22px 0 10px;
-  font-weight:800;
-  color:#1f2937;
-  font-size:1.05rem;
+.rt-title{
+  margin: 6px 0 16px;
+  font-size: clamp(1.35rem, 1.2rem + 1vw, 1.9rem);
+  color: var(--rt-primary);
+  font-weight: 800;
+  line-height: 1.15;
 }
-body.dark .section{ color:#dbe1ea; }
-
-.hr{
-  border:0; height:1px;
-  background:var(--border);
-  margin:14px 0 6px;
-  opacity:.8;
+.rt-section{
+  margin-top: 20px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--rt-border);
 }
 
-/* ---------- Inputs ---------- */
-.field{ margin:12px 0 14px; }
-.field label{
-  display:flex; justify-content:space-between; align-items:center;
-  gap:10px; margin:0 0 6px;
-  font-weight:700; color:#334155;
-}
-body.dark .field label{ color:#c7d2fe; }
-
-.input, .field input[type="text"], .field input[type="email"],
-.field input[type="password"], .field input[type="tel"],
-.field input[type="date"], .field input[type="number"],
-.field select, .field textarea, .form input[type="file"]{
-  width:100%;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:inherit;
-  height:48px; padding:0 14px;
-  border-radius:var(--radius);
-  outline:none; transition:border-color .15s, box-shadow .15s, background .15s;
-}
-.field textarea{ height:120px; padding:12px 14px; resize:vertical; }
-.form input[type="file"]{ height:auto; padding:10px 12px; }
-
-.input:focus, .field input:focus, .field select:focus, .field textarea:focus{
-  border-color:rgba(0,114,206,.85);
-  box-shadow:0 0 0 3px rgba(0,114,206,.18);
-}
-
-/* Invalid/help text (optional classes your script can toggle) */
-.is-invalid{ border-color:#ef4444 !important; }
-.invalid-msg{ color:#ef4444; font-size:.88rem; margin-top:6px; }
-.hint{ color:var(--muted); font-size:.9rem; margin-top:4px; }
-
-/* ---------- Grids ---------- */
-.grid-2{ display:grid; gap:14px; grid-template-columns:repeat(2, minmax(0,1fr)); }
-.grid-3{ display:grid; gap:14px; grid-template-columns:repeat(3, minmax(0,1fr)); }
-@media (max-width:880px){
-  .grid-2,.grid-3{ grid-template-columns:1fr; }
-}
-
-/* ---------- Chip checkboxes (specializations, languages) ---------- */
-.checkbox-group{
-  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
-  gap:12px; margin-top:8px;
-}
-.checkbox-group label{
-  display:flex; align-items:center; gap:12px;
-  padding:11px 12px;
-  border:1px solid var(--border);
-  background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.6));
-  border-radius:14px; cursor:pointer;
-  transition:transform .08s ease, border-color .14s ease, background .2s ease;
-}
-.checkbox-group label:hover{ transform:translateY(-1px); }
-.checkbox-group input{ width:18px; height:18px; accent-color:var(--primary); }
-body.dark .checkbox-group label{
-  background:linear-gradient(180deg, #191e25, #171b21);
-}
-
-/* ---------- Buttons ---------- */
-.actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
-.btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  height:48px; padding:0 18px; border-radius:var(--radius);
-  border:1px solid transparent; font-weight:800; cursor:pointer;
-  transition:transform .08s ease, filter .12s ease, box-shadow .15s ease;
-}
-.btn:active{ transform:translateY(1px); }
-
-.btn-primary{
-  background:var(--primary); color:#fff;
-  box-shadow:0 6px 18px rgba(0,114,206,.28);
-}
-.btn-primary:hover{ filter:brightness(1.05); }
-
-.btn-ghost{
-  background:var(--card); border:1px solid var(--border); color:var(--text);
-}
-.btn-ghost:hover{ filter:brightness(1.02); }
-
-/* Loading state (optional) */
-.btn.loading{ opacity:.85; cursor:not-allowed; }
-.btn.loading::before{
-  content:""; width:1em; height:1em; margin-right:.55em; border:.18em solid currentColor;
-  border-right-color:transparent; border-radius:50%; display:inline-block; animation:spin .8s linear infinite;
-}
-@keyframes spin{ to{ transform:rotate(360deg); } }
-
-/* ---------- Profile preview ---------- */
-#profilePreview{
-  width:190px; height:190px; object-fit:cover; border-radius:16px;
-  border:1px solid var(--border); background:#f9fafb;
-}
-body.dark #profilePreview{ background:#0f1217; }
-
-/* ---------- Map picker block ---------- */
-.rt-mapbox{
-  margin: 12px 0 6px;
-  padding: 14px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
-}
-.map-legend{
-  font-weight:700;
-  color:#374151;
-  margin:0 0 6px;
-}
-body.dark .map-legend{ color:#dbe1ea; }
-
-/* search input above map */
-.map-field{ display:grid; gap:6px; margin-bottom:10px; }
-.map-field span{ font-size:.9rem; color:var(--muted); }
-.map-field input{
-  height:46px; border-radius:12px; padding:0 12px;
-  border:1px solid var(--border); background:var(--card); color:inherit;
-  outline:none; transition:border-color .15s, box-shadow .15s;
-}
-.map-field input:focus{
-  border-color:rgba(0,114,206,.8);
-  box-shadow:0 0 0 3px rgba(0,114,206,.18);
-}
-
-/* actual map canvas */
-.map-picker{
-  height:320px; width:100%;
-  border-radius:12px; overflow:hidden;
-  color-scheme: light;        /* dual-mode MapID support */
-}
-body.dark .map-picker{ color-scheme: dark; }
-@media (max-width:600px){ .map-picker{ height:240px; } }
-
-/* Google Places dropdown on top of everything */
-.pac-container{
-  z-index: 3000 !important;
-  border-radius:12px; overflow:hidden;
-  box-shadow:0 14px 34px rgba(0,0,0,.22);
-}
-body.dark .pac-container{ background:#12161d; color:#fff; border:1px solid #233143; }
-
-/* under-map toggles */
-.map-toggles{
-  display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin:10px 0;
-}
-.map-precision{ display:flex; gap:14px; }
-.map-precision label{ display:flex; gap:8px; align-items:center; font-weight:600; }
-
-/* auto fields (city/region) */
-.map-meta{
-  display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;
-}
-.field-small{ display:grid; gap:6px; }
-.field-small input{
-  height:44px; border-radius:10px;
-  border:1px solid var(--border); background:var(--card); color:inherit; padding:0 10px;
-}
-
-/* ---------- Footer small note ---------- */
-.ur-foot{
-  text-align:center; color:var(--muted);
-  margin:12px auto 0; max-width:900px;
-}
-.ur-foot a{ color:var(--primary); font-weight:800; text-decoration:none; }
-.ur-foot a:hover{ text-decoration:underline; }
-
-/* ---------- Toast (keep your existing JS) ---------- */
-.rt-toast{
-  position:fixed; bottom:18px; right:18px; z-index:9999;
-  background:#0b1220; color:#fff; padding:.75rem 1rem; border-radius:12px;
-  box-shadow:0 12px 30px rgba(0,0,0,.35);
-  opacity:0; transform:translateY(8px); pointer-events:none;
-  transition:opacity .18s ease, transform .18s ease;
-  max-width:min(420px, 90vw);
-}
-.rt-toast.show{ opacity:1; transform:translateY(0); }
-body.dark .rt-toast{ background:#161c26; }
-
-/* Utility */
-.text-muted{ color:var(--muted); }
-.hide{ display:none !important; }
-
-/* ====== Small UI polish for register page ====== */
-
-/* Buttons (generic so it catches your current ones) */
-button, .ur-btn, input[type="submit"] {
-  -webkit-appearance: none;
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  padding: 0 18px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  font-weight: 700;
-  cursor: pointer;
-  transition: filter .12s ease, box-shadow .15s ease, transform .06s ease;
-}
-button:active, .ur-btn:active, input[type="submit"]:active { transform: translateY(1px); }
-
-/* Primary submit */
-#registerSubmit, /* if you have an ID */
-button[type="submit"],
-.ur-btn-primary {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(0,114,206,.25);
-}
-#registerSubmit:hover,
-button[type="submit"]:hover,
-.ur-btn-primary:hover {
-  filter: brightness(1.06);
-}
-
-/* Ghost / secondary buttons (e.g., Back link if styled as button) */
-.ur-btn-ghost,
-button.ghost {
-  background: var(--card);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.ur-btn-ghost:hover,
-button.ghost:hover { filter: brightness(1.03); }
-
-/* Map toggles: “Zobrazit na mapě”, “Přesná / Přibližná” */
-.map-toggles,
-.map-precision {
-  display: flex;
-  flex-wrap: wrap;
+/* ==========================================================================
+   Grid / layout helpers
+   ========================================================================== */
+.rt-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
-  align-items: center;
 }
-.map-toggles label,
-.map-precision label {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: 600;
+.rt-grid-3{ grid-template-columns: repeat(3, 1fr); }
+.rt-grid-4{ grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 960px){
+  .rt-grid-4{ grid-template-columns: repeat(2, 1fr); }
 }
-.map-toggles input[type="checkbox"],
-.map-precision input[type="radio"] {
-  width: 18px; height: 18px;
-  accent-color: var(--primary);
+@media (max-width: 820px){
+  .rt-grid, .rt-grid-3, .rt-grid-4{ grid-template-columns: 1fr; }
 }
 
-/* “Souhlasím se smluvními podmínkami…” block */
-.consent, .legal, .terms-block {
-  margin-top: 10px;
-  color: var(--muted);        /* make it a bit quieter */
-  font-size: 0.96rem;
+/* ==========================================================================
+   Fields (inputs / selects / textareas)
+   ========================================================================== */
+.rt-field{ display:flex; flex-direction:column; gap:6px; }
+.rt-label{ font-weight:600; color:var(--rt-fg); }
+.rt-help{ font-size:.9rem; color:var(--rt-muted); }
+
+.rt-input, .rt-textarea, .rt-select{
+  width:100%;
+  border:1px solid var(--rt-border);
+  background:transparent;
+  color:var(--rt-fg);
+  border-radius: var(--rt-radius-sm);
+  padding: 12px 12px;
+  outline:none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.consent label, .legal label, .terms-block label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.rt-input::placeholder, .rt-textarea::placeholder{ color: color-mix(in srgb, var(--rt-fg) 45%, transparent); }
+.rt-textarea{ min-height:120px; resize:vertical; }
+.rt-input:focus, .rt-textarea:focus, .rt-select:focus{
+  border-color:var(--rt-primary);
+  box-shadow: var(--rt-focus);
 }
-.consent input[type="checkbox"],
-.legal input[type="checkbox"],
-.terms-block input[type="checkbox"] {
-  width: 18px; height: 18px;
-  accent-color: var(--primary);
-}
-.consent a, .legal a, .terms-block a {
-  color: inherit;             /* keep grey tone */
-  text-decoration: underline;
-}
-.consent a:hover, .legal a:hover, .terms-block a:hover {
-  color: var(--text);         /* readable on hover */
+.rt-input[disabled], .rt-select[disabled], .rt-textarea[disabled]{
+  opacity:.65; cursor:not-allowed;
+  background: color-mix(in srgb, var(--rt-surface) 70%, transparent);
 }
 
-/* The “Back to registration choice” link next to submit */
-.form-actions, .actions {
-  display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;
-}
-.actions .link-muted, .form-actions .link-muted {
-  align-self: center;
-  color: var(--muted);
-  text-decoration: none;
-  font-weight: 700;
-}
-.actions .link-muted:hover, .form-actions .link-muted:hover {
-  color: var(--text);
-  text-decoration: underline;
+/* Validation */
+.rt-error{ color:var(--rt-danger); font-weight:600; }
+.rt-input.is-error, .rt-select.is-error, .rt-textarea.is-error{
+  border-color: var(--rt-danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rt-danger) 25%, transparent);
 }
 
-/* Make the Google map picker look crisp in both themes (already present but keep here) */
-.map-picker { color-scheme: light; }
-body.dark .map-picker { color-scheme: dark; }
+/* File picker */
+.rt-file{
+  display:flex; align-items:center; gap:10px;
+  background: var(--rt-surface);
+  border:1px dashed var(--rt-border);
+  padding: 12px; border-radius: var(--rt-radius-sm);
+}
 
-/* Inputs inside the “auto city/region” part to match the rest */
-.map-meta .field-small input {
-  height: 44px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: inherit;
-  padding: 0 10px;
+/* ==========================================================================
+   Map block
+   ========================================================================== */
+.rt-map-title{ font-weight:700; color:var(--rt-fg); }
+.rt-map-block{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+
+#mapSearch{
+  border:1px solid var(--rt-border);
+  border-radius:10px; padding:10px 12px;
+  background:transparent; color:var(--rt-fg);
+}
+#trainerMap{
+  height: 320px; width:100%;
+  border:1px solid var(--rt-border);
+  border-radius:12px; overflow:hidden;
+}
+
+/* Make Google Map follow your theme (no re-initialization needed) */
+#trainerMap{ color-scheme: light; }
+body.dark #trainerMap{ color-scheme: dark; }
+
+/* ==========================================================================
+   Specializations / Languages as chips
+   ========================================================================== */
+.rt-chip{
+  display:inline-flex; align-items:center; gap:.55rem;
+  border:1px solid var(--rt-border);
+  padding:10px 12px; border-radius:12px;
+  color:var(--rt-fg); background:transparent;
+  user-select:none;
+}
+.rt-chip input{ width:18px; height:18px; accent-color:var(--rt-primary); }
+
+/* ==========================================================================
+   Choice rows (checkboxes / radios)
+   ========================================================================== */
+.rt-choices{
+  display:flex; flex-wrap:wrap; gap:18px 22px; align-items:center;
+}
+.rt-check, .rt-radio{
+  display:inline-flex; align-items:center; gap:.55rem;
+  font-weight:600; color:var(--rt-fg);
+}
+.rt-check input[type="checkbox"],
+.rt-radio input[type="radio"]{
+  width:18px; height:18px; accent-color: var(--rt-primary);
+}
+
+/* Terms — softer look + better spacing */
+.rt-terms{
+  display:flex; align-items:flex-start; gap:.6rem; margin-top:.4rem;
+  color:var(--rt-muted); line-height:1.35;
+}
+.rt-terms a{ color:var(--rt-primary); text-decoration:none; }
+.rt-terms a:hover{ text-decoration:underline; }
+
+/* ==========================================================================
+   Buttons (primary / ghost / link)
+   ========================================================================== */
+.rt-actions{ display:flex; flex-wrap:wrap; gap:.6rem; margin-top:10px; }
+
+.rt-btn{
+  -webkit-tap-highlight-color: transparent;
+  appearance:none;
+  border:1px solid var(--rt-border);
+  background:#f8fafc; color:#0f172a;
+  padding:12px 16px; border-radius:12px;
+  font-weight:700; text-decoration:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition: transform .12s ease, filter .12s ease, background .15s ease, border-color .15s ease;
+  cursor:pointer;
+}
+.rt-btn:hover{ transform:translateY(-1px); filter:brightness(1.02); }
+.rt-btn:active{ transform:translateY(0); filter:brightness(.98); }
+.rt-btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+.rt-btn-primary{
+  background: var(--rt-primary);
+  border-color: var(--rt-primary);
+  color: #fff;
+}
+.rt-btn-primary:hover{ filter:brightness(1.02); }
+.rt-btn-primary:active{ filter:brightness(.96); }
+
+.rt-btn-ghost{
+  background:transparent; color:var(--rt-primary-600);
+  border-color: color-mix(in srgb, var(--rt-primary) 35%, var(--rt-border));
+}
+
+.rt-btn-link{
+  background:transparent; border-color:transparent;
+  color: var(--rt-primary-600);
+  padding: 8px 10px; border-radius:10px;
+}
+.rt-btn-link:hover{ background: color-mix(in srgb, var(--rt-primary) 8%, transparent); }
+
+body.dark .rt-btn{
+  background:#1b1f26; color:#e8eefc; border-color:#273040;
+}
+body.dark .rt-btn-ghost{
+  background:transparent; color:#cfe0ff; border-color:#334155;
+}
+body.dark .rt-btn-link{ color:#cfe0ff; }
+body.dark .rt-btn-primary{ background:#2b7de9; border-color:#2b7de9; }
+
+/* Fallback: style a plain submit button inside the trainer page as primary */
+.rt-wrap form button[type="submit"]:not([class]){
+  -webkit-tap-highlight-color: transparent;
+  appearance:none; border:1px solid var(--rt-primary);
+  background: var(--rt-primary); color:#fff;
+  padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer;
+}
+.rt-wrap form button[type="submit"]:not([class]):hover{ filter:brightness(1.02); }
+.rt-wrap form button[type="submit"]:not([class]):disabled{ opacity:.55; cursor:not-allowed; }
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+.rt-muted{ color:var(--rt-muted); }
+.rt-surface{ background:var(--rt-surface); }
+.rt-divider{ height:1px; background:var(--rt-border); margin:14px 0; }
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* ==========================================================================
+   Map hints (optional chip-like tip below the map search)
+   ========================================================================== */
+.rt-tip{
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:6px 10px; border-radius:999px; border:1px solid var(--rt-border);
+  font-size:.9rem; color:var(--rt-muted); background:var(--rt-surface);
 }
