@@ -1,237 +1,232 @@
-/* trainer-profile-edit.css */
-
-/* ---------- Design tokens (same as register) ---------- */
+/* ========= Theme tokens ========= */
 :root{
   --primary:#0072CE;
-  --primary-600:#0b63b5;
-  --text:#111827;
+  --bg:#f4f7fb;
+  --text:#0f172a;
   --muted:#6b7280;
-  --border:#e5e7eb;
-  --bg:#f7f9fc;
   --card:#ffffff;
+  --border:#e5e7eb;
   --radius:14px;
-  --shadow:0 8px 28px rgba(16,24,40,.08);
+  --shadow:0 8px 30px rgba(2,6,23,.08);
 }
-body.dark{
-  --text:#e5e7eb;
-  --muted:#9aa4b2;
-  --border:#2a3342;
-  --bg:#111418;
-  --card:#171a20;
-  --shadow:0 10px 34px rgba(0,0,0,.45);
-}
-
-/* ---------- Base ---------- */
-*{ box-sizing:border-box; }
-html,body{ height:100%; margin:0; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
 body{
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
   color:var(--text);
   background:var(--bg);
   line-height:1.45;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  transition: background .25s ease, color .25s ease;
+  transition:background .25s,color .25s;
 }
+/* playful dumbbell pattern like the register page */
 body::before{
   content:"";
-  position:fixed; inset:0;
+  position:fixed; inset:0; pointer-events:none; z-index:-1;
   background-image:url("assets/dumbell-art.png");
-  background-size:180px; background-repeat:repeat;
-  opacity:.05; pointer-events:none; z-index:-1;
+  background-size:200px; background-repeat:repeat;
+  opacity:.08;
 }
-body.dark::before{ opacity:.03; }
 
-/* ---------- Layout & card ---------- */
-.page-wrapper{
-  max-width:1100px;
-  margin:24px auto;
-  padding:0 18px 36px;
+/* ========= Dark mode ========= */
+body.dark{
+  --bg:#0e1116;
+  --text:#eef2ff;
+  --card:#12161e;
+  --border:#2a2f3a;
+  --shadow:0 8px 32px rgba(0,0,0,.35);
 }
-.form-container{
+body.dark::before{ opacity:.045; }
+
+/* ========= Layout container (matches register) ========= */
+.page-wrapper{
+  min-height:calc(100vh - 72px);
+  display:flex; justify-content:center;
+  padding:24px;
+}
+.form-card,               /* edit page */
+.form-container{          /* register page (kept for parity) */
+  width:100%; max-width:980px;
   background:var(--card);
   border:1px solid var(--border);
   border-radius:18px;
   box-shadow:var(--shadow);
-  padding:22px;
+  padding:28px clamp(16px,2.6vw,32px);
+  backdrop-filter:saturate(120%) blur(6px);
 }
-
-/* ---------- Headings ---------- */
 .title{
-  display:flex; align-items:center; gap:10px;
-  font-size:clamp(22px,2.8vw,32px);
-  font-weight:800;
-  letter-spacing:.2px;
+  margin:0 0 8px; text-align:left;
+  font-weight:800; letter-spacing:.2px;
   color:var(--primary);
-  margin:6px 2px 14px;
 }
-.subtitle{ margin:0 2px 18px; color:var(--muted); }
 
-/* ---------- Sections ---------- */
+/* ========= Form grid & fields ========= */
+.form{ display:flex; flex-direction:column; gap:18px; }
+
 .section{
-  margin:22px 0 10px;
-  font-weight:800;
-  color:#1f2937;
-  font-size:1.05rem;
-}
-body.dark .section{ color:#dbe1ea; }
-
-.hr{
-  border:0; height:1px; background:var(--border);
-  margin:14px 0 6px; opacity:.8;
+  margin:2px 0 2px;
+  font-size:1.02rem; font-weight:800;
 }
 
-/* ---------- Inputs ---------- */
-.field{ margin:12px 0 14px; }
-.field label{
-  display:flex; justify-content:space-between; align-items:center;
-  gap:10px; margin:0 0 6px;
-  font-weight:700; color:#334155;
+.grid-2{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.grid-3{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+@media (max-width:860px){
+  .grid-2,.grid-3{ grid-template-columns:1fr; }
 }
-body.dark .field label{ color:#c7d2fe; }
 
-.input, .field input[type="text"], .field input[type="email"],
-.field input[type="password"], .field input[type="tel"],
-.field input[type="date"], .field input[type="number"],
-.field select, .field textarea, .form input[type="file"]{
+.field{ display:flex; flex-direction:column; gap:8px; }
+.field label{ font-weight:700; font-size:.95rem; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="number"],
+input[type="file"],
+select, textarea{
   width:100%;
+  background:#fff;
+  color:#0b1324;
   border:1px solid var(--border);
-  background:var(--card);
-  color:inherit;
-  height:48px; padding:0 14px;
-  border-radius:var(--radius);
-  outline:none; transition:border-color .15s, box-shadow .15s, background .15s;
+  border-radius:12px;
+  padding:.8rem .95rem;
+  font-size:1rem;
+  transition:border-color .2s, box-shadow .2s, background .2s, color .2s;
 }
-.field textarea{ height:120px; padding:12px 14px; resize:vertical; }
-.form input[type="file"]{ height:auto; padding:10px 12px; }
+textarea{ min-height:110px; resize:vertical; }
+input[type="file"]{ padding:.6rem .8rem; }
 
-.input:focus, .field input:focus, .field select:focus, .field textarea:focus{
-  border-color:rgba(0,114,206,.85);
-  box-shadow:0 0 0 3px rgba(0,114,206,.18);
+input:focus, select:focus, textarea:focus{
+  outline:none;
+  border-color:#9cc8ff;
+  box-shadow:0 0 0 4px rgba(0,114,206,.18);
 }
 
-/* Validation helpers (optional) */
-.is-invalid{ border-color:#ef4444 !important; }
-.invalid-msg{ color:#ef4444; font-size:.88rem; margin-top:6px; }
-.hint{ color:var(--muted); font-size:.9rem; margin-top:4px; }
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#141924;
+  color:var(--text);
+  border-color:var(--border);
+}
+body.dark input:focus,
+body.dark select:focus,
+body.dark textarea:focus{
+  border-color:#3a7be0;
+  box-shadow:0 0 0 4px rgba(58,123,224,.22);
+}
 
-/* ---------- Grids ---------- */
-.grid-2{ display:grid; gap:14px; grid-template-columns:repeat(2,minmax(0,1fr)); }
-.grid-3{ display:grid; gap:14px; grid-template-columns:repeat(3,minmax(0,1fr)); }
-@media (max-width:880px){ .grid-2,.grid-3{ grid-template-columns:1fr; } }
+.hint{ font-size:.86rem; color:var(--muted); margin-top:2px; }
+body.dark .hint{ color:#9aa3b2; }
 
-/* ---------- Chip checkboxes (specs, languages) ---------- */
+/* Profile photo preview */
+#profilePreview{
+  width:200px; height:200px; object-fit:cover;
+  border-radius:16px; border:1px solid var(--border);
+  background:#fafafa; display:block; margin:6px 0 6px;
+}
+body.dark #profilePreview{ background:#0f141c; }
+
+/* ========= Chips / checkbox groups ========= */
 .checkbox-group{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:12px; margin-top:8px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
 }
 .checkbox-group label{
-  display:flex; align-items:center; gap:12px;
-  padding:11px 12px;
+  display:flex; align-items:center; gap:.6rem;
+  padding:.62rem .8rem;
   border:1px solid var(--border);
-  background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.6));
-  border-radius:14px; cursor:pointer;
-  transition:transform .08s ease, border-color .14s ease, background .2s ease;
+  border-radius:12px;
+  background:#f9fafb;
+  cursor:pointer;
+  transition:transform .08s, background .2s, border-color .2s;
 }
-.checkbox-group label:hover{ transform:translateY(-1px); }
-.checkbox-group input{ width:18px; height:18px; accent-color:var(--primary); }
-body.dark .checkbox-group label{
-  background:linear-gradient(180deg, #191e25, #171b21);
-}
+.checkbox-group label:hover{ background:#f3f4f6; transform:translateY(-1px); }
+.checkbox-group input[type="checkbox"]{ width:18px; height:18px; accent-color:var(--primary); }
+body.dark .checkbox-group label{ background:#12161e; }
+body.dark .checkbox-group label:hover{ background:#151b25; }
 
-/* ---------- Buttons ---------- */
-.actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
-button, .btn, input[type="submit"]{
-  -webkit-appearance:none; appearance:none;
+/* ========= Buttons (match register page styles) ========= */
+.actions{ display:flex; gap:12px; justify-content:flex-end; align-items:center; margin-top:4px; }
+
+.btn, .ur-btn{
   display:inline-flex; align-items:center; justify-content:center;
-  height:48px; padding:0 18px; border-radius:var(--radius);
+  height:46px; padding:0 18px; border-radius:12px;
   border:1px solid transparent; font-weight:800; cursor:pointer;
-  transition:transform .08s ease, filter .12s ease, box-shadow .15s ease;
+  transition:filter .15s, transform .03s, box-shadow .15s, background .15s, color .15s;
 }
-button:active, .btn:active, input[type="submit"]:active{ transform:translateY(1px); }
-
-.btn-primary{
+.btn.primary, .ur-btn-primary{
   background:var(--primary); color:#fff;
-  box-shadow:0 6px 18px rgba(0,114,206,.28);
+  box-shadow:0 6px 14px rgba(0,114,206,.26);
 }
-.btn-primary:hover{ filter:brightness(1.05); }
-.btn-ghost{
-  background:var(--card); border:1px solid var(--border); color:var(--text);
+.btn.primary:hover, .ur-btn-primary:hover{ filter:brightness(1.05); }
+.ur-btn-ghost{
+  background:transparent; color:var(--primary);
+  border-color:rgba(0,114,206,.25);
 }
-.btn-ghost:hover{ filter:brightness(1.02); }
+.ur-btn-ghost:hover{ background:rgba(0,114,206,.06); }
 
-/* ---------- Profile picture preview ---------- */
-#profilePreview{
-  width:190px; height:190px; object-fit:cover; border-radius:16px;
-  border:1px solid var(--border); background:#f9fafb;
+/* ========= Toast (edit page uses #toast) ========= */
+.toast{
+  position:fixed; right:20px; bottom:20px; z-index:9999;
+  padding:10px 14px; border-radius:12px;
+  background:#111827; color:#fff; opacity:0; transform:translateY(10px);
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  transition:.35s;
 }
-body.dark #profilePreview{ background:#0f1217; }
+.toast.show{ opacity:1; transform:translateY(0); }
 
-/* ---------- Map picker (mirrors register page) ---------- */
+/* ========= Map picker (identical to register) ========= */
 .rt-mapbox{
-  margin:12px 0 6px; padding:14px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
+  display:flex; flex-direction:column; gap:12px;
+  padding:12px; border-radius:12px;
+  background:#fff; border:1px solid var(--border);
 }
-.map-legend{ font-weight:700; color:#374151; margin:0 0 6px; }
-body.dark .map-legend{ color:#dbe1ea; }
+body.dark .rt-mapbox{ background:#0f141c; }
 
-.map-field{ display:grid; gap:6px; margin-bottom:10px; }
-.map-field span{ font-size:.9rem; color:var(--muted); }
+.map-field{ display:flex; flex-direction:column; gap:6px; }
+.map-field > span{ font-weight:700; font-size:.95rem; }
 .map-field input{
-  height:46px; border-radius:12px; padding:0 12px;
-  border:1px solid var(--border); background:var(--card); color:inherit;
-  outline:none; transition:border-color .15s, box-shadow .15s;
+  width:100%; padding:.78rem .9rem; border-radius:12px;
+  border:1px solid var(--border); background:#fff; color:#0b1324;
 }
 .map-field input:focus{
-  border-color:rgba(0,114,206,.8);
-  box-shadow:0 0 0 3px rgba(0,114,206,.18);
+  outline:none; border-color:#9cc8ff; box-shadow:0 0 0 3px rgba(0,114,206,.18);
 }
+body.dark .map-field input{ background:#141924; color:var(--text); }
 
 .map-picker{
-  height:320px; width:100%;
-  border-radius:12px; overflow:hidden;
-  color-scheme: light;               /* lets Google Maps honor your MapID theme */
+  height:330px; width:100%;
+  border-radius:12px; border:1px solid var(--border);
+  overflow:hidden;
+  /* make Google UI follow theme */
+  color-scheme: light;
 }
 body.dark .map-picker{ color-scheme: dark; }
-@media (max-width:600px){ .map-picker{ height:240px; } }
 
-/* Places dropdown above everything */
-.pac-container{
-  z-index:3000 !important;
-  border-radius:12px; overflow:hidden;
-  box-shadow:0 14px 34px rgba(0,0,0,.22);
+.map-toggles{
+  display:flex; gap:16px; align-items:center; flex-wrap:wrap;
 }
-body.dark .pac-container{ background:#12161d; color:#fff; border:1px solid #233143; }
+.map-precision{ display:flex; gap:14px; align-items:center; }
+.rt-check{ display:flex; align-items:center; gap:.55rem; cursor:pointer; }
+.rt-check input{ width:18px; height:18px; accent-color:var(--primary); }
 
-/* under-map toggles */
-.map-toggles{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin:10px 0; }
-.map-precision{ display:flex; gap:14px; }
-.map-precision label{ display:flex; gap:8px; align-items:center; font-weight:600; }
-.map-toggles input[type="checkbox"],
-.map-precision input[type="radio"]{ width:18px; height:18px; accent-color:var(--primary); }
+.map-meta{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
+}
+@media (max-width:720px){ .map-meta{ grid-template-columns:1fr; } }
 
-/* auto meta fields */
-.map-meta{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
-.field-small{ display:grid; gap:6px; }
+.field-small{ display:flex; flex-direction:column; gap:6px; }
 .field-small input{
-  height:44px; border-radius:10px;
-  border:1px solid var(--border); background:var(--card); color:inherit; padding:0 10px;
+  width:100%; padding:.72rem .85rem; border-radius:10px;
+  border:1px solid var(--border); background:#fafafa; color:#0b1324;
 }
+body.dark .field-small input{ background:#12161e; color:var(--text); }
 
-/* ---------- Toast (same API as register page) ---------- */
-.rt-toast{
-  position:fixed; bottom:18px; right:18px; z-index:9999;
-  background:#0b1220; color:#fff; padding:.75rem 1rem; border-radius:12px;
-  box-shadow:0 12px 30px rgba(0,0,0,.35);
-  opacity:0; transform:translateY(8px); pointer-events:none;
-  transition:opacity .18s ease, transform .18s ease;
-  max-width:min(420px,90vw);
-}
-.rt-toast.show{ opacity:1; transform:translateY(0); }
-body.dark .rt-toast{ background:#161c26; }
-
-/* Utilities */
-.text-muted{ color:var(--muted); }
-.hide{ display:none !important; }
+/* ========= Small helpers to keep perfect parity ========= */
+.animate__animated{ animation-duration:.65s; }
+a{ color:var(--primary); text-decoration:none; }
+a:hover{ text-decoration:underline; }
