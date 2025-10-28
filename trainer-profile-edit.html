@@ -331,7 +331,7 @@
       form.datum.value      = d.datum || "";
       form.phone.value      = d.phone || "";
       form.gender.value     = d.gender || "";
-      form.location.value   = d.location || "";
+      // form.location.value = d.location || "";
       form.bio.value        = d.bio || "";
       form.pricing.value    = d.pricing || "";
       form.experience.value = d.experience || "";
@@ -342,12 +342,18 @@
       form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
 
       const loc = d.location || {};
-      document.getElementById("loc_lat").value     = loc.lat ?? "";
-      document.getElementById("loc_lng").value     = loc.lng ?? "";
-      document.getElementById("loc_city").value    = loc.city ?? "";
-      document.getElementById("loc_region").value  = loc.region ?? "";
-      document.getElementById("loc_geohash").value = loc.geohash ?? "";
+      document.getElementById("loc_lat").value       = loc.lat ?? "";
+      document.getElementById("loc_lng").value       = loc.lng ?? "";
+      document.getElementById("loc_city").value      = loc.city ?? "";
+      document.getElementById("loc_region").value    = loc.region ?? "";
+      document.getElementById("loc_geohash").value   = loc.geohash ?? "";
       document.getElementById("loc_precision").value = loc.precision ?? "exact";
+      document.getElementById("loc_visible").value   = String(loc.visibleOnMap !== false);
+
+      const regionSelect = document.getElementById("location");
+      if (regionSelect && loc.region) regionSelect.value = loc.region;
+
+      if (window.setTrainerMapFromHidden) window.setTrainerMapFromHidden();
 
       const show = document.getElementById("showOnMap");
       if (show) show.checked = loc.visibleOnMap !== false;

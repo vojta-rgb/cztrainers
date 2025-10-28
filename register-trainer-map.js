@@ -169,7 +169,43 @@ function initTrainerMap() {
       const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
     });
   });
+if (window.setTrainerMapFromHidden) window.setTrainerMapFromHidden();
 }
+
+// Read hidden loc_* inputs and move the marker/map accordingly
+window.setTrainerMapFromHidden = function () {
+  if (!window.gmap || !window.gmarker) return;
+
+  const latEl = document.getElementById("loc_lat");
+  const lngEl = document.getElementById("loc_lng");
+  if (!latEl || !lngEl) return;
+
+  const lat = parseFloat(latEl.value);
+  const lng = parseFloat(lngEl.value);
+  if (!isFinite(lat) || !isFinite(lng)) return;
+
+  const city      = (document.getElementById("loc_city")?.value || "");
+  const region    = (document.getElementById("loc_region")?.value || "");
+  const precision = (document.getElementById("loc_precision")?.value || "exact");
+  const visible   = (document.getElementById("loc_visible")?.value !== "false");
+
+  const pos = { lat, lng };
+  gmarker.setPosition(pos);
+  gmap.setCenter(pos);
+  gmap.setZoom(13);
+
+  // sync UI toggles + region select
+  const radio = document.querySelector(`input[name="locPrecision"][value="${precision === "approx" ? "approx" : "exact"}"]`);
+  if (radio) radio.checked = true;
+  const show = document.getElementById("showOnMap");
+  if (show) show.checked = visible;
+
+  // update "Kraj" <select> if present
+  if (typeof updateRegionSelect === "function") updateRegionSelect(region);
+
+  // refresh hidden set (keeps geohash etc. in step with current pos)
+  if (typeof setHidden === "function") setHidden(lat, lng, city, region);
+};
 
 // save to RTDB under unverified-users/{uid}/location
 async function writeLocation(uid) {
