@@ -134,8 +134,8 @@ function initTrainerMap() {
   });
 
   // click / drag update
-  gmap.addListener("click", (e) => setMarkerAndFill(e.latLng));
-  gmarker.addListener("dragend", (e) => setMarkerAndFill(e.latLng));
+  window.gmap = gmap;
+  window.gmarker = gmarker;
 
   // Places Autocomplete
   const input = document.getElementById("mapSearch");
@@ -156,10 +156,6 @@ function initTrainerMap() {
     });
     autocomplete = ac;
   }
-
-  // initial fill for defaults
-  setHidden(49.83, 15.47, "", "");
-
   // react to toggles (recompute blur/visibility immediately)
   document.getElementById("showOnMap")?.addEventListener("change", () => {
     const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
@@ -169,7 +165,22 @@ function initTrainerMap() {
       const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
     });
   });
-if (window.setTrainerMapFromHidden) window.setTrainerMapFromHidden();
+    // If profile already has coordinates (hidden inputs filled by fillForm),
+    // honor them; otherwise seed a sane CZ default.
+    const latEl = document.getElementById("loc_lat");
+    const lngEl = document.getElementById("loc_lng");
+    const hasSaved =
+        latEl?.value && lngEl?.value &&
+        isFinite(parseFloat(latEl.value)) && isFinite(parseFloat(lngEl.value));
+
+    if (hasSaved) {
+        window.setTrainerMapFromHidden?.();
+    } else {
+        setHidden(49.83, 15.47, "", "");
+        gmarker.setPosition({ lat: 49.83, lng: 15.47 });
+        gmap.setCenter({ lat: 49.83, lng: 15.47 });
+        gmap.setZoom(7);
+    }
 }
 
 // Read hidden loc_* inputs and move the marker/map accordingly
