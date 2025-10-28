@@ -582,7 +582,8 @@
         tiktok: form.tiktok.value.trim()
       };
 
-      // ➕ include the map picker payload
+      // include the map picker payload
+      window.syncHiddenFromMarker?.();
       const locationPayload = collectMapLocation();
 
       try {

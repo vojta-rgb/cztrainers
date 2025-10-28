@@ -133,9 +133,27 @@ function initTrainerMap() {
     position: { lat: 49.83, lng: 15.47 }
   });
 
-  // click / drag update
-  window.gmap = gmap;
-  window.gmarker = gmarker;
+    // expose for the edit page
+    window.gmap = gmap;
+    window.gmarker = gmarker;
+
+    // clicks on the map move the pin
+    gmap.addListener("click", ({ latLng }) => setMarkerAndFill(latLng));
+
+    // dragging the pin updates hidden fields
+    gmarker.addListener("dragend", ({ latLng }) => setMarkerAndFill(latLng));
+
+    // keep hidden loc_* in sync with the current marker (used before saving)
+    window.syncHiddenFromMarker = function () {
+    if (!window.gmarker) return;
+    const p = window.gmarker.getPosition();
+    if (!p) return;
+
+    // keep any already-filled city/region unless geocoding just ran
+    const city   = document.getElementById("loc_city")?.value   || "";
+    const region = document.getElementById("loc_region")?.value || "";
+    setHidden(p.lat(), p.lng(), city, region);
+    };
 
   // Places Autocomplete
   const input = document.getElementById("mapSearch");
