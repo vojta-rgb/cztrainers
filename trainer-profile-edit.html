@@ -383,6 +383,10 @@
       }
     }
 
+    fillForm(snap.val());
+    applyLoadedLocationWhenMapReady();
+
+
     async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9){
       try {
         const img = await new Promise((res, rej) => { const i = new Image(); i.onload=res; i.onerror=rej; i.src=URL.createObjectURL(file); });
@@ -467,6 +471,14 @@
       return JSON.parse(txt);
     }
 
+    function applyLoadedLocationWhenMapReady(tries = 0) {
+      if (window.gmap && window.gmarker && typeof window.setTrainerMapFromHidden === "function") {
+        window.setTrainerMapFromHidden();
+        return;
+      }
+      if (tries < 100) setTimeout(() => applyLoadedLocationWhenMapReady(tries + 1), 50);
+    }
+
     // ---------- Load & Submit ----------
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -480,13 +492,16 @@
       .then(async (snap) => {
         if (snap.exists()) {
           fillForm(snap.val());
-          window.setTimeout(() => window.setTrainerMapFromHidden?.(), 500);
+          applyLoadedLocationWhenMapReady();
           return;
         }
         const uvRef = ref(db, "unverified-users/" + user.uid);
         try {
           const uvSnap = await get(uvRef);
-          if (uvSnap.exists()) fillForm(uvSnap.val());
+          if (uvSnap.exists()) {
+            fillForm(uvSnap.val());
+            applyLoadedLocationWhenMapReady(); 
+          }
           else alert("Vaše data nebyla nalezena. Přihlaste se znovu, aby se profil aktivoval.");
         } catch (err) {
           console.error("[profile] read error (unverified-users):", err);

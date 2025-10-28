@@ -165,8 +165,6 @@ function initTrainerMap() {
       const pos = gmarker.getPosition(); if (pos) setMarkerAndFill(pos);
     });
   });
-    // If profile already has coordinates (hidden inputs filled by fillForm),
-    // honor them; otherwise seed a sane CZ default.
     const latEl = document.getElementById("loc_lat");
     const lngEl = document.getElementById("loc_lng");
     const hasSaved =
@@ -174,16 +172,17 @@ function initTrainerMap() {
         isFinite(parseFloat(latEl.value)) && isFinite(parseFloat(lngEl.value));
 
     if (hasSaved) {
-        window.setTrainerMapFromHidden?.();
+    window.setTrainerMapFromHidden?.();
     } else {
-        setHidden(49.83, 15.47, "", "");
-        gmarker.setPosition({ lat: 49.83, lng: 15.47 });
-        gmap.setCenter({ lat: 49.83, lng: 15.47 });
-        gmap.setZoom(7);
+    // Show a neutral center, but DO NOT write defaults into hidden inputs
+    const cz = { lat: 49.83, lng: 15.47 };
+    gmarker.setPosition(cz);
+    gmap.setCenter(cz);
+    gmap.setZoom(7);
     }
 }
 
-// Read hidden loc_* inputs and move the marker/map accordingly
+// Read hidden loc_* input and move the marker/map accordingly
 window.setTrainerMapFromHidden = function () {
   if (!window.gmap || !window.gmarker) return;
 
