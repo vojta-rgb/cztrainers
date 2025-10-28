@@ -195,8 +195,25 @@
     // links
     profileEl.href = `profil.html?u=${encodeURIComponent(uid)}`;
     if (loc.visibleOnMap !== false && isFinite(loc.lat) && isFinite(loc.lng)) {
-        navEl.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc.lat)},${encodeURIComponent(loc.lng)}`;
-        navEl.removeAttribute("hidden");
+        // Build absolute URL to avoid SPA/redirect rules pointing you back to index.html
+        const profileUrl = new URL('profil.html', window.location.origin);
+        profileUrl.searchParams.set('u', uid);
+        profileEl.href = profileUrl.toString();
+        profileEl.setAttribute('target', '_self');   // explicit navigation in same tab
+
+        // Safety: stop bubbling (but DO NOT prevent default)
+        profileEl.addEventListener('click', (e) => e.stopPropagation());
+
+        // Navigation link unchanged, just ensure absolute format
+        if (isFinite(loc.lat) && isFinite(loc.lng) && loc.visibleOnMap !== false) {
+        const navUrl = new URL('https://www.google.com/maps/dir/');
+        navUrl.searchParams.set('api', '1');
+        navUrl.searchParams.set('destination', `${loc.lat},${loc.lng}`);
+        navEl.href = navUrl.toString();
+        navEl.removeAttribute('hidden');
+        } else {
+        navEl.setAttribute('hidden', 'true');
+        }
     } else {
         navEl.setAttribute("hidden", "true");
     }

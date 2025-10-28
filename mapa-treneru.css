@@ -257,3 +257,14 @@ body.dark .ts-avatar{ border-color:#1f1f1f; }
 .rt-btn-ghost{ background:transparent; color:var(--ts-text); border-color:var(--ts-border); }
 .rt-btn-ghost:hover{ background:rgba(0,0,0,.04); }
 body.dark .rt-btn-ghost:hover{ background:rgba(255,255,255,.06); }
+
+/* Hide Filtry FAB when the side panel is open or on wide screens */
+.map-panel.open + .map-canvas-wrap .map-fab { 
+  display: none !important; 
+}
+
+@media (min-width: 1024px) {
+  .map-fab { 
+    display: none !important; 
+  }
+}
