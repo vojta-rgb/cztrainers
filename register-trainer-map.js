@@ -173,8 +173,8 @@ function initTrainerMap() {
 
     if (hasSaved) {
     window.setTrainerMapFromHidden?.();
-    } else {
-    // Show a neutral center, but DO NOT write defaults into hidden inputs
+    } 
+    else {
     const cz = { lat: 49.83, lng: 15.47 };
     gmarker.setPosition(cz);
     gmap.setCenter(cz);
@@ -250,3 +250,4 @@ if (auth) {
 
 // exported callback for the loader script
 window.initTrainerPickMap = function () { initTrainerMap(); };
+

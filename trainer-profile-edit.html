@@ -383,10 +383,6 @@
       }
     }
 
-    fillForm(snap.val());
-    applyLoadedLocationWhenMapReady();
-
-
     async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9){
       try {
         const img = await new Promise((res, rej) => { const i = new Image(); i.onload=res; i.onerror=rej; i.src=URL.createObjectURL(file); });
@@ -471,13 +467,14 @@
       return JSON.parse(txt);
     }
 
-    function applyLoadedLocationWhenMapReady(tries = 0) {
-      if (window.gmap && window.gmarker && typeof window.setTrainerMapFromHidden === "function") {
+    window.applyLoadedLocationWhenMapReady = function () {
+      if (window.setTrainerMapFromHidden) {
         window.setTrainerMapFromHidden();
-        return;
+      } else {
+        // Maps not ready yet – try shortly again
+        setTimeout(window.applyLoadedLocationWhenMapReady, 60);
       }
-      if (tries < 100) setTimeout(() => applyLoadedLocationWhenMapReady(tries + 1), 50);
-    }
+    };
 
     // ---------- Load & Submit ----------
   onAuthStateChanged(auth, (user) => {
@@ -492,7 +489,7 @@
       .then(async (snap) => {
         if (snap.exists()) {
           fillForm(snap.val());
-          applyLoadedLocationWhenMapReady();
+          window.applyLoadedLocationWhenMapReady?.();
           return;
         }
         const uvRef = ref(db, "unverified-users/" + user.uid);
@@ -500,7 +497,7 @@
           const uvSnap = await get(uvRef);
           if (uvSnap.exists()) {
             fillForm(uvSnap.val());
-            applyLoadedLocationWhenMapReady(); 
+            window.applyLoadedLocationWhenMapReady?.();
           }
           else alert("Vaše data nebyla nalezena. Přihlaste se znovu, aby se profil aktivoval.");
         } catch (err) {
