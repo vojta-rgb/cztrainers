@@ -168,47 +168,92 @@ body.dark .trainer-pin {
   box-shadow: 0 1px 6px rgba(0,0,0,.8);
 }
 
-/* === InfoWindow card === */
-.iw-card{
-  width: 280px;
-  display: grid;
-  grid-template-columns: 60px 1fr;
-  gap: 12px;
-  align-items: start;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-
-  /* Force dark text because the GM bubble background is always light */
-  color: #111;
+/* ===== Trainer avatar pins (AdvancedMarker) ===== */
+.trainer-pin{
+  all: unset;
+  display:inline-flex;
+  align-items:center; justify-content:center;
+  width:42px; height:42px;
+  border-radius:50%;
+  box-shadow:0 6px 18px rgba(0,0,0,.25), 0 0 0 2px #fff;
+  background:#fff;
+  cursor:pointer;
 }
-body.dark .iw-card{ color:#111; }  /* keep it dark text in dark mode too */
-
-.iw-card .iw-avatar{
-  width: 60px; height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 0 2px rgba(0,0,0,.06);
+.trainer-pin .pin-avatar{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
 }
+body.dark .trainer-pin{ box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 0 2px #1f1f1f; background:#1f1f1f; }
 
-.iw-card .iw-name{
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 1.2;
-  margin: 2px 0 4px;
-  color:#111;            /* explicit – avoids faint text in dark mode */
+/* ===== Bottom Sheet (two-state) ===== */
+:root{
+  --ts-bg:#fff;
+  --ts-text:#111;
+  --ts-muted:#6b7280;
+  --ts-border:rgba(17,17,17,.08);
+  --ts-accent:#0072CE;
+  --ts-elev:0 10px 30px rgba(0,0,0,.18);
 }
-
-.iw-card .iw-meta{
-  font-size: 13px;
-  line-height: 1.3;
-  color:#6b7280;
-}
-body.dark .iw-card .iw-meta{ color:#8b95a3; }
-
-.iw-card .iw-btn{
-  margin-top: 10px;
-  display: inline-block;
-  text-decoration: none;
+body.dark{
+  --ts-bg:#161616;
+  --ts-text:#f4f4f4;
+  --ts-muted:#a9acb3;
+  --ts-border:rgba(255,255,255,.10);
+  --ts-accent:#4da3ff;
+  --ts-elev:0 16px 40px rgba(0,0,0,.5);
 }
 
-/* Safety: ensure default InfoWindow text uses dark color */
-.gm-style-iw, .gm-style-iw-d, .gm-style .gm-style-iw-c { color:#111; }
+.ts-scrim{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  opacity:0; pointer-events:none; transition:opacity .18s ease;
+  z-index: 80;
+}
+.ts-sheet{
+  position:fixed; left:0; right:0; bottom:0;
+  display:none;
+  justify-content:center; align-items:flex-end;
+  z-index: 90;
+}
+.ts-sheet.open{ display:flex; }
+.ts-sheet.open + .ts-scrim,
+.ts-sheet.open ~ .ts-scrim{ opacity:1; pointer-events:auto; }
+
+.ts-card{
+  background:var(--ts-bg); color:var(--ts-text);
+  width: min(640px, calc(100% - 24px));
+  max-height: 70vh; overflow:auto;
+  border:1px solid var(--ts-border);
+  border-radius:24px; box-shadow:var(--ts-elev);
+  padding:16px; margin:12px;
+  outline:none;
+}
+
+.ts-row{ display:flex; gap:12px; align-items:center; }
+.ts-avatar{ width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid #fff; }
+body.dark .ts-avatar{ border-color:#1f1f1f; }
+
+.ts-main{ display:flex; flex-direction:column; gap:4px; }
+.ts-name{ margin:0; font-size:1.15rem; font-weight:800; color:var(--ts-text); }
+.ts-meta{ color:var(--ts-muted); font-size:.95rem; }
+.ts-badge{
+  display:inline-block; align-self:flex-start;
+  margin-top:4px; padding:2px 8px; font-size:.78rem;
+  border-radius:999px; background:rgba(0,114,206,.12); color:var(--ts-accent);
+}
+
+.ts-lines{ margin:12px 0 4px; display:flex; flex-direction:column; gap:6px; }
+.ts-line{ color:var(--ts-text); font-size:.95rem; }
+.ts-line:empty{ display:none; }
+
+.ts-actions{ display:flex; gap:10px; margin-top:8px; }
+.rt-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:40px; padding:0 14px; border-radius:12px; font-weight:700;
+  border:1px solid transparent; text-decoration:none; cursor:pointer;
+}
+.rt-btn-primary{ background:var(--ts-accent); color:#fff; }
+.rt-btn-primary:hover{ filter:brightness(1.06); }
+.rt-btn-ghost{ background:transparent; color:var(--ts-text); border-color:var(--ts-border); }
+.rt-btn-ghost:hover{ background:rgba(0,0,0,.04); }
+body.dark .rt-btn-ghost:hover{ background:rgba(255,255,255,.06); }

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <link rel="stylesheet" href="style_main.css" />
   <link rel="stylesheet" href="navbar.css" />
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.min.css">
 
   <!-- Page styles (below) -->
   <link rel="stylesheet" href="mapa-treneru.css" />
@@ -139,55 +140,154 @@
     const MAP_ID_LIGHT = "af6046a265f967e45e85c84d";
     const MAP_ID_DARK  = "af6046a265f967e41ff3345f";
     const currentMapId = () =>
-        document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
+    document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
 
-        /* Globals */
-        let map, clusterer, allMarkers = [], trainersData = [];
-        let infoWindow;
-        let geocoder;
+    /* Globals */
+    let map, clusterer, allMarkers = [], trainersData = [];
+    let geocoder;
 
-        // add this helper anywhere in the module (above init is fine)
-        function setupSearch() {
-        const input = document.getElementById("searchPlace");
-        if (!input || !window.google || !google.maps) return;
+    /* ===== Trainer Detail Sheet (two states) ===== */
+    const sheetEl   = document.getElementById("trainerSheet");
+    const scrimEl   = document.getElementById("trainerScrim");
+    const cardEl    = document.getElementById("tsContent");
+    const avatarEl  = document.getElementById("tsAvatar");
+    const titleEl   = document.getElementById("tsTitle");
+    const metaEl    = document.getElementById("tsMeta");
+    const approxEl  = document.getElementById("tsBadge") || document.getElementById("tsApprox");
+    const specsEl   = document.getElementById("tsSpecs");
+    const langsEl   = document.getElementById("tsLangs");
+    const expEl     = document.getElementById("tsExp");
+    const profileEl = document.getElementById("tsProfileBtn");
+    const navEl     = document.getElementById("tsNavBtn");
 
-        // Legacy Autocomplete (still supported). We already load libraries=places.
-        // Restrict to CZ; add more countries if you like.
-        const ac = new google.maps.places.Autocomplete(input, {
-            fields: ["geometry"],
-            componentRestrictions: { country: ["cz"] },
-            types: ["geocode"]
-        });
+    let lastAnchor = null; // to restore focus when closing
 
-        ac.addListener("place_changed", () => {
-            const place = ac.getPlace();
-            const loc = place?.geometry?.location;
+    function getTextList(v){
+    if (!v) return "";
+    if (Array.isArray(v)) return v.filter(Boolean).join(", ");
+    return String(v);
+    }
+    function fullName(t){
+    return ([t.name, t.prijmeni].filter(Boolean).join(" ") || "Trenér").trim();
+    }
+
+    function openTrainerSheet(uid, t){
+    // build content safely
+    const name = fullName(t);
+    const loc  = t.location || {};
+    const city = (loc.city || "").trim();
+    const region = (loc.region || "").trim();
+    const showDot = city && region;
+    const meta = showDot ? `${city} • ${region}` : (city || region || "");
+    const specs = getTextList(t.specializations);
+    const langs = getTextList(t.languages);
+    const exp   = (t.experience != null && t.experience !== "") ? `${t.experience} let praxe` : "";
+
+    avatarEl.src = t.profilePicture || "assets/placeholder.jpg";
+    avatarEl.alt = name;
+    titleEl.textContent = name;
+    metaEl.textContent = meta;
+    approxEl.hidden = !(loc.precision === "approx");
+    specsEl.hidden = !specs;  specsEl.textContent = specs;
+    langsEl.hidden = !langs;  langsEl.textContent = langs ? `Jazyky: ${langs}` : "";
+    expEl.hidden   = !exp;    expEl.textContent   = exp;
+
+    // links
+    profileEl.href = `profil.html?u=${encodeURIComponent(uid)}`;
+    if (loc.visibleOnMap !== false && isFinite(loc.lat) && isFinite(loc.lng)) {
+        navEl.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc.lat)},${encodeURIComponent(loc.lng)}`;
+        navEl.removeAttribute("hidden");
+    } else {
+        navEl.setAttribute("hidden", "true");
+    }
+
+    // state & animation
+    sheetEl.setAttribute("aria-hidden", "false");
+    scrimEl.setAttribute("aria-hidden", "false");
+    sheetEl.classList.add("open");
+    cardEl.classList.remove("animate__fadeOutDown");
+    cardEl.classList.add("animate__fadeInUp", "animate__fast");
+
+    // focus mgmt
+    lastAnchor = document.activeElement;
+    cardEl.focus();
+
+    // URL deep link
+    const url = new URL(location.href);
+    url.searchParams.set("u", uid);
+    history.pushState({u: uid}, "", url);
+    }
+
+    function closeTrainerSheet(){
+    if (!sheetEl.classList.contains("open")) return;
+    // animate out
+    cardEl.classList.remove("animate__fadeInUp");
+    cardEl.classList.add("animate__fadeOutDown", "animate__fast");
+    setTimeout(() => {
+        sheetEl.classList.remove("open");
+        sheetEl.setAttribute("aria-hidden", "true");
+        scrimEl.setAttribute("aria-hidden", "true");
+        cardEl.classList.remove("animate__fadeOutDown");
+        // URL clean-up
+        const url = new URL(location.href);
+        url.searchParams.delete("u");
+        history.pushState({}, "", url);
+        // restore focus
+        if (lastAnchor && typeof lastAnchor.focus === "function") lastAnchor.focus();
+    }, 180);
+    }
+
+    // global exits
+    scrimEl.addEventListener("click", closeTrainerSheet);
+    window.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeTrainerSheet(); });
+    window.addEventListener("popstate", ()=> {
+    const u = new URL(location.href).searchParams.get("u");
+    if (!u) closeTrainerSheet();
+    });
+
+
+    // add this helper anywhere in the module (above init is fine)
+    function setupSearch() {
+    const input = document.getElementById("searchPlace");
+    if (!input || !window.google || !google.maps) return;
+
+    // Legacy Autocomplete (still supported). We already load libraries=places.
+    // Restrict to CZ; add more countries if you like.
+    const ac = new google.maps.places.Autocomplete(input, {
+        fields: ["geometry"],
+        componentRestrictions: { country: ["cz"] },
+        types: ["geocode"]
+    });
+
+    ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        const loc = place?.geometry?.location;
+        if (loc) {
+        map.panTo(loc);
+        map.setZoom(12);
+        }
+    });
+
+    // Fallback: user presses Enter without picking a suggestion
+    input.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const q = input.value.trim();
+        if (!q) return;
+
+        geocoder = geocoder || new google.maps.Geocoder();
+        geocoder.geocode(
+        { address: q, componentRestrictions: { country: "cz" } },
+        (results, status) => {
+            const loc = (status === "OK" && results[0]?.geometry?.location) ? results[0].geometry.location : null;
             if (loc) {
             map.panTo(loc);
             map.setZoom(12);
             }
-        });
-
-        // Fallback: user presses Enter without picking a suggestion
-        input.addEventListener("keydown", (e) => {
-            if (e.key !== "Enter") return;
-            e.preventDefault();
-            const q = input.value.trim();
-            if (!q) return;
-
-            geocoder = geocoder || new google.maps.Geocoder();
-            geocoder.geocode(
-            { address: q, componentRestrictions: { country: "cz" } },
-            (results, status) => {
-                const loc = (status === "OK" && results[0]?.geometry?.location) ? results[0].geometry.location : null;
-                if (loc) {
-                map.panTo(loc);
-                map.setZoom(12);
-                }
-            }
-            );
-        });
         }
+        );
+    });
+    }
 
     const KRAJE = [
         "Hlavní město Praha","Středočeský kraj","Jihočeský kraj","Plzeňský kraj","Karlovarský kraj",
@@ -231,85 +331,37 @@
 
 
         function makeTrainerPin(t, uid, position) {
-        const name = [t.name, t.prijmeni].filter(Boolean).join(" ") || "Trenér";
-        const img  = t.profilePicture || "assets/placeholder.jpg";
+            const name = fullName(t);
+            const img  = t.profilePicture || "assets/placeholder.jpg";
 
-        // DOM for the avatar pin
-        const el = document.createElement("div");
-        el.className = "trainer-pin";
-        el.innerHTML = `<img class="pin-avatar" src="${img}" alt="${name}">`;
+            const el = document.createElement("button"); // button for a11y focus
+            el.type = "button";
+            el.className = "trainer-pin";
+            el.innerHTML = `<img class="pin-avatar" src="${img}" alt="${name}">`;
 
-        // Prefer AdvancedMarker; fall back to classic Marker if not available
-        const useAdvanced = !!(google.maps.marker && google.maps.marker.AdvancedMarkerElement);
-
-        const m = useAdvanced
-            ? new google.maps.marker.AdvancedMarkerElement({
+            const m = new google.maps.marker.AdvancedMarkerElement({
                 map,
                 position,
                 content: el,
                 title: name
-            })
-            : new google.maps.Marker({
-                map,
-                position,
-                title: name
             });
 
-        // Build InfoWindow content
-        const html = buildIwHtml(t, uid);
+            // open our sheet
+            const open = () => {
+                closeTrainerSheet();           // ensure only one open
+                lastAnchor = el;               // restore focus here on close
+                openTrainerSheet(uid, t);
+            };
 
-        // Open handler (safe even if infoWindow not yet set)
-        const open = () => {
-            if (!infoWindow) infoWindow = new google.maps.InfoWindow();
-            infoWindow.close();
-            infoWindow.setContent(html);
-            // AdvancedMarker needs anchor: marker itself is fine
-            infoWindow.open({ map, anchor: m });
-
-            // Prevent link click from bubbling and immediately closing IW
-            google.maps.event.addListenerOnce(infoWindow, "domready", () => {
-            const a = document.querySelector(".iw-card .iw-btn");
-            if (a) a.addEventListener("click", (e) => e.stopPropagation());
-            });
-        };
-
-        // === CRITICAL: attach listeners ===
-        if (useAdvanced) {
-            // AdvancedMarker fires 'gmp-click'
-            m.addListener("gmp-click", open);
-            // and sometimes 'click' depending on version – include both
-            m.addListener("click", open);
-            // Also click on the custom DOM content (belt & suspenders)
+            m.addListener("gmp-click", open); // primary event for AdvancedMarker
+            // click on the button content (fallback)
             el.addEventListener("click", (e) => { e.stopPropagation(); open(); });
-        } else {
-            // Classic Marker
-            m.addListener("click", open);
+
+            return m;
         }
 
-        return m;
-        }
 
     /* ----------------------------------------------------------- */
-
-    // (kept – not used by new pins but harmless)
-    function buildInfoHtml(t, uid){
-        const name = [t.name, t.prijmeni].filter(Boolean).join(" ");
-        const specs = (t.specializations || "").toString();
-        const langs = (t.languages || "").toString();
-        const img   = t.profilePicture || "assets/placeholder.jpg";
-        return `
-        <div class="map-iw">
-            <div class="map-iw__row">
-            <img class="map-iw__avatar" src="${img}" alt="${name}">
-            <div class="map-iw__meta">
-                <strong>${name || "Trenér"}</strong>
-                <small>${specs}</small>
-                <small>${langs ? "Jazyky: " + langs : ""}</small>
-            </div>
-            </div>
-            <a class="rt-btn rt-btn-primary map-iw__btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
-        </div>`;
-    }
 
     function rebuildMap(){
         const mapDiv = document.getElementById("map");
@@ -328,6 +380,8 @@
         const spec = document.getElementById("filterSpec").value;
         const lang = document.getElementById("filterLang").value;
         const onlyApprox = document.getElementById("filterApprox").checked;
+
+        closeTrainerSheet();
 
         if (clusterer) clusterer.clearMarkers();
         allMarkers.forEach(m => { if (m) m.map = null; });
@@ -397,12 +451,25 @@
         zoom: 6,
         mapId: currentMapId()
         });
-        infoWindow = new google.maps.InfoWindow();
-        map.addListener("click",     () => infoWindow.close());
-        map.addListener("dragstart", () => infoWindow.close());
+        // close on map interactions
+        map.addListener("click",     closeTrainerSheet);
+        map.addListener("dragstart", closeTrainerSheet);
+        map.addListener("zoom_changed", closeTrainerSheet);
         setupSearch();
         try { await fetchTrainers(); } catch (e) { console.warn("Cannot load trainers:", e); }
         applyFilters();
+        // deep-link: ?u=<uid>
+
+        const uidParam = new URL(location.href).searchParams.get("u");
+        if (uidParam && trainersData[uidParam] && trainersData[uidParam].location) {
+        const t   = trainersData[uidParam];
+        const loc = t.location || {};
+        if (isFinite(loc.lat) && isFinite(loc.lng) && loc.visibleOnMap !== false) {
+            map.setCenter({lat: Number(loc.lat), lng: Number(loc.lng)});
+            map.setZoom(12);
+            openTrainerSheet(uidParam, t);
+        }
+        }
 
         // Rebuild when theme flips body.dark
         document.getElementById("themeToggle")?.addEventListener("click", () => setTimeout(rebuildMap, 0));
@@ -426,6 +493,33 @@
         window.initTrainersMap = start;
     })();
     </script>
+
+    <!-- Trainer Detail Sheet (bottom sheet) + scrim -->
+<div id="trainerScrim" class="ts-scrim" aria-hidden="true"></div>
+
+<aside id="trainerSheet" class="ts-sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="tsTitle">
+    <div id="tsContent" class="ts-card animate__animated" tabindex="-1">
+        <div class="ts-row">
+        <img id="tsAvatar" class="ts-avatar" src="assets/placeholder.jpg" alt="Profilový obrázek" />
+        <div class="ts-main">
+            <h3 id="tsTitle" class="ts-name">Trenér</h3>
+            <div id="tsMeta" class="ts-meta">Město • Kraj</div>
+            <div id="tsApprox" class="ts-badge" hidden>Přibližné umístění</div>
+        </div>
+        </div>
+
+        <div class="ts-lines">
+        <div id="tsSpecs" class="ts-line" hidden></div>
+        <div id="tsLangs" class="ts-line" hidden></div>
+        <div id="tsExp"   class="ts-line" hidden></div>
+        </div>
+
+        <div class="ts-actions">
+        <a id="tsProfileBtn" class="rt-btn rt-btn-primary">Zobrazit profil</a>
+        <a id="tsNavBtn" class="rt-btn rt-btn-ghost" target="_blank" rel="noopener">Navigovat</a>
+        </div>
+    </div>
+    </aside>
 
   <!-- Google Maps JS -->
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=marker,places&language=cs&region=CZ&callback=initTrainersMap&loading=async"></script>
