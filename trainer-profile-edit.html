@@ -480,6 +480,7 @@
       .then(async (snap) => {
         if (snap.exists()) {
           fillForm(snap.val());
+          window.setTimeout(() => window.setTrainerMapFromHidden?.(), 500);
           return;
         }
         const uvRef = ref(db, "unverified-users/" + user.uid);
