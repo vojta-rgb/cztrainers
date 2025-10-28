@@ -210,23 +210,25 @@
   }
 
   /* -------- pretty InfoWindow content + avatar pins ---------- */
-  function buildIwHtml(t, uid) {
-    const name = [t.name, t.prijmeni].filter(Boolean).join(" ") || "Trenér";
+    function buildIwHtml(t, uid) {
+    const name  = [t.name, t.prijmeni].filter(Boolean).join(" ") || "Trenér";
     const specs = (t.specializations || "").toString();
     const langs = (t.languages || "").toString();
-    const img = t.profilePicture || "assets/placeholder.jpg";
+    const img   = t.profilePicture || "assets/placeholder.jpg";
 
+    // NOTE: relative link (fixes “goes to homepage”)
     return `
-      <div class="iw-card">
+        <div class="iw-card" role="dialog" aria-label="${name}">
         <img class="iw-avatar" src="${img}" alt="${name}">
-        <div>
-          <div class="iw-name">${name}</div>
-          ${specs ? `<div class="iw-meta">${specs}</div>` : ""}
-          ${langs ? `<div class="iw-meta">Jazyky: ${langs}</div>` : ""}
-          <a class="rt-btn rt-btn-primary iw-btn" href="/profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
+        <div class="iw-body">
+            <div class="iw-name">${name}</div>
+            ${specs ? `<div class="iw-meta">${specs}</div>` : ""}
+            ${langs ? `<div class="iw-meta">Jazyky: ${langs}</div>` : ""}
+            <a class="rt-btn rt-btn-primary iw-btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
         </div>
-      </div>`;
-  }
+        </div>`;
+    }
+
 
   function makeTrainerPin(t, uid, position) {
     const name = [t.name, t.prijmeni].filter(Boolean).join(" ") || "Trenér";
@@ -245,11 +247,19 @@
       title: name
     });
 
-    // Open prettier card
     const html = buildIwHtml(t, uid);
-    const open = () => { infoWindow.setContent(html); infoWindow.open({ map, anchor: m }); };
-    m.addListener("gmp-click", open); // AdvancedMarker event
-    m.addListener("click", open);     // fallback
+    const open = () => {
+    // Always close previous window first
+    infoWindow.close();
+    infoWindow.setContent(html);
+    infoWindow.open({ map, anchor: m });
+
+    // Stop the link click from bubbling to the map (prevents weird closes)
+    google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+        const a = document.querySelector(".iw-card .iw-btn");
+        if (a) a.addEventListener("click", (e) => e.stopPropagation());
+    });
+    };
 
     return m;
   }
@@ -362,6 +372,8 @@
       mapId: currentMapId()
     });
     infoWindow = new google.maps.InfoWindow();
+    map.addListener("click",     () => infoWindow.close());
+    map.addListener("dragstart", () => infoWindow.close());
     setupSearch();
     try { await fetchTrainers(); } catch (e) { console.warn("Cannot load trainers:", e); }
     applyFilters();

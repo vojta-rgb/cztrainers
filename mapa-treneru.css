@@ -169,30 +169,46 @@ body.dark .trainer-pin {
 }
 
 /* === InfoWindow card === */
-.iw-card {
-  width: 260px;
+.iw-card{
+  width: 280px;
   display: grid;
-  grid-template-columns: 56px 1fr;
+  grid-template-columns: 60px 1fr;
   gap: 12px;
   align-items: start;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* Force dark text because the GM bubble background is always light */
+  color: #111;
 }
-.iw-card .iw-avatar {
-  width: 56px; height: 56px;
+body.dark .iw-card{ color:#111; }  /* keep it dark text in dark mode too */
+
+.iw-card .iw-avatar{
+  width: 60px; height: 60px;
   border-radius: 50%;
   object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.06);
 }
-.iw-card .iw-name {
+
+.iw-card .iw-name{
   font-weight: 700;
+  font-size: 16px;
+  line-height: 1.2;
   margin: 2px 0 4px;
+  color:#111;            /* explicit – avoids faint text in dark mode */
 }
-.iw-card .iw-meta {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 2px 0;
+
+.iw-card .iw-meta{
+  font-size: 13px;
+  line-height: 1.3;
+  color:#6b7280;
 }
-.iw-card .iw-btn {
-  margin-top: 8px;
+body.dark .iw-card .iw-meta{ color:#8b95a3; }
+
+.iw-card .iw-btn{
+  margin-top: 10px;
   display: inline-block;
+  text-decoration: none;
 }
-body.dark .iw-card .iw-meta { color: #9aa4b2; }
+
+/* Safety: ensure default InfoWindow text uses dark color */
+.gm-style-iw, .gm-style-iw-d, .gm-style .gm-style-iw-c { color:#111; }
