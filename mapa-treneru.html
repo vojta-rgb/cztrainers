@@ -193,11 +193,12 @@
     expEl.hidden   = !exp;    expEl.textContent   = exp;
 
     // links
-    profileEl.href = `profil.html?u=${encodeURIComponent(uid)}`;
+    // Link to the correct profile page + expected query param
+    profileEl.href = `profile.html?id=${encodeURIComponent(uid)}`;
     if (loc.visibleOnMap !== false && isFinite(loc.lat) && isFinite(loc.lng)) {
         // Build absolute URL to avoid SPA/redirect rules pointing you back to index.html
-        const profileUrl = new URL('profil.html', window.location.origin);
-        profileUrl.searchParams.set('u', uid);
+        const profileUrl = new URL('profile.html', window.location.origin);
+        profileUrl.searchParams.set('id', uid);
         profileEl.href = profileUrl.toString();
         profileEl.setAttribute('target', '_self');   // explicit navigation in same tab
 
@@ -341,7 +342,7 @@
                 <div class="iw-name">${name}</div>
                 ${specs ? `<div class="iw-meta">${specs}</div>` : ""}
                 ${langs ? `<div class="iw-meta">Jazyky: ${langs}</div>` : ""}
-                <a class="rt-btn rt-btn-primary iw-btn" href="profil.html?u=${encodeURIComponent(uid)}">Zobrazit profil</a>
+                <a class="rt-btn rt-btn-primary iw-btn" href="profile.html?id=${encodeURIComponent(uid)}">Zobrazit profil</a>
             </div>
             </div>`;
         }
