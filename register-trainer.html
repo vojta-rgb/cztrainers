@@ -234,6 +234,8 @@
           <!-- Hidden fields JS fills before save -->
           <input type="hidden" id="loc_lat" />
           <input type="hidden" id="loc_lng" />
+          <input type="hidden" id="loc_lat_public" />
+          <input type="hidden" id="loc_lng_public" />
           <input type="hidden" id="loc_city" />
           <input type="hidden" id="loc_region" />
           <input type="hidden" id="loc_geohash" />
@@ -499,27 +501,30 @@ async function getNSFWModel() {
     }
 
     function collectMapLocation() {
-    const visible   = document.getElementById("showOnMap")?.checked ?? true;
-    const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
+      const visible   = document.getElementById("showOnMap")?.checked ?? true;
+      const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
 
-    const lat = parseFloat(document.getElementById("loc_lat")?.value ?? "");
-    const lng = parseFloat(document.getElementById("loc_lng")?.value ?? "");
-    const city = document.getElementById("loc_city")?.value || "";
-    const regionAuto = document.getElementById("loc_region")?.value || "";
-    const geohash = document.getElementById("loc_geohash")?.value || "";
+      const latExact = parseFloat(document.getElementById("loc_lat")?.value ?? "");
+      const lngExact = parseFloat(document.getElementById("loc_lng")?.value ?? "");
+      const latPub   = parseFloat(document.getElementById("loc_lat_public")?.value ?? "");
+      const lngPub   = parseFloat(document.getElementById("loc_lng_public")?.value ?? "");
+      const city = document.getElementById("loc_city")?.value || "";
+      const regionAuto = document.getElementById("loc_region")?.value || "";
+      const geohash = document.getElementById("loc_geohash")?.value || "";
 
-    return {
-      visibleOnMap: visible,
-      precision,
-      lat:  visible && Number.isFinite(lat) ? lat : null,
-      lng:  visible && Number.isFinite(lng) ? lng : null,
-      city,
-      // prefer reverse-geocoded region, fall back to manual Kraj select
-      region: regionAuto || (document.getElementById("location")?.value || ""),
-      geohash: visible ? geohash : "",
-      updatedAt: Date.now()
-    };
-  }
+      return {
+        visibleOnMap: visible,
+        precision,
+        lat:  visible && Number.isFinite(latExact) ? latExact : null,
+        lng:  visible && Number.isFinite(lngExact) ? lngExact : null,
+        publicLat: visible && Number.isFinite(latPub) ? latPub : null,
+        publicLng: visible && Number.isFinite(lngPub) ? lngPub : null,
+        city,
+        region: regionAuto || (document.getElementById("location")?.value || ""),
+        geohash: visible ? geohash : "",
+        updatedAt: Date.now()
+      };
+    }
 
     document.getElementById("registerForm").addEventListener("submit", async function (e) {
     e.preventDefault();

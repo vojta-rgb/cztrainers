@@ -417,7 +417,10 @@
         if (lang && !(t.languages || "").includes(lang)) return;
         if (onlyApprox && loc.precision !== "approx") return;
 
-        const pos = { lat: Number(loc.lat), lng: Number(loc.lng) };
+        // Prefer publicLat/publicLng when provided; fallback to lat/lng
+        const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
+        const lng = (loc.publicLng != null && isFinite(Number(loc.publicLng))) ? Number(loc.publicLng) : Number(loc.lng);
+        const pos = { lat, lng };
         // NEW: avatar AdvancedMarker
         const marker = makeTrainerPin(t, uid, pos);
         markers.push(marker);

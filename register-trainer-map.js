@@ -63,15 +63,30 @@ function setHidden(lat, lng, city, region) {
   const precision = (document.querySelector('input[name="locPrecision"]:checked')?.value) || "exact";
   const visible   = document.getElementById("showOnMap")?.checked ?? true;
 
-  let outLat = lat, outLng = lng;
-  if (precision === "approx") ({ lat: outLat, lng: outLng } = approxLatLng(lat, lng));
+  // Always keep exact coordinates
+  const exactLat = Number(lat);
+  const exactLng = Number(lng);
 
-  // hidden fields for saving
-  document.getElementById("loc_lat").value       = Number(outLat).toFixed(6);
-  document.getElementById("loc_lng").value       = Number(outLng).toFixed(6);
+  // Public coords used for map display (blur only if approx)
+  let pubLat = exactLat;
+  let pubLng = exactLng;
+  if (precision === "approx") ({ lat: pubLat, lng: pubLng } = approxLatLng(exactLat, exactLng));
+
+  // hidden fields for saving: exact
+  const latEl = document.getElementById("loc_lat");
+  const lngEl = document.getElementById("loc_lng");
+  if (latEl) latEl.value = isFinite(exactLat) ? exactLat.toFixed(6) : "";
+  if (lngEl) lngEl.value = isFinite(exactLng) ? exactLng.toFixed(6) : "";
+
+  // hidden fields for saving: public
+  const latPubEl = document.getElementById("loc_lat_public");
+  const lngPubEl = document.getElementById("loc_lng_public");
+  if (latPubEl) latPubEl.value = isFinite(pubLat) ? pubLat.toFixed(6) : "";
+  if (lngPubEl) lngPubEl.value = isFinite(pubLng) ? pubLng.toFixed(6) : "";
+
   document.getElementById("loc_city").value      = city || "";
   document.getElementById("loc_region").value    = region || "";
-  document.getElementById("loc_geohash").value   = geohashEncode(outLat, outLng, 9);
+  document.getElementById("loc_geohash").value   = geohashEncode(pubLat, pubLng, 9);
   document.getElementById("loc_precision").value = precision;
   document.getElementById("loc_visible").value   = String(visible);
 
@@ -239,11 +254,23 @@ window.setTrainerMapFromHidden = function () {
 async function writeLocation(uid) {
   if (!db || !uid) return;
   const visible = document.getElementById("showOnMap")?.checked ?? true;
+  const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
+  const exactLat = Number(document.getElementById("loc_lat").value || 0);
+  const exactLng = Number(document.getElementById("loc_lng").value || 0);
+  const pubLatEl = document.getElementById("loc_lat_public");
+  const pubLngEl = document.getElementById("loc_lng_public");
+  const publicLat = Number(pubLatEl?.value || exactLat || 0);
+  const publicLng = Number(pubLngEl?.value || exactLng || 0);
+
   const payload = {
     visibleOnMap: visible,
-    precision: document.querySelector('input[name="locPrecision"]:checked')?.value || "exact",
-    lat:  visible ? Number(document.getElementById("loc_lat").value || 0) : null,
-    lng:  visible ? Number(document.getElementById("loc_lng").value || 0) : null,
+    precision,
+    // always persist exact
+    lat: visible ? exactLat : null,
+    lng: visible ? exactLng : null,
+    // optional public pair for display
+    publicLat: visible ? publicLat : null,
+    publicLng: visible ? publicLng : null,
     city: document.getElementById("loc_city").value || "",
     region: document.getElementById("loc_region").value || "",
     geohash: visible ? (document.getElementById("loc_geohash").value || "") : "",
