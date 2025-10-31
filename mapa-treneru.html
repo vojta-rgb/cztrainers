@@ -435,15 +435,15 @@
 
     async function fetchTrainers() {
         const rootRef = ref(db);
-        let snap = null;
+        let pubSnap = null, userSnap = null;
+        try { pubSnap  = await get(child(rootRef, "public-trainers")); } catch (_) {}
+        try { userSnap = await get(child(rootRef, "users")); } catch (_) {}
 
-        try { snap = await get(child(rootRef, "public-trainers")); } catch (_) {}
+        const pub   = (pubSnap  && pubSnap.exists())  ? pubSnap.val()  : {};
+        const users = (userSnap && userSnap.exists()) ? userSnap.val() : {};
 
-        if (!snap || !snap.exists()) {
-        snap = await get(child(rootRef, "users"));
-        }
-
-        trainersData = snap.exists() ? snap.val() : {};
+        // Merge, prefer live users data when both exist
+        trainersData = { ...(pub || {}), ...(users || {}) };
     }
 
     function initPanel(){
