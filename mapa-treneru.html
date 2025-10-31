@@ -398,7 +398,7 @@
         const kraj = document.getElementById("filterKraj").value;
         const spec = document.getElementById("filterSpec").value;
         const lang = document.getElementById("filterLang").value;
-        const onlyApprox = document.getElementById("filterApprox").checked;
+        // approx-only filter removed
 
         closeTrainerSheet();
 
@@ -415,7 +415,7 @@
         if (kraj && (loc.region !== kraj)) return;
         if (spec && !(t.specializations || "").includes(spec)) return;
         if (lang && !(t.languages || "").includes(lang)) return;
-        if (onlyApprox && loc.precision !== "approx") return;
+        // no approx-only filtering
 
         // Prefer publicLat/publicLng when provided; fallback to lat/lng
         const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
@@ -458,7 +458,7 @@
         document.getElementById("filterKraj").value = "";
         document.getElementById("filterSpec").value = "";
         document.getElementById("filterLang").value = "";
-        document.getElementById("filterApprox").checked = false;
+        // removed approx-only checkbox
         applyFilters();
         });
     }

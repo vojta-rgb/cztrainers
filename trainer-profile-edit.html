@@ -284,14 +284,25 @@
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
 
+    let loadedLocation = null;
+
     function collectMapLocation() {
       const visible   = document.getElementById("showOnMap")?.checked ?? true;
       const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
 
-      const latExact = Number(document.getElementById("loc_lat").value || 0);
-      const lngExact = Number(document.getElementById("loc_lng").value || 0);
-      const latPub   = Number(document.getElementById("loc_lat_public").value || latExact || 0);
-      const lngPub   = Number(document.getElementById("loc_lng_public").value || lngExact || 0);
+      let latExact = Number(document.getElementById("loc_lat").value || NaN);
+      let lngExact = Number(document.getElementById("loc_lng").value || NaN);
+      let latPub   = Number(document.getElementById("loc_lat_public").value || NaN);
+      let lngPub   = Number(document.getElementById("loc_lng_public").value || NaN);
+
+      // Fallback to previously loaded location if fields are not yet set
+      if (!Number.isFinite(latExact) && Number.isFinite(loadedLocation?.lat)) latExact = Number(loadedLocation.lat);
+      if (!Number.isFinite(lngExact) && Number.isFinite(loadedLocation?.lng)) lngExact = Number(loadedLocation.lng);
+      if (!Number.isFinite(latPub)   && Number.isFinite(loadedLocation?.publicLat)) latPub = Number(loadedLocation.publicLat);
+      if (!Number.isFinite(lngPub)   && Number.isFinite(loadedLocation?.publicLng)) lngPub = Number(loadedLocation.publicLng);
+      // As a last resort, mirror exact into public
+      if (!Number.isFinite(latPub)) latPub = latExact;
+      if (!Number.isFinite(lngPub)) lngPub = lngExact;
 
       if (!visible) {
         return { visibleOnMap: false, precision, lat: null, lng: null, publicLat: null, publicLng: null, city:"", region:"", geohash:"", updatedAt: Date.now() };
@@ -350,6 +361,7 @@
       form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
 
       const loc = d.location || {};
+      loadedLocation = loc;
       document.getElementById("loc_lat").value       = loc.lat ?? "";
       document.getElementById("loc_lng").value       = loc.lng ?? "";
       document.getElementById("loc_city").value      = loc.city ?? "";
