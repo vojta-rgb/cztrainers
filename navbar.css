@@ -1,110 +1,179 @@
-/* === CZTRAINERS NAV (blue, normal corners, dark-mode ready) === */
+/* =========================
+   CZTRAINERS NAVBAR (square)
+   ========================= */
+
 :root{
-  --nav-blue:#0072CE;
-  --nav-h:64px;             /* approx navbar height; adjust if you change logo size */
+  --blue: #0072CE;
+  --blue-600: #0a67b8;   /* slightly darker for dark mode */
+  --white: #fff;
+  --text: #ffffff;
+  --nav-h: 64px;         /* navbar height */
 }
 
-/* Bar */
+/* --- Navbar bar --- */
 .cznav{
-  position:sticky; top:0; z-index:1002;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.8rem 1.2rem;
-  background:var(--nav-blue); color:#fff;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
-  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1100;                 /* above page & menu panel */
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--blue);
+  color: var(--text);
+  border-radius: 0;              /* 90° corners */
 }
-.cznav *{ box-sizing:border-box; }
 
-/* Logo */
-.cznav__logo img{ height:50px; display:block; }
+/* keep same tone in dark mode (blue brand first) */
+body.dark .cznav{ background: var(--blue); }
 
-/* Right side cluster */
-.cznav__right{ margin-left:auto; display:inline-flex; align-items:center; gap:.75rem; }
+/* logo */
+.cznav__logo img{
+  display: block;
+  height: 40px;
+  width: auto;
+}
 
-/* Profile/Login pill */
+/* right cluster */
+.cznav__right{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* profile pill */
 .cznav__pill{
-  display:inline-flex; align-items:center; gap:.45rem;
-  padding:.45rem .9rem; border-radius:999px;
-  border:1px solid rgba(255,255,255,.9);
-  color:#fff; text-decoration:none; font-weight:700; line-height:1;
-  background:transparent; white-space:nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--white);
+  text-decoration: none;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 0;              /* 90° */
 }
-.cznav__pill:hover{ background:rgba(255,255,255,.12); }
+.cznav__pill:hover{ background: rgba(255,255,255,.18); }
 
-/* Theme toggle (emoji) */
-.cznav__theme{ background:transparent; border:0; color:#fff; padding:0; cursor:pointer; line-height:1; font-size:20px; }
+/* theme toggle */
+.cznav__theme{
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--white);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 0;              /* 90° */
+  cursor: pointer;
+}
+.cznav__theme:hover{ background: rgba(255,255,255,.12); }
 
-/* Hamburger with X animation */
+/* hamburger */
 .cznav__hamburger{
-  display:inline-flex; flex-direction:column; justify-content:center; align-items:center;
-  gap:6px; width:44px; height:36px; padding:6px;
-  background:transparent; border:0; border-radius:10px; cursor:pointer; color:#fff;
-  position:relative; z-index:1003; -webkit-tap-highlight-color:transparent;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 0;              /* 90° */
+  cursor: pointer;
 }
-.cznav__hamburger:focus-visible{ outline:2px solid rgba(255,255,255,.6); outline-offset:2px; }
-.cznav__hamburger span{ width:26px; height:3px; border-radius:3px; background:currentColor; transition:transform .22s ease, opacity .22s ease; transform-origin:center; }
-.cznav__hamburger.active span:nth-child(1){ transform:translateY(9px) rotate(45deg); }
-.cznav__hamburger.active span:nth-child(2){ opacity:0; }
-.cznav__hamburger.active span:nth-child(3){ transform:translateY(-9px) rotate(-45deg); }
+.cznav__hamburger span{
+  display:block; width:20px; height:2px;
+  background:#fff; margin:2px 0;
+  transition:transform .2s ease, opacity .2s ease;
+}
 
-/* Links (shared) */
+/* optional “X” animation when JS adds .is-open on the button */
+.cznav__hamburger.is-open span:nth-child(1){ transform: translateY(4px) rotate(45deg); }
+.cznav__hamburger.is-open span:nth-child(2){ opacity: 0; }
+.cznav__hamburger.is-open span:nth-child(3){ transform: translateY(-4px) rotate(-45deg); }
+
+/* =========================
+   MENU PANEL (square corners)
+   ========================= */
+
+/* mobile/tablet: full-width sheet BELOW the navbar
+   (navbar stays visible) */
+.cznav__menu{
+  position: fixed;
+  top: var(--nav-h);             /* start under the navbar */
+  left: 0; right: 0; bottom: 0;
+  z-index: 1000;
+
+  background: var(--blue);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px 28px;
+
+  border-radius: 0;              /* 90° corners */
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: none;
+
+  /* hidden by default; JS toggles .open */
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+/* dark mode tone for the sheet */
+body.dark .cznav__menu{ background: var(--blue-600); }
+
+/* visible state */
+.cznav__menu.open{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* links inside the panel */
 .cznav__link{
-  display:flex; align-items:center; justify-content:center;
-  width:100%; text-decoration:none; font-weight:700;
-  border-radius:12px; padding:.6rem .9rem; transition:filter .15s ease, background .15s ease, color .15s ease;
+  width: 100%;
+  max-width: 720px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+  color: #fff;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 0;              /* 90° */
 }
+.cznav__link:hover{ background: rgba(255,255,255,.18); }
 
-/* -------- Desktop dropdown (small blue panel under the bar) -------- */
-@media (min-width:768px){
+/* desktop: compact square panel aligned to the right under the bar */
+@media (min-width: 1024px){
   .cznav__menu{
-    display:none;
-    position:absolute; right:12px; top:calc(100% + 8px);
-    min-width:260px; padding:.6rem;
-    background:var(--nav-blue); color:#fff;
-    border-radius:12px; border:0;
-    box-shadow:0 10px 28px rgba(0,0,0,.18);
-    flex-direction:column; gap:.55rem; z-index:1001;
-  }
-  .cznav__menu.active{ display:flex !important; }
+    top: calc(var(--nav-h) + 10px);
+    right: 16px; left: auto; bottom: auto;
+    width: 380px;
+    max-height: calc(100dvh - var(--nav-h) - 24px);
+    overflow: auto;
 
-  .cznav__link{
-    background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.16);
+    /* still square corners */
+    border-radius: 0;
+    box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    padding: 14px;
+    gap: 10px;
   }
-  .cznav__link:hover{ background:rgba(255,255,255,.14); }
 }
 
-/* -------- Mobile full-screen sheet (covers page) -------- */
-@media (max-width:767.98px){
-  .cznav__logo img{ height:40px; }
-  .cznav__right{ gap:.5rem; }
-  .cznav__pill{ padding:.35rem .7rem; font-size:14px; }
-
-  .cznav{ position:sticky; top:0; z-index:1002; }
-
-  .cznav__menu{
-    position:fixed; inset:0;                       /* cover whole screen */
-    background:var(--nav-blue); color:#fff;
-    display:flex; flex-direction:column; gap:.75rem;
-    padding:calc(var(--nav-h) + 12px) 16px 24px;   /* space under the bar */
-    transform:translateY(12px); opacity:0; pointer-events:none;
-    transition:transform .25s ease, opacity .25s ease;
-  }
-  .cznav__menu.active{ transform:none; opacity:1; pointer-events:auto; }
-
-  .cznav__link{
-    background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18);
-  }
-  .cznav__link:hover{ background:rgba(255,255,255,.16); }
+/* accessibility focus */
+.cznav__link:focus-visible,
+.cznav__pill:focus-visible,
+.cznav__theme:focus-visible,
+.cznav__hamburger:focus-visible{
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
-/* Always respect hidden (auth buttons) */
-.cznav__menu [hidden]{ display:none !important; }
-
-/* Dark mode — keep blue bar/sheet, just ensure contrast */
-body.dark .cznav,
-body.dark .cznav__menu{ color:#fff; }
-body.dark .cznav__pill{ border-color:rgba(255,255,255,.9); }
-body.dark .cznav__hamburger{ color:#fff; }
-
-/* Reset stray page styles */
-html,body{ margin:0; padding:0; }
+/* reduce-motion: keep everything functional without animation */
+@media (prefers-reduced-motion: reduce){
+  .cznav__menu{ transition: none; }
+  .cznav__hamburger span{ transition: none; }
+}
