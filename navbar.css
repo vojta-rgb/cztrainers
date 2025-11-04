@@ -1,14 +1,18 @@
-/* ========= CZTRAINERS isolated navbar ========= */
-.cznav{
-  position:relative;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.8rem 1.2rem;
-  background:#0072CE; color:#fff;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+/* === CZTRAINERS NAV (blue, normal corners, dark-mode ready) === */
+:root{
+  --nav-blue:#0072CE;
+  --nav-h:64px;             /* approx navbar height; adjust if you change logo size */
 }
 
-/* make sure foreign CSS doesn’t leak in */
+/* Bar */
+.cznav{
+  position:sticky; top:0; z-index:1002;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.8rem 1.2rem;
+  background:var(--nav-blue); color:#fff;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
 .cznav *{ box-sizing:border-box; }
 
 /* Logo */
@@ -21,181 +25,86 @@
 .cznav__pill{
   display:inline-flex; align-items:center; gap:.45rem;
   padding:.45rem .9rem; border-radius:999px;
-  border:1px solid rgba(255,255,255,.85);
-  color:#fff; text-decoration:none; font-weight:600; line-height:1;
+  border:1px solid rgba(255,255,255,.9);
+  color:#fff; text-decoration:none; font-weight:700; line-height:1;
   background:transparent; white-space:nowrap;
 }
 .cznav__pill:hover{ background:rgba(255,255,255,.12); }
 
-/* Theme toggle — now plain emoji */
-.cznav__theme{
-  background:transparent; border:0; color:#fff;
-  padding:0; cursor:pointer; line-height:1;
-  font-size:20px;
-}
+/* Theme toggle (emoji) */
+.cznav__theme{ background:transparent; border:0; color:#fff; padding:0; cursor:pointer; line-height:1; font-size:20px; }
 
-/* Hamburger */
+/* Hamburger with X animation */
 .cznav__hamburger{
-  display:inline-flex; flex-direction:column; justify-content:center;
-  gap:4px; width:28px; height:22px; background:none; border:0; padding:0; cursor:pointer;
+  display:inline-flex; flex-direction:column; justify-content:center; align-items:center;
+  gap:6px; width:44px; height:36px; padding:6px;
+  background:transparent; border:0; border-radius:10px; cursor:pointer; color:#fff;
+  position:relative; z-index:1003; -webkit-tap-highlight-color:transparent;
 }
-.cznav__hamburger span{ display:block; height:3px; border-radius:3px; background:#fff; }
+.cznav__hamburger:focus-visible{ outline:2px solid rgba(255,255,255,.6); outline-offset:2px; }
+.cznav__hamburger span{ width:26px; height:3px; border-radius:3px; background:currentColor; transition:transform .22s ease, opacity .22s ease; transform-origin:center; }
+.cznav__hamburger.active span:nth-child(1){ transform:translateY(9px) rotate(45deg); }
+.cznav__hamburger.active span:nth-child(2){ opacity:0; }
+.cznav__hamburger.active span:nth-child(3){ transform:translateY(-9px) rotate(-45deg); }
 
-/* Dropdown menu */
-.cznav__menu{
-  display:none;
-  position:absolute; right:12px; top:calc(100% + 8px);
-  min-width:220px; padding:.6rem;
-  background:#fff; color:#111;
-  border:1px solid #e5e7eb; border-radius:12px;
-  box-shadow:0 8px 24px rgba(0,0,0,.12);
-  flex-direction:column; gap:.6rem; z-index:1000;
-}
-.cznav__menu.active{ display:flex !important; }
-
+/* Links (shared) */
 .cznav__link{
   display:flex; align-items:center; justify-content:center;
-  width:100%;
-  background:#fff; color:#111; text-decoration:none;
-  border:1px solid #e5e7eb; border-radius:12px;
-  padding:.5rem .75rem; font-weight:600;
+  width:100%; text-decoration:none; font-weight:700;
+  border-radius:12px; padding:.6rem .9rem; transition:filter .15s ease, background .15s ease, color .15s ease;
 }
-.cznav__link:hover{ background:#0072CE; color:#fff; border-color:#0072CE; }
 
-/* Dark mode variants */
-body.dark .cznav{ color:#f4f4f4; }
-body.dark .cznav__menu{ background:#1b1b1b; border-color:#2a2a2a; }
-body.dark .cznav__link{ background:#202020; color:#f4f4f4; border-color:#2a2a2a; }
-body.dark .cznav__link:hover{ background:#2c72cc; border-color:#2c72cc; }
-
-/* Mobile: full-width block under the bar */
-@media (max-width:767.98px){
+/* -------- Desktop dropdown (small blue panel under the bar) -------- */
+@media (min-width:768px){
   .cznav__menu{
-    position:static; right:auto; top:auto; min-width:0; width:100%;
-    margin-top:.6rem; padding:0; background:transparent; border:0; box-shadow:none;
+    display:none;
+    position:absolute; right:12px; top:calc(100% + 8px);
+    min-width:260px; padding:.6rem;
+    background:var(--nav-blue); color:#fff;
+    border-radius:12px; border:0;
+    box-shadow:0 10px 28px rgba(0,0,0,.18);
+    flex-direction:column; gap:.55rem; z-index:1001;
   }
-  body.dark .cznav__menu{ background:transparent; }
-  .cznav__link{ width:100%; }
-}
+  .cznav__menu.active{ display:flex !important; }
 
-/* Center dropdown items (only our navbar items) */
-.cznav__menu > .cznav__link,
-.cznav__menu > .nav-button {      /* keep if some pages still use old class */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  width: 100%;
-}
-
-/* Always respect hidden state */
-.cznav__menu [hidden] {
-  display: none !important;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
-/* Force normal weight in navbar text */
-.cznav,
-.cznav * {
-  font-weight: bold !important;
-}
-
-/* Mobile tweaks: keep controls compact and show a floating dropdown */
-@media (max-width: 767.98px) {
-  .cznav__logo img { height: 40px; }
-  .cznav__right { gap: .5rem; }
-  .cznav__pill { padding: .35rem .7rem; font-size: 14px; }
-  .cznav__hamburger { flex-shrink: 0; z-index: 1001; } /* never squeezed off */
-
-  /* Turn the menu into a floating sheet below the bar */
-  .cznav { position: sticky; top: 0; z-index: 1000; }
-  .cznav__menu {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    top: calc(56px + 8px);        /* approx navbar height + gap */
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 24px rgba(0,0,0,.12);
-    border-radius: 12px;
-    padding: .6rem;
-    display: none;                 /* stays hidden until .active */
+  .cznav__link{
+    background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.16);
   }
-  .cznav__menu.active { display: flex !important; }
+  .cznav__link:hover{ background:rgba(255,255,255,.14); }
+}
 
-  /* center items (anchors & buttons) */
-  .cznav__menu > a,
-  .cznav__menu > button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
+/* -------- Mobile full-screen sheet (covers page) -------- */
+@media (max-width:767.98px){
+  .cznav__logo img{ height:40px; }
+  .cznav__right{ gap:.5rem; }
+  .cznav__pill{ padding:.35rem .7rem; font-size:14px; }
+
+  .cznav{ position:sticky; top:0; z-index:1002; }
+
+  .cznav__menu{
+    position:fixed; inset:0;                       /* cover whole screen */
+    background:var(--nav-blue); color:#fff;
+    display:flex; flex-direction:column; gap:.75rem;
+    padding:calc(var(--nav-h) + 12px) 16px 24px;   /* space under the bar */
+    transform:translateY(12px); opacity:0; pointer-events:none;
+    transition:transform .25s ease, opacity .25s ease;
   }
-}
+  .cznav__menu.active{ transform:none; opacity:1; pointer-events:auto; }
 
-/* Dark sheet in dark mode */
-@media (max-width: 767.98px) {
-  body.dark .cznav__menu {
-    background: #1b1b1b;
-    border-color: #2a2a2a;
+  .cznav__link{
+    background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18);
   }
+  .cznav__link:hover{ background:rgba(255,255,255,.16); }
 }
 
-/* --- Hamburger: visible on all screens, larger tap target on mobile --- */
-.cznav__hamburger{
-  display:inline-flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
-  width:44px;              /* bigger hit area */
-  height:36px;
-  padding:6px;
-  background:transparent;
-  border:0;
-  border-radius:10px;
-  cursor:pointer;
-  color:#fff;              /* bars use currentColor */
-  position:relative;
-  z-index:1001;            /* stay above the dropdown sheet */
-  -webkit-tap-highlight-color: transparent;
-}
+/* Always respect hidden (auth buttons) */
+.cznav__menu [hidden]{ display:none !important; }
 
-.cznav__hamburger:focus-visible{
-  outline:2px solid rgba(255,255,255,.6);
-  outline-offset:2px;
-}
-
-.cznav__hamburger span{
-  display:block;
-  width:26px;              /* ← the missing piece */
-  height:3px;
-  border-radius:3px;
-  background:currentColor; /* inherits white */
-  transition:transform .22s ease, opacity .22s ease, width .22s ease;
-  transform-origin:center;
-}
-
-/* Nice “X” animation when menu is open */
-.cznav__hamburger.active span:nth-child(1){
-  transform:translateY(9px) rotate(45deg);
-}
-.cznav__hamburger.active span:nth-child(2){
-  opacity:0;
-}
-.cznav__hamburger.active span:nth-child(3){
-  transform:translateY(-9px) rotate(-45deg);
-}
-
-/* Keep contrast in dark mode just in case */
+/* Dark mode — keep blue bar/sheet, just ensure contrast */
+body.dark .cznav,
+body.dark .cznav__menu{ color:#fff; }
+body.dark .cznav__pill{ border-color:rgba(255,255,255,.9); }
 body.dark .cznav__hamburger{ color:#fff; }
 
-/* Small screens: don’t let layout squeeze the button */
-@media (max-width:767.98px){
-  .cznav__hamburger{ flex-shrink:0; }
-}
+/* Reset stray page styles */
+html,body{ margin:0; padding:0; }
