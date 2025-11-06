@@ -68,6 +68,11 @@
       <button id="btnShowReviews" class="action-btn action-btn--primary" type="button" title="Skočit na recenze">
         Zobrazit recenze
       </button>
+
+      <!-- New: open map centered on this trainer -->
+      <button id="btnOpenOnMap" class="action-btn action-btn--primary action-btn--wide" type="button" title="Zobrazit trenéra na mapě">
+        📍 Zobrazit na mapě
+      </button>
     </div>
   </div>
 
@@ -160,6 +165,16 @@
     if (btnShowReviews) {
       btnShowReviews.addEventListener("click", () => {
         document.getElementById("reviewsSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    // Deep-link to map page and center on this trainer
+    const btnOpenOnMap = document.getElementById("btnOpenOnMap");
+    if (btnOpenOnMap) {
+      btnOpenOnMap.addEventListener("click", () => {
+        if (!userId) return;
+        const url = `mapa-treneru.html?u=${encodeURIComponent(userId)}`;
+        window.location.href = url;
       });
     }
 
