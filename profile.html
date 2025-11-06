@@ -636,8 +636,8 @@
         setFavUI(mine.exists());
       } catch {}
 
-      // click to toggle
-      btnFav.addEventListener("click", async () => {
+      // click to toggle (allow multiple toggles without refresh)
+      btnFav.onclick = async () => {
         const u = auth.currentUser;
         if (!u) return; // safety (guest handler above will redirect)
 
@@ -661,7 +661,7 @@
           console.error("Fav toggle failed:", e);
           toast("Nepodařilo se upravit oblíbené.");
         }
-      }, { once: true });
+      };
     }
 
     // auth gate: self-review blocked, one review per user; allow editing

@@ -95,9 +95,15 @@ body.dark .trainer-card .tag-more{background:#222;color:#d1d5db;border-color:#2d
 .trainer-card .fav-btn:hover{filter:brightness(1.03);transform:translateY(-1px);}
 .trainer-card .fav-btn:active{transform:translateY(0);}
 .trainer-card .fav-btn.on{background:#fff0f2;border-color:#f3c2ce;color:#c81e4a;}
+.trainer-card .fav-btn.on .heart{color:#c81e4a;}
+.trainer-card .fav-btn[aria-pressed="true"]{background:#fff0f2;border-color:#f3c2ce;color:#c81e4a;}
+.trainer-card .fav-btn[aria-pressed="true"] .heart{color:#c81e4a;}
 .trainer-card .fav-btn[disabled]{opacity:.55;cursor:not-allowed;}
-body.dark .trainer-card .fav-btn{background:#0f0f0f;color:#e5e7eb;border-color:#222;box-shadow:0 10px 24px rgba(0,0,0,.45);}
+body.dark .trainer-card .fav-btn{background:#0f0f0f;color:#e5e7eb;border-color:#222;box-shadow:0 10px 24px rgba(0,0,0,.45);} 
 body.dark .trainer-card .fav-btn.on{background:#2a0f18;border-color:#72273a;color:#ff8cab;}
+body.dark .trainer-card .fav-btn.on .heart{color:#ff8cab;}
+body.dark .trainer-card .fav-btn[aria-pressed="true"]{background:#2a0f18;border-color:#72273a;color:#ff8cab;}
+body.dark .trainer-card .fav-btn[aria-pressed="true"] .heart{color:#ff8cab;}
 
 /* =============== Profile page blocks =============== */
 .profile-container{display:flex;flex-wrap:wrap;gap:2rem;padding:2rem;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-top:2rem;}
