@@ -82,11 +82,12 @@
   .cznav{ position:sticky; top:0; z-index:1002; }
 
   .cznav__menu{
-    position:fixed; inset:0;                       /* cover whole screen */
+    position:fixed; left:0; right:0; top:var(--nav-h); bottom:0;  /* start below navbar */
     background:var(--nav-blue); color:#fff;
     display:flex; flex-direction:column; gap:.75rem;
-    padding:calc(var(--nav-h) + 12px) 16px 24px;   /* space under the bar */
-    transform:translateY(12px); opacity:0; pointer-events:none;
+    padding:12px 16px 24px;                         /* content padding only */
+    z-index:1001;                                   /* keep under the bar */
+    transform:translateY(8px); opacity:0; pointer-events:none;
     transition:transform .25s ease, opacity .25s ease;
   }
   .cznav__menu.active{ transform:none; opacity:1; pointer-events:auto; }
