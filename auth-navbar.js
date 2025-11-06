@@ -45,6 +45,40 @@ async function getRole(uid){
   return null;
 }
 
+// Prefer real name from DB over email/local-part
+async function resolveDisplayName(uid, role, user){
+  const tryUsers = async () => {
+    try{
+      const s = await get(ref(db, "users/" + uid));
+      if (s.exists()){
+        const d = s.val();
+        const full = [d.name, d.prijmeni].filter(Boolean).join(" ").trim();
+        if (full) return full;
+        if (d.name) return d.name;
+      }
+    } catch {}
+    return null;
+  };
+
+  const tryAppUsers = async () => {
+    try{
+      const s = await get(ref(db, "app-users/" + uid));
+      if (s.exists()){
+        const d = s.val();
+        const full = [d.name, d.prijmeni].filter(Boolean).join(" ").trim();
+        if (full) return full;
+        if (d.name) return d.name;
+      }
+    } catch {}
+    return null;
+  };
+
+  if (role === "user"){
+    return (await tryAppUsers()) || (await tryUsers()) || user?.displayName || (user?.email ? user.email.split("@")[0] : "Uživatel");
+  }
+  return (await tryUsers()) || (await tryAppUsers()) || user?.displayName || (user?.email ? user.email.split("@")[0] : "Uživatel");
+}
+
 // Hamburger toggle
 if (hamburger && navLinks) {
   // initial a11y state
@@ -131,6 +165,8 @@ onAuthStateChanged(auth, async (user) => {
       pillHref = "trainer-profile.html";
       pillClickable = true;
     }
+    // Prefer resolving a real name from DB if available
+    try { name = await resolveDisplayName(user.uid, role, user) || name; } catch {}
   }
 
   if (pill) {

@@ -28,11 +28,17 @@
   border:1px solid rgba(255,255,255,.9);
   color:#fff; text-decoration:none; font-weight:700; line-height:1;
   background:transparent; white-space:nowrap;
+  /* Allow pill to be the first thing that shrinks */
+  flex:1 1 auto; max-width:52vw; min-width:0; overflow:hidden;
 }
 .cznav__pill:hover{ background:rgba(255,255,255,.12); }
+/* Truncate long names inside the pill */
+#profilePill svg{ flex:0 0 auto; }
+#pillText{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* Theme toggle (emoji) */
 .cznav__theme{ background:transparent; border:0; color:#fff; padding:0; cursor:pointer; line-height:1; font-size:20px; }
+.cznav__theme{ flex:0 0 auto; }
 
 /* Hamburger with X animation */
 .cznav__hamburger{
@@ -41,6 +47,7 @@
   background:transparent; border:0; border-radius:10px; cursor:pointer; color:#fff;
   position:relative; z-index:1003; -webkit-tap-highlight-color:transparent;
 }
+.cznav__hamburger{ flex:0 0 auto; }
 .cznav__hamburger:focus-visible{ outline:2px solid rgba(255,255,255,.6); outline-offset:2px; }
 .cznav__hamburger span{ width:26px; height:3px; border-radius:3px; background:currentColor; transition:transform .22s ease, opacity .22s ease; transform-origin:center; }
 .cznav__hamburger.active span:nth-child(1){ transform:translateY(9px) rotate(45deg); }
@@ -76,8 +83,10 @@
 /* -------- Mobile full-screen sheet (covers page) -------- */
 @media (max-width:767.98px){
   .cznav__logo img{ height:40px; }
-  .cznav__right{ gap:.5rem; }
+  .cznav__right{ gap:.5rem; min-width:0; }
   .cznav__pill{ padding:.35rem .7rem; font-size:14px; }
+  /* Slightly tighter truncation budget on small screens */
+  .cznav__pill{ max-width:58vw; }
 
   .cznav{ position:sticky; top:0; z-index:1002; }
 
@@ -96,6 +105,11 @@
     background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18);
   }
   .cznav__link:hover{ background:rgba(255,255,255,.16); }
+}
+
+/* Ultra-narrow devices: hide the pill if there's no space */
+@media (max-width:340px){
+  .cznav__pill{ display:none; }
 }
 
 /* Always respect hidden (auth buttons) */
