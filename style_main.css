@@ -232,9 +232,8 @@ body.dark .action-btn--heart{background:#111418;border-color:#2b3443;color:#e5e7
 .action-btn--heart .count{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;margin-left:2px;border-radius:999px;background:#f3f4f6;color:#374151;font-weight:800;font-size:12px;} 
 body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;} 
 @media(max-width:720px){.profile-actions{gap:10px;padding:12px;}.action-btn{flex:1 1 auto;justify-content:center;}} 
-.action-btn--wide{flex:1 1 100%; justify-content:center; height:52px; padding:0 22px; font-size:1.02rem; border-radius:14px; width:100%; max-width:520px;}
+.action-btn--wide{flex:0 0 100%; justify-content:center; height:52px; padding:0 22px; font-size:1.02rem; border-radius:14px; width:100%;}
 .profile-actions .action-btn--wide{margin-top:6px;}
-@media (max-width:720px){ .action-btn--wide{ max-width:none; } }
 
 /* Your requested format examples preserved */
 .action-btn--primary:hover{filter:brightness(1.05);}
