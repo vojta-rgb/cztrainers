@@ -8,6 +8,7 @@
 .cznav{
   position:sticky; top:0; z-index:1002;
   display:flex; align-items:center; justify-content:space-between;
+  gap:.6rem; /* ensure space between logo and right cluster */
   padding:.8rem 1.2rem;
   background:var(--nav-blue); color:#fff;
   box-shadow:0 2px 4px rgba(0,0,0,.1);
@@ -16,6 +17,7 @@
 .cznav *{ box-sizing:border-box; }
 
 /* Logo */
+.cznav__logo{ flex:0 0 auto; }
 .cznav__logo img{ height:50px; display:block; }
 
 /* Right side cluster */
