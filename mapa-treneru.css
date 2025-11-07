@@ -296,3 +296,122 @@ body.dark .rt-btn-ghost:hover{ background:rgba(255,255,255,.06); }
     display: none !important; 
   }
 }
+
+/* =========================================
+   My Location (panel + slider + blue dot)
+   ========================================= */
+
+/* --- Panel layout --- */
+.map-near {
+  border-top: 1px solid var(--panel-border, #e5e7eb);
+  padding-top: 12px;
+}
+.map-near__row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.map-near__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 4px;
+}
+.map-near__check input {
+  transform: translateY(1px);
+}
+.map-panel__hint {
+  font-size: 0.9rem;
+  opacity: 0.75;
+  margin-top: 6px;
+}
+
+/* --- Radius Slider (cross-browser, accessible) --- */
+.range {
+  appearance: none;             /* standard */
+  -webkit-appearance: none;     /* webkit (needed for iOS/Safari) */
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0072CE 0%, #9cc7f1 100%);
+  outline: none;
+  opacity: .95;
+  cursor: pointer;
+}
+.range:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* Keyboard focus ring */
+.range:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0,114,206,.25);
+}
+
+/* --- WebKit (Chrome, Edge, Safari) --- */
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0072CE 0%, #9cc7f1 100%);
+}
+.range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #0072CE;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+  margin-top: -7px; /* centers thumb on 4px track */
+  cursor: pointer;
+}
+
+/* --- Firefox --- */
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0072CE 0%, #9cc7f1 100%);
+}
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #0072CE;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+
+/* Dark mode variants */
+body.dark .range {
+  background: linear-gradient(90deg, #2b7dff 0%, #86b4ff 100%);
+}
+body.dark .range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, #2b7dff 0%, #86b4ff 100%);
+}
+body.dark .range::-moz-range-track {
+  background: linear-gradient(90deg, #2b7dff 0%, #86b4ff 100%);
+}
+body.dark .range::-webkit-slider-thumb {
+  border-color: #2b7dff;
+}
+body.dark .range::-moz-range-thumb {
+  border-color: #2b7dff;
+}
+
+/* --- User blue dot (AdvancedMarker content) --- */
+.user-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285F4; /* Google blue */
+  box-shadow:
+    0 0 0 3px #fff,                 /* inner ring for contrast */
+    0 0 0 6px rgba(66,133,244,.25); /* outer glow */
+}
+body.dark .user-dot {
+  box-shadow:
+    0 0 0 3px #1f1f1f,
+    0 0 0 6px rgba(66,133,244,.35);
+}

@@ -92,6 +92,27 @@
         </label>
       </div>
 
+      <!-- === MY LOCATION === -->
+      <div class="map-panel__section map-near">
+        <div class="map-near__row">
+          <button id="useMyLocation" class="ur-btn ur-btn-primary" type="button">
+            Použít mou polohu
+          </button>
+          <button id="recenterMe" class="ur-btn ur-btn-ghost" type="button" disabled>
+            Přiblížit ke mně
+          </button>
+        </div>
+
+        <label class="map-near__check">
+          <input id="filterNear" type="checkbox" disabled />
+          <span>Jen trenéři v okruhu</span>
+          <strong id="nearRadiusValue">25&nbsp;km</strong>
+        </label>
+
+        <input id="nearRadius" class="range" type="range" min="1" max="100" step="1" value="25" disabled />
+        <p class="map-panel__hint">Vaši přesnou polohu neukládáme.</p>
+      </div>
+
       <!--
       <div class="map-panel__section">
         <label class="map-check">
@@ -151,8 +172,15 @@
     document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
 
     /* Globals */
-    let map, clusterer, allMarkers = [], trainersData = [];
+    let map, clusterer, allMarkers = [], trainersData = {};
     let geocoder;
+    // --- Geolocation state ---
+    let userLoc = null;           // { lat, lng, accuracy }
+    let userMarker = null;        // AdvancedMarker for the blue dot
+    let userCircle = null;        // Accuracy circle
+    let distCache = {};           // uid -> distance (km)
+    let nearEnabled = false;
+    let nearRadiusKm = Number(localStorage.getItem('nearRadiusKm') || 25);
 
     /* ===== Trainer Detail Sheet (two states) ===== */
     const sheetEl   = document.getElementById("trainerSheet");
@@ -197,7 +225,9 @@
     avatarEl.src = t.profilePicture || "assets/placeholder.jpg";
     avatarEl.alt = name;
     titleEl.textContent = name;
-    metaEl.textContent = meta;
+    let metaWithDist = meta;
+    if (userLoc && Number.isFinite(distCache[uid])) metaWithDist += (metaWithDist ? " • " : "") + `${distCache[uid].toFixed(1)} km`;
+    metaEl.textContent = metaWithDist;
     approxEl.hidden = !(loc.precision === "approx");
     specsEl.hidden = !specs;  specsEl.textContent = specs;
     langsEl.hidden = !langs;  langsEl.textContent = langs ? `Jazyky: ${langs}` : "";
@@ -411,7 +441,74 @@
           gestureHandling: gestureHandlingMode(),
           fullscreenControl: true
         });
+        drawUserOverlays();
         applyFilters();
+    }
+    // Haversine distance in KM (no extra Maps library needed)
+    function distanceKm(a, b){
+      const toRad = d => d * Math.PI / 180;
+      const R = 6371;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const s1 = Math.sin(dLat/2), s2 = Math.sin(dLng/2);
+      const q = s1*s1 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*s2*s2;
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(q)));
+    }
+
+    function updateNearLabel(){
+      const span = document.getElementById('nearRadiusValue');
+      if (span) span.textContent = `${nearRadiusKm} km`;
+    }
+
+    function drawUserOverlays(){
+      if (!map || !userLoc) return;
+      // marker
+      if (userMarker) userMarker.map = null;
+      const el = document.createElement('div'); el.className = 'user-dot';
+      userMarker = new google.maps.marker.AdvancedMarkerElement({
+        map, position: userLoc, content: el, title: 'Moje poloha'
+      });
+      // accuracy circle
+      const radius = Math.max(80, Math.min(1500, Number(userLoc.accuracy || 200))); // clamp
+      if (userCircle) userCircle.setMap(null);
+      userCircle = new google.maps.Circle({
+        map, center: userLoc, radius,
+        strokeColor: '#4285F4', strokeOpacity: .5, strokeWeight: 1,
+        fillColor: '#4285F4', fillOpacity: .12, clickable: false
+      });
+    }
+
+    async function requestUserLocation(){
+      const btn = document.getElementById('useMyLocation');
+      btn?.setAttribute('disabled','true');
+      try{
+        await new Promise((resolve, reject) => {
+          if (!navigator.geolocation) return reject(new Error('no geo'));
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy:true, timeout:12000, maximumAge:30000
+          });
+        }).then((pos) => {
+          userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+        });
+        drawUserOverlays();
+        // enable controls
+        document.getElementById('recenterMe')?.removeAttribute('disabled');
+        document.getElementById('filterNear')?.removeAttribute('disabled');
+        document.getElementById('nearRadius')?.removeAttribute('disabled');
+        // center once
+        if (map) { map.setCenter(userLoc); map.setZoom(Math.max(map.getZoom()||6, 12)); }
+        applyFilters(); // to compute distances & (optionally) filter
+      } catch(e){
+        alert('Nepodařilo se získat polohu. Zkuste to prosím znovu.');
+      } finally{
+        btn?.removeAttribute('disabled');
+      }
+    }
+
+    function recenterToUser(){
+      if (!map || !userLoc) return;
+      map.panTo(userLoc);
+      if ((map.getZoom()||6) < 12) map.setZoom(12);
     }
 
     function applyFilters(){
@@ -419,6 +516,9 @@
         const spec = document.getElementById("filterSpec").value;
         const lang = document.getElementById("filterLang").value;
         // approx-only filter removed
+        nearEnabled = !!document.getElementById("filterNear")?.checked;
+        nearRadiusKm = Number(document.getElementById("nearRadius")?.value || nearRadiusKm);
+        updateNearLabel();
 
         closeTrainerSheet();
 
@@ -428,22 +528,28 @@
 
         const markers = [];
         Object.entries(trainersData).forEach(([uid, t]) => {
-        const loc = t?.location;
-        if (!loc || loc.lat == null || loc.lng == null) return;
-        if (loc.visibleOnMap === false) return;
+          const loc = t?.location;
+          if (!loc) return;
+          if (loc.visibleOnMap === false) return;
 
-        if (kraj && (loc.region !== kraj)) return;
-        if (spec && !(t.specializations || "").includes(spec)) return;
-        if (lang && !(t.languages || "").includes(lang)) return;
-        // no approx-only filtering
+          // Prefer publicLat/publicLng when provided; fallback to lat/lng
+          const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
+          const lng = (loc.publicLng != null && isFinite(Number(loc.publicLng))) ? Number(loc.publicLng) : Number(loc.lng);
+          if (!isFinite(lat) || !isFinite(lng)) return;
+          const pos = { lat, lng };
 
-        // Prefer publicLat/publicLng when provided; fallback to lat/lng
-        const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
-        const lng = (loc.publicLng != null && isFinite(Number(loc.publicLng))) ? Number(loc.publicLng) : Number(loc.lng);
-        const pos = { lat, lng };
-        // NEW: avatar AdvancedMarker
-        const marker = makeTrainerPin(t, uid, pos);
-        markers.push(marker);
+          // Distance cache (if we know user's location)
+          if (userLoc) {
+            distCache[uid] = distanceKm(userLoc, pos);
+            if (nearEnabled && distCache[uid] > nearRadiusKm) return; // outside radius -> skip
+          }
+
+          if (kraj && (loc.region !== kraj)) return;
+          if (spec && !(t.specializations || "").includes(spec)) return;
+          if (lang && !(t.languages || "").includes(lang)) return;
+
+          const marker = makeTrainerPin(t, uid, pos);
+          markers.push(marker);
         });
 
         allMarkers = markers;
@@ -467,20 +573,38 @@
     }
 
     function initPanel(){
-        const open  = document.getElementById("panelOpen");
-        const close = document.getElementById("panelClose");
-        const panel = document.querySelector(".map-panel");
-        const wrap  = document.querySelector(".map-canvas-wrap");
-        open.addEventListener("click",  () => { panel.classList.add("open");  wrap.classList.add("panel-open"); });
-        close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
-        document.getElementById("applyFilters").addEventListener("click", applyFilters);
-        document.getElementById("resetFilters").addEventListener("click", () => {
+      const open  = document.getElementById("panelOpen");
+      const close = document.getElementById("panelClose");
+      const panel = document.querySelector(".map-panel");
+      const wrap  = document.querySelector(".map-canvas-wrap");
+      open.addEventListener("click",  () => { panel.classList.add("open");  wrap.classList.add("panel-open"); });
+      close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
+      document.getElementById("applyFilters").addEventListener("click", applyFilters);
+      document.getElementById("resetFilters").addEventListener("click", () => {
         document.getElementById("filterKraj").value = "";
         document.getElementById("filterSpec").value = "";
         document.getElementById("filterLang").value = "";
         // removed approx-only checkbox
         applyFilters();
+      });
+      // === My location UI ===
+      const near = document.getElementById("nearRadius");
+      if (near) {
+        near.value = String(nearRadiusKm);
+        updateNearLabel();
+        near.addEventListener("input", () => {
+          nearRadiusKm = Number(near.value);
+          localStorage.setItem('nearRadiusKm', String(nearRadiusKm));
+          if (nearEnabled) applyFilters();
+          updateNearLabel();
         });
+      }
+      document.getElementById("useMyLocation")?.addEventListener("click", requestUserLocation);
+      document.getElementById("recenterMe")?.addEventListener("click", recenterToUser);
+      document.getElementById("filterNear")?.addEventListener("change", () => {
+        nearEnabled = !!document.getElementById("filterNear").checked;
+        applyFilters();
+      });
     }
 
     /* INIT */
@@ -523,6 +647,7 @@
         setupSearch();
         try { await fetchTrainers(); } catch (e) { console.warn("Cannot load trainers:", e); }
         applyFilters();
+        drawUserOverlays();
         // deep-link: ?u=<uid>
 
         const uidParam = new URL(location.href).searchParams.get("u");
