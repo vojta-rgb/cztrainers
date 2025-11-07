@@ -120,7 +120,7 @@
 
 <script type="module">
   import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, get, set, remove, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, get, set, remove, runTransaction, onValue, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   // --- Firebase ---
@@ -462,9 +462,15 @@
       card.innerHTML = `
         <div class="card-header"></div>
 
-        <button class="fav-btn ${favOn ? "on" : ""}" data-id="${id}" ${isMine ? "disabled" : ""} aria-pressed="${favOn}" aria-label="Přidat mezi oblíbené">
-          <span class="heart">${favOn ? "♥" : "♡"}</span>
-          <span class="count">${count}</span>
+        <button
+          class="fav-btn ${favOn ? 'on' : ''}"
+          data-trainer-id="${id}"
+          ${isMine ? 'disabled' : ''}
+          aria-pressed="${favOn ? 'true' : 'false'}"
+          aria-label="${favOn ? 'Odebrat z oblíbených' : 'Přidat mezi oblíbené'}"
+        >
+          <span class="heart" aria-hidden="true">${favOn ? '♥' : '♡'}</span>
+          <span class="count" data-fav-count>${count}</span>
         </button>
 
         <div class="avatar-wrap">
@@ -529,6 +535,7 @@
         // local state + UI
         myFavSet.delete(trainerId);
         if (countEl) countEl.textContent = String(Math.max(0, cur - 1));
+        favCounts[trainerId] = Math.max(0, (favCounts[trainerId] || 0) - 1);
         if (heartEl) heartEl.textContent = "♡";
         if (btn) {
           btn.classList.remove("on");
@@ -542,6 +549,7 @@
         // local state + UI
         myFavSet.add(trainerId);
         if (countEl) countEl.textContent = String(cur + 1);
+        favCounts[trainerId] = (favCounts[trainerId] || 0) + 1;
         if (heartEl) heartEl.textContent = "♥";
         if (btn) {
           btn.classList.add("on");
@@ -549,10 +557,6 @@
         }
         toast("Přidáno do oblíbených ✓");
       }
-      await Promise.all([loadUsersOnce(), loadFavCounts()]);
-      const f = getFiltersFromUI();
-      renderChips(f);
-      renderUsers(applyFilters(allUsers, f));
 
     } catch (e) {
       console.error(e);
@@ -569,7 +573,7 @@
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
-    const id = btn.getAttribute("data-id");
+    const id = btn.dataset.trainerId;
     if (!id) return;
     toggleFavorite(id, btn); // pass btn
   });
@@ -617,12 +621,12 @@
   }
   loadUsersOnce();
 
-  async function loadFavCounts() {
-    const snap = await get(ref(db, "favoriteCounts"));
+  onValue(ref(db, "favoriteCounts"), (snap) => {
     favCounts = snap.val() || {};
-    doFilter();
-  }
-  loadFavCounts();
+    const f = getFiltersFromUI();               // keep your existing helpers
+    renderChips(f);
+    renderUsers(applyFilters(allUsers, f));
+  });
 
   // auth + my favorites
   onAuthStateChanged(auth, (user) => {
