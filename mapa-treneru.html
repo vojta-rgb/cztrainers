@@ -122,7 +122,7 @@
       </div>
       -->
 
-      <div class="map-panel__section">
+      <div class="map-panel__actions">
         <button id="applyFilters" class="ur-btn ur-btn-primary" type="button">Filtrovat</button>
         <button id="resetFilters" class="ur-btn ur-btn-ghost" type="button">Vymazat</button>
       </div>
@@ -498,6 +498,11 @@
         // center once
         if (map) { map.setCenter(userLoc); map.setZoom(Math.max(map.getZoom()||6, 12)); }
         applyFilters(); // to compute distances & (optionally) filter
+        // Hide the “Použít mou polohu” button and make “Přiblížit ke mně” full width
+        const useBtn = document.getElementById('useMyLocation');
+        if (useBtn) useBtn.style.display = 'none';
+        const recBtn = document.getElementById('recenterMe');
+        if (recBtn) recBtn.style.gridColumn = '1 / -1';
       } catch(e){
         alert('Nepodařilo se získat polohu. Zkuste to prosím znovu.');
       } finally{

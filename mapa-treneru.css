@@ -415,3 +415,85 @@ body.dark .user-dot {
     0 0 0 3px #1f1f1f,
     0 0 0 6px rgba(66,133,244,.35);
 }
+
+/* === Filters panel mobile refinements === */
+.map-panel {
+  /* ensure content can scroll behind the sticky actions */
+  padding-bottom: 88px; /* space for sticky bar */
+}
+
+/* Sticky actions always visible on mobile */
+.map-panel__actions{
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--panel-bg, #fff);
+  border-top: 1px solid var(--panel-border, #e5e7eb);
+  backdrop-filter: saturate(120%) blur(6px);
+}
+body.dark .map-panel__actions{
+  background: var(--panel-bg, #0f172a);
+  border-top-color: var(--panel-border, #243244);
+}
+
+/* My Location section layout & spacing */
+.map-near { 
+  border-top: 1px solid var(--panel-border, #e5e7eb);
+  padding-top: 12px;
+}
+.map-near__row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px; /* space above the checkbox/slider */
+}
+.map-near__check{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px; /* space above the slider */
+}
+
+/* Range: full width + nicer look */
+.map-near .range,
+.map-panel__section .range{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  outline: none;
+  background: linear-gradient(90deg, #0072CE 0%, #9cc7f1 100%);
+  opacity: .95;
+  display: block;
+  margin: 0 0 2px;
+}
+.range::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #0072CE;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+.range::-moz-range-thumb{
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff;
+  border: 2px solid #0072CE;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+/* dark theme tweaks */
+body.dark .range{ background: linear-gradient(90deg, #2b7dff 0%, #86b4ff 100%); }
+body.dark .range::-webkit-slider-thumb{ border-color: #2b7dff; }
+body.dark .range::-moz-range-thumb{ border-color: #2b7dff; }
+
+/* When “Použít mou polohu” is hidden, let “Přiblížit ke mně” span full width */
+.map-near__row > :only-child{ grid-column: 1 / -1; } /* covers DOM cases when only one element remains */
+
+/* (Optional) small utility if you need to hide anything via class */
+.hidden{ display: none !important; }
