@@ -142,6 +142,11 @@
     /* Map IDs (light/dark). Put YOUR real IDs here. */
     const MAP_ID_LIGHT = "af6046a265f967e45e85c84d";
     const MAP_ID_DARK  = "af6046a265f967e41ff3345f";
+    // Desktop = 'greedy' (normal scroll zoom), touch = 'cooperative' (two-finger)
+    const gestureHandlingMode = () =>
+      (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+        ? 'cooperative'
+        : 'greedy';
     const currentMapId = () =>
     document.body.classList.contains("dark") ? MAP_ID_DARK : MAP_ID_LIGHT;
 
@@ -401,7 +406,11 @@
         if (clusterer) { clusterer.clearMarkers(); clusterer = null; }
         allMarkers.forEach(m => { if (m) m.map = null; });
 
-        map = new google.maps.Map(mapDiv, { center, zoom, mapId: currentMapId(), gestureHandling: 'cooperative', fullscreenControl: true });
+        map = new google.maps.Map(mapDiv, {
+          center, zoom, mapId: currentMapId(),
+          gestureHandling: gestureHandlingMode(),
+          fullscreenControl: true
+        });
         applyFilters();
     }
 
@@ -481,11 +490,11 @@
 
         const mapDiv = document.getElementById("map");
         map = new google.maps.Map(mapDiv, {
-        center: { lat: 49.8175, lng: 15.4730 },
-        zoom: 6,
-        mapId: currentMapId(),
-        gestureHandling: 'cooperative',      // two-finger pan on touch
-        fullscreenControl: false             // avoid hiding sheet in native fullscreen
+          center: { lat: 49.8175, lng: 15.4730 },
+          zoom: 6,
+          mapId: currentMapId(),
+          gestureHandling: gestureHandlingMode(),
+          fullscreenControl: false
         });
         // close only on explicit map taps (not drag/zoom to avoid instant close)
         map.addListener("click", () => {
