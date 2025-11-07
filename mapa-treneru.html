@@ -517,51 +517,52 @@
     }
 
     function applyFilters(){
-        const kraj = document.getElementById("filterKraj").value;
-        const spec = document.getElementById("filterSpec").value;
-        const lang = document.getElementById("filterLang").value;
-        // approx-only filter removed
-        nearEnabled = !!document.getElementById("filterNear")?.checked;
-        nearRadiusKm = Number(document.getElementById("nearRadius")?.value || nearRadiusKm);
-        updateNearLabel();
+      const kraj = document.getElementById("filterKraj").value;
+      const spec = document.getElementById("filterSpec").value;
+      const lang = document.getElementById("filterLang").value;
+      // approx-only filter removed
+      nearEnabled = !!document.getElementById("filterNear")?.checked;
+      nearRadiusKm = Number(document.getElementById("nearRadius")?.value || nearRadiusKm);
+      updateNearLabel();
 
-        closeTrainerSheet();
+      closeTrainerSheet();
 
-        if (clusterer) clusterer.clearMarkers();
-        allMarkers.forEach(m => { if (m) m.map = null; });
-        allMarkers = [];
+      if (clusterer) clusterer.clearMarkers();
+      allMarkers.forEach(m => { if (m) m.map = null; });
+      allMarkers = [];
 
-        const markers = [];
-        Object.entries(trainersData).forEach(([uid, t]) => {
-          const loc = t?.location;
-          if (!loc) return;
-          if (loc.visibleOnMap === false) return;
+      const markers = [];
+      Object.entries(trainersData).forEach(([uid, t]) => {
+        const loc = t?.location;
+        if (!loc) return;
+        if (loc.visibleOnMap === false) return;
 
-          // Prefer publicLat/publicLng when provided; fallback to lat/lng
-          const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
-          const lng = (loc.publicLng != null && isFinite(Number(loc.publicLng))) ? Number(loc.publicLng) : Number(loc.lng);
-          if (!isFinite(lat) || !isFinite(lng)) return;
-          const pos = { lat, lng };
+        // Prefer publicLat/publicLng when provided; fallback to lat/lng
+        const lat = (loc.publicLat != null && isFinite(Number(loc.publicLat))) ? Number(loc.publicLat) : Number(loc.lat);
+        const lng = (loc.publicLng != null && isFinite(Number(loc.publicLng))) ? Number(loc.publicLng) : Number(loc.lng);
+        if (!isFinite(lat) || !isFinite(lng)) return;
+        const pos = { lat, lng };
 
-          // Distance cache (if we know user's location)
-          if (userLoc) {
-            distCache[uid] = distanceKm(userLoc, pos);
-            if (nearEnabled && distCache[uid] > nearRadiusKm) return; // outside radius -> skip
-          }
-
-          if (kraj && (loc.region !== kraj)) return;
-          if (spec && !(t.specializations || "").includes(spec)) return;
-          if (lang && !(t.languages || "").includes(lang)) return;
-
-          const marker = makeTrainerPin(t, uid, pos);
-          markers.push(marker);
-        });
-
-        allMarkers = markers;
-        if (markers.length) {
-        // eslint-disable-next-line no-undef
-        clusterer = new markerClusterer.MarkerClusterer({ map, markers });
+        // Distance cache (if we know user's location)
+        if (userLoc) {
+          distCache[uid] = distanceKm(userLoc, pos);
+          if (nearEnabled && distCache[uid] > nearRadiusKm) return; // outside radius -> skip
         }
+
+        if (kraj && (loc.region !== kraj)) return;
+        if (spec && !(t.specializations || "").includes(spec)) return;
+        if (lang && !(t.languages || "").includes(lang)) return;
+
+        const marker = makeTrainerPin(t, uid, pos);
+        markers.push(marker);
+      });
+
+      allMarkers = markers;
+      if (markers.length) {
+      // eslint-disable-next-line no-undef
+      clusterer = new markerClusterer.MarkerClusterer({ map, markers });
+      }
+      setTimeout(closePanelIfMobile, 50);
     }
 
     async function fetchTrainers() {
@@ -632,7 +633,6 @@
 
         // 4) Re-apply filters with clean state
         applyFilters();
-        setTimeout(closePanelIfMobile, 50);
       });
       // === My location UI ===
       const near = document.getElementById("nearRadius");
