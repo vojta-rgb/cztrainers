@@ -175,6 +175,7 @@
     }
 
     let preventCloseUntil = 0; // small guard to ignore map-click right after opening
+    let sheetOpenedAt = 0; // high-res timestamp for the last open (performance.now)
 
     function openTrainerSheet(uid, t){
     // build content safely
@@ -236,7 +237,8 @@
     cardEl.focus();
 
     // brief guard so a pin click doesn't immediately close via map 'click'
-    preventCloseUntil = Date.now() + 350;
+    sheetOpenedAt = performance.now();
+    preventCloseUntil = Date.now() + 900; // was 350; longer guard for mobile taps
 
     // URL deep link
     const url = new URL(location.href);
@@ -380,11 +382,11 @@
                 lastAnchor = el;               // restore focus here on close
                 openTrainerSheet(uid, t);
             };
-
             m.addListener("gmp-click", open); // primary event for AdvancedMarker
+            el.addEventListener("pointerdown", e => e.stopPropagation(), { passive: true });
+            el.addEventListener("touchstart", e => e.stopPropagation(), { passive: true });
             // click on the button content (fallback)
             el.addEventListener("click", (e) => { e.stopPropagation(); open(); });
-
             return m;
         }
 
@@ -486,7 +488,13 @@
         fullscreenControl: false             // avoid hiding sheet in native fullscreen
         });
         // close only on explicit map taps (not drag/zoom to avoid instant close)
-        map.addListener("click", () => closeTrainerSheet('map'));
+        map.addListener("click", () => {
+          // If the sheet isn’t open, ignore
+          if (!sheetEl.classList.contains("open")) return;
+          // On touch devices, a synthetic map click follows the pin tap — ignore it briefly
+          if (performance.now() - sheetOpenedAt < 900) return;
+          closeTrainerSheet('map');
+        });
 
         // If user enters native fullscreen by other means, keep sheet inside the fullscreen root
         const relocateOverlay = () => {
