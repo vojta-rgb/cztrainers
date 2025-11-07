@@ -130,13 +130,31 @@ body.dark .pac-item:hover{ background:rgba(255,255,255,.07); }
 .map-canvas{ width:100%;height:100%; }
 
 /* Floating button (open filters) */
+/* Floating button (open filters) — fixed to viewport */
 .map-fab{
-  position:absolute;bottom:16px;left:16px;
-  border:none;border-radius:999px;
-  padding:10px 14px;font-weight:600;
-  background:var(--fab-bg);color:var(--fab-text);
-  box-shadow:0 4px 16px rgba(0,0,0,.2);
-  cursor:pointer;
+  position: fixed;
+  z-index: 10; /* above map controls */
+  left: calc(12px + env(safe-area-inset-left));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  background: var(--fab-bg);
+  color: var(--fab-text);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  cursor: pointer;
+  touch-action: manipulation; /* removes tap delay on iOS */
+  -webkit-font-smoothing: antialiased;
+}
+.map-fab:hover{ filter: brightness(1.05); }
+
+/* Hide Filtry FAB when the side panel is open (you already toggle .panel-open) */
+.map-canvas-wrap.panel-open .map-fab{ display:none; }
+
+/* Also hide FAB when the left filter panel is visible on desktop */
+@media (min-width: 1024px){
+  .map-fab{ display:none; }
 }
 .map-fab:hover{ filter:brightness(1.05); }
 

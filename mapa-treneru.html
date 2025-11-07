@@ -122,7 +122,7 @@
       </div>
       -->
 
-      <div class="map-panel__actions">
+      <div class="map-panel__section">
         <button id="applyFilters" class="ur-btn ur-btn-primary" type="button">Filtrovat</button>
         <button id="resetFilters" class="ur-btn ur-btn-ghost" type="button">Vymazat</button>
       </div>
@@ -586,11 +586,36 @@
       close.addEventListener("click", () => { panel.classList.remove("open"); wrap.classList.remove("panel-open"); });
       document.getElementById("applyFilters").addEventListener("click", applyFilters);
       document.getElementById("resetFilters").addEventListener("click", () => {
-        document.getElementById("filterKraj").value = "";
-        document.getElementById("filterSpec").value = "";
-        document.getElementById("filterLang").value = "";
-        document.getElementById('filterNear')?.removeAttribute('disabled');
-        // removed approx-only checkbox
+        const kraj = document.getElementById("filterKraj");
+        const spec = document.getElementById("filterSpec");
+        const lang = document.getElementById("filterLang");
+        const nearChk = document.getElementById("filterNear");
+        const near = document.getElementById("nearRadius");
+
+        // 1) Clear dropdowns
+        if (kraj) kraj.value = "";
+        if (spec) spec.value = "";
+        if (lang) lang.value = "";
+
+        // 2) Reset "near me" state
+        if (nearChk) {
+          nearChk.checked = false;
+          // Enable only if we already have a user location
+          if (userLoc) {
+            nearChk.removeAttribute("disabled");
+            near?.removeAttribute("disabled");
+          } else {
+            nearChk.setAttribute("disabled", "true");
+            near?.setAttribute("disabled", "true");
+          }
+        }
+
+        // 3) Reset radius to default and label
+        nearRadiusKm = 25;
+        if (near) near.value = "25";
+        updateNearLabel();
+
+        // 4) Re-apply filters with clean state
         applyFilters();
       });
       // === My location UI ===
