@@ -136,14 +136,41 @@
     </section>
   </main>
 
+  <!-- Trainer Detail Sheet (bottom sheet) + scrim -->
+  <div id="trainerScrim" class="ts-scrim" aria-hidden="true"></div>
+
+  <aside id="trainerSheet" class="ts-sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="tsTitle">
+    <div id="tsContent" class="ts-card animate__animated" tabindex="-1">
+        <div class="ts-row">
+        <img id="tsAvatar" class="ts-avatar" src="assets/placeholder.jpg" alt="Profilový obrázek" />
+        <div class="ts-main">
+            <h3 id="tsTitle" class="ts-name">Trenér</h3>
+            <div id="tsMeta" class="ts-meta">Město • Kraj</div>
+            <div id="tsApprox" class="ts-badge" hidden>Přibližné umístění</div>
+        </div>
+        </div>
+
+        <div class="ts-lines">
+        <div id="tsSpecs" class="ts-line" hidden></div>
+        <div id="tsLangs" class="ts-line" hidden></div>
+        <div id="tsExp"   class="ts-line" hidden></div>
+        </div>
+
+        <div class="ts-actions">
+        <a id="tsProfileBtn" class="rt-btn rt-btn-primary">Zobrazit profil</a>
+        <a id="tsNavBtn" class="rt-btn rt-btn-ghost" target="_blank" rel="noopener">Navigovat</a>
+        </div>
+    </div>
+  </aside>
+
   <!-- Auth-aware navbar -->
   <script type="module" src="auth-navbar.js"></script>
 
   <!-- Clustering -->
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-
+  
     <!-- Firebase + Google Maps -->
-    <script type="module">
+  <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -492,9 +519,7 @@
         });
         drawUserOverlays();
         // enable controls
-        document.getElementById('recenterMe')?.removeAttribute('disabled');
-        document.getElementById('filterNear')?.removeAttribute('disabled');
-        document.getElementById('nearRadius')?.removeAttribute('disabled');
+        setNearControlsEnabled(true);
         // center once
         if (map) { map.setCenter(userLoc); map.setZoom(Math.max(map.getZoom()||6, 12)); }
         applyFilters(); // to compute distances & (optionally) filter
@@ -593,6 +618,25 @@
       document.getElementById('panelOpen')?.focus({ preventScroll: true });
     }
 
+    function setNearControlsEnabled(enabled){
+      const wrap = document.querySelector('.map-near');
+      const recBtn = document.getElementById('recenterMe');
+      const nearChk = document.getElementById('filterNear');
+      const near = document.getElementById('nearRadius');
+
+      if (enabled){
+        recBtn?.removeAttribute('disabled');  recBtn?.classList.remove('is-disabled');
+        nearChk?.removeAttribute('disabled');
+        near?.removeAttribute('disabled');
+        wrap?.classList.remove('map-near--disabled');
+      } else {
+        recBtn?.setAttribute('disabled','true'); recBtn?.classList.add('is-disabled');
+        nearChk?.setAttribute('disabled','true');
+        near?.setAttribute('disabled','true');
+        wrap?.classList.add('map-near--disabled');
+      }
+    }
+
     function initPanel(){
       const open  = document.getElementById("panelOpen");
       const close = document.getElementById("panelClose");
@@ -656,6 +700,7 @@
         nearEnabled = !!document.getElementById("filterNear").checked;
         applyFilters();
       });
+      setNearControlsEnabled(!!userLoc);   // false on first load -> gray & disabled
     }
 
     /* INIT */
@@ -733,34 +778,9 @@
         }
         window.initTrainersMap = start;
     })();
-    </script>
+  </script>
 
-    <!-- Trainer Detail Sheet (bottom sheet) + scrim -->
-<div id="trainerScrim" class="ts-scrim" aria-hidden="true"></div>
 
-<aside id="trainerSheet" class="ts-sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="tsTitle">
-    <div id="tsContent" class="ts-card animate__animated" tabindex="-1">
-        <div class="ts-row">
-        <img id="tsAvatar" class="ts-avatar" src="assets/placeholder.jpg" alt="Profilový obrázek" />
-        <div class="ts-main">
-            <h3 id="tsTitle" class="ts-name">Trenér</h3>
-            <div id="tsMeta" class="ts-meta">Město • Kraj</div>
-            <div id="tsApprox" class="ts-badge" hidden>Přibližné umístění</div>
-        </div>
-        </div>
-
-        <div class="ts-lines">
-        <div id="tsSpecs" class="ts-line" hidden></div>
-        <div id="tsLangs" class="ts-line" hidden></div>
-        <div id="tsExp"   class="ts-line" hidden></div>
-        </div>
-
-        <div class="ts-actions">
-        <a id="tsProfileBtn" class="rt-btn rt-btn-primary">Zobrazit profil</a>
-        <a id="tsNavBtn" class="rt-btn rt-btn-ghost" target="_blank" rel="noopener">Navigovat</a>
-        </div>
-    </div>
-    </aside>
 
   <!-- Google Maps JS -->
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=marker,places&language=cs&region=CZ&callback=initTrainersMap&loading=async"></script>

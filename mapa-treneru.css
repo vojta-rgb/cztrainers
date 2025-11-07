@@ -515,3 +515,45 @@ body.dark .range::-moz-range-thumb{ border-color: #2b7dff; }
 
 /* (Optional) small utility if you need to hide anything via class */
 .hidden{ display: none !important; }
+
+/* === Disabled look for "Near me" controls === */
+.map-near .ur-btn[disabled],
+.map-near .ur-btn.is-disabled{
+  background: #e5e7eb;       /* light gray pill */
+  color: #9aa0a6;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+body.dark .map-near .ur-btn[disabled],
+body.dark .map-near .ur-btn.is-disabled{
+  background: #232a36;       /* dark gray pill */
+  color: #7b8494;
+  border-color: #232a36;
+}
+
+/* Slider disabled (track + thumb) */
+.range:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  background: #e5e7eb;
+}
+.range:disabled::-webkit-slider-runnable-track{ background:#e5e7eb; }
+.range:disabled::-moz-range-track{ background:#e5e7eb; }
+.range:disabled::-webkit-slider-thumb{
+  border-color:#c9ced6; background:#fff;
+}
+.range:disabled::-moz-range-thumb{
+  border-color:#c9ced6; background:#fff;
+}
+body.dark .range:disabled{
+  background:#2b3443;
+}
+body.dark .range:disabled::-webkit-slider-runnable-track{ background:#2b3443; }
+body.dark .range:disabled::-moz-range-track{ background:#2b3443; }
+body.dark .range:disabled::-webkit-slider-thumb{ border-color:#3a4658; }
+body.dark .range:disabled::-moz-range-thumb{ border-color:#3a4658; }
+
+/* Dim the radius label when controls disabled */
+.map-near--disabled #nearRadiusValue{ opacity:.6; }
