@@ -589,6 +589,7 @@
         document.getElementById("filterKraj").value = "";
         document.getElementById("filterSpec").value = "";
         document.getElementById("filterLang").value = "";
+        document.getElementById('filterNear')?.removeAttribute('disabled');
         // removed approx-only checkbox
         applyFilters();
       });
