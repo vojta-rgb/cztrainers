@@ -577,6 +577,21 @@
         trainersData = { ...(pub || {}), ...(users || {}) };
     }
 
+    function closePanelIfMobile() {
+      // only on mobile/tablet layouts
+      if (!window.matchMedia('(max-width: 1023px)').matches) return;
+
+      // Works with either #mapPanel or .map-panel, and the wrapper class you toggle
+      const panel = document.getElementById('mapPanel') || document.querySelector('.map-panel');
+      const wrap  = document.querySelector('.map-canvas-wrap');
+
+      panel?.classList.remove('open');
+      wrap?.classList.remove('panel-open');
+
+      // return focus to the FAB so keyboard users can reopen quickly
+      document.getElementById('panelOpen')?.focus({ preventScroll: true });
+    }
+
     function initPanel(){
       const open  = document.getElementById("panelOpen");
       const close = document.getElementById("panelClose");
@@ -631,7 +646,11 @@
         });
       }
       document.getElementById("useMyLocation")?.addEventListener("click", requestUserLocation);
-      document.getElementById("recenterMe")?.addEventListener("click", recenterToUser);
+      document.getElementById("recenterMe")?.addEventListener("click", () => {
+        recenterToUser();
+        // Close the panel shortly after panning so the user sees the map move
+        setTimeout(closePanelIfMobile, 50);
+      });
       document.getElementById("filterNear")?.addEventListener("change", () => {
         nearEnabled = !!document.getElementById("filterNear").checked;
         applyFilters();
