@@ -632,6 +632,7 @@
 
         // 4) Re-apply filters with clean state
         applyFilters();
+        setTimeout(closePanelIfMobile, 50);
       });
       // === My location UI ===
       const near = document.getElementById("nearRadius");
