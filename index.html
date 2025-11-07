@@ -528,35 +528,45 @@
       const heartEl = btn?.querySelector(".heart");
       const cur = parseInt(countEl?.textContent || "0", 10) || 0;
 
-      if (already) {
-        await remove(favRef);
-        await runTransaction(countRef, cur => Math.max(0, (cur || 0) - 1));
+// figure out the current number shown (fallback to cached counts)
+const prevCount =
+  countEl && !Number.isNaN(parseInt(countEl.textContent, 10))
+    ? parseInt(countEl.textContent, 10)
+    : (favCounts[trainerId] || 0);
 
-        // local state + UI
-        myFavSet.delete(trainerId);
-        if (countEl) countEl.textContent = String(Math.max(0, cur - 1));
-        favCounts[trainerId] = Math.max(0, (favCounts[trainerId] || 0) - 1);
-        if (heartEl) heartEl.textContent = "♡";
-        if (btn) {
-          btn.classList.remove("on");
-          btn.setAttribute("aria-pressed","false");
-        }
-        toast("Odebráno z oblíbených");
-      } else {
-        await set(favRef, { addedAt: Date.now() });
-        await runTransaction(countRef, cur => (cur || 0) + 1);
+    if (already) {
+      await remove(favRef);
+      await runTransaction(countRef, cur => Math.max(0, (cur || 0) - 1));
 
-        // local state + UI
-        myFavSet.add(trainerId);
-        if (countEl) countEl.textContent = String(cur + 1);
-        favCounts[trainerId] = (favCounts[trainerId] || 0) + 1;
-        if (heartEl) heartEl.textContent = "♥";
-        if (btn) {
-          btn.classList.add("on");
-          btn.setAttribute("aria-pressed","true");
-        }
-        toast("Přidáno do oblíbených ✓");
+      // local state + UI
+      myFavSet.delete(trainerId);
+      const next = Math.max(0, prevCount - 1);
+      if (countEl) countEl.textContent = String(next);
+      favCounts[trainerId] = next;
+
+      if (heartEl) heartEl.textContent = "♡";
+      if (btn) {
+        btn.classList.remove("on");
+        btn.setAttribute("aria-pressed","false");
       }
+      toast("Odebráno z oblíbených");
+    } else {
+      await set(favRef, { addedAt: Date.now() });
+      await runTransaction(countRef, cur => (cur || 0) + 1);
+
+      // local state + UI
+      myFavSet.add(trainerId);
+      const next = prevCount + 1;
+      if (countEl) countEl.textContent = String(next);
+      favCounts[trainerId] = next;
+
+      if (heartEl) heartEl.textContent = "♥";
+      if (btn) {
+        btn.classList.add("on");
+        btn.setAttribute("aria-pressed","true");
+      }
+      toast("Přidáno do oblíbených ✓");
+    }
 
     } catch (e) {
       console.error(e);
