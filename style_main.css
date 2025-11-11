@@ -50,9 +50,8 @@ body.dark #search::placeholder{color:#a1a1aa;}
 body.dark #search:focus{outline:none;box-shadow:0 0 0 3px rgba(43,125,233,.22);}
 body.dark #search:-webkit-autofill{-webkit-text-fill-color:#eaeaea;-webkit-box-shadow:0 0 0px 1000px #1e1e1e inset;box-shadow:0 0 0px 1000px #1e1e1e inset;}
 /* sum button inside filters tweaks */
-/* Filters actions buttons: color-only hover (no jump) */
-.btn:hover{ filter:brightness(1.03); }
-.btn:active{ transform:none; }
+.btn:hover{transform:translateY(-50%) scale(1.03);}
+.btn:active{transform:translateY(-50%) scale(.98);}
 
 /* =============== Legacy simple cards (back-compat) =============== */
 .cards{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));}
