@@ -218,32 +218,44 @@
   let favCounts = {};                // { trainerUid: number }
   const favBusy = new Set();
   
-  // toggle filters panel
   filtersToggle.addEventListener("click", () => {
     const panel = document.getElementById("filtersPanel");
     const opening = panel.hasAttribute("hidden");
 
-    // Clean any old animation classes so we can re-trigger
-    panel.classList.remove("animate__animated","animate__fadeInUp","animate__fadeOutDown");
+    // Clean any old animation classes so we can re-trigger cleanly
+    panel.classList.remove(
+      "animate__animated",
+      "animate__fadeInUp",
+      "animate__fadeOutDown",
+      "animate__fadeInDown",
+      "animate__fadeOutUp"
+    );
+
+    // Ensure animation originates from the top edge
+    panel.style.transformOrigin = "top center";
 
     if (opening) {
-      // SHOW + animate in
+      // SHOW + animate from top
       panel.removeAttribute("hidden");
-      panel.classList.add("open","animate__animated","animate__fadeInUp");
-      // Optional: tune speed or delay
-      panel.style.setProperty("--animate-duration","450ms");   // Animate.css v4 custom prop
-      panel.style.setProperty("--animate-delay","0ms");
+      panel.classList.add("open", "animate__animated", "animate__fadeInDown");
+      panel.style.setProperty("--animate-duration", "420ms");
+      panel.style.setProperty("--animate-delay", "0ms");
     } else {
-      // Animate out, then hide when the animation ends
-      panel.classList.add("animate__animated","animate__fadeOutDown");
-      panel.style.setProperty("--animate-duration","350ms");
-      panel.addEventListener("animationend", function onEnd(){
-        panel.removeEventListener("animationend", onEnd);
-        panel.setAttribute("hidden","");
-        panel.classList.remove("open","animate__animated","animate__fadeOutDown");
-      }, { once:true });
+      // Animate out upward, then hide
+      panel.classList.add("animate__animated", "animate__fadeOutUp");
+      panel.style.setProperty("--animate-duration", "320ms");
+      panel.addEventListener(
+        "animationend",
+        function onEnd() {
+          panel.removeEventListener("animationend", onEnd);
+          panel.setAttribute("hidden", "");
+          panel.classList.remove("open", "animate__animated", "animate__fadeOutUp");
+        },
+        { once: true }
+      );
     }
   });
+
 
 
   // --- Facets helpers ---
