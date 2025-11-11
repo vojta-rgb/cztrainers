@@ -220,10 +220,31 @@
   
   // toggle filters panel
   filtersToggle.addEventListener("click", () => {
-    const isHidden = filtersPanel.hasAttribute("hidden");
-    if (isHidden) { filtersPanel.removeAttribute("hidden"); filtersPanel.classList.add("open"); }
-    else { filtersPanel.setAttribute("hidden",""); filtersPanel.classList.remove("open"); }
+    const panel = document.getElementById("filtersPanel");
+    const opening = panel.hasAttribute("hidden");
+
+    // Clean any old animation classes so we can re-trigger
+    panel.classList.remove("animate__animated","animate__fadeInUp","animate__fadeOutDown");
+
+    if (opening) {
+      // SHOW + animate in
+      panel.removeAttribute("hidden");
+      panel.classList.add("open","animate__animated","animate__fadeInUp");
+      // Optional: tune speed or delay
+      panel.style.setProperty("--animate-duration","450ms");   // Animate.css v4 custom prop
+      panel.style.setProperty("--animate-delay","0ms");
+    } else {
+      // Animate out, then hide when the animation ends
+      panel.classList.add("animate__animated","animate__fadeOutDown");
+      panel.style.setProperty("--animate-duration","350ms");
+      panel.addEventListener("animationend", function onEnd(){
+        panel.removeEventListener("animationend", onEnd);
+        panel.setAttribute("hidden","");
+        panel.classList.remove("open","animate__animated","animate__fadeOutDown");
+      }, { once:true });
+    }
   });
+
 
   // --- Facets helpers ---
   const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };

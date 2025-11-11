@@ -286,3 +286,10 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .btn-plain:hover{background:#eef2ff;border-color:#c7d2fe}
 .btn-plain.delete-review{color:#b91c1c;border-color:rgba(185,28,28,.25);background:#fff5f5}
 .btn-plain.delete-review:hover{background:#ffe4e6;border-color:#fb7185}
+/* Smooth open/close for filters panel */
+.filters-panel { will-change: transform, opacity; }
+
+/* Respect “reduced motion” preference */
+@media (prefers-reduced-motion: reduce){
+    .animate__animated { animation: none !important; transition: none !important; } 
+}
