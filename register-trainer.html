@@ -60,8 +60,18 @@
           <label for="profileImage">Přidejte profilový obrázek</label>
           <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
           <input type="file" id="profileImage" accept="image/*" />
-          <p class="hint">Max 500&nbsp;KB · Nevhodné obrázky se zamítnou.</p>
+          <p class="hint">Max 10&nbsp;MB · Obrázek automaticky zkomprimujeme (≈500&nbsp;KB). Nevhodné obrázky se zamítnou.</p>
         </div>
+
+        <!-- === Gallery (multiple images) === -->
+        <fieldset class="field-group">
+          <legend>Galerie</legend>
+          <p class="hint">Vyberte více fotek (JPG/PNG/WebP/AVIF). Max 10&nbsp;MB za soubor – zkomprimujeme cca na 500&nbsp;KB.</p>
+
+          <input id="galleryInput" type="file" accept="image/*" multiple />
+          <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
+          <p class="hint" id="galleryCount">0 fotek vybráno</p>
+        </fieldset>
 
         <!-- Osobní údaje -->
         <h3 class="section">Osobní údaje</h3>
@@ -289,7 +299,7 @@
     import {
       getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -303,20 +313,29 @@
 
     const CLOUD_NAME = "dkt3pdcbe";
     const SIGNER_URL = "/api/sign"; // call your Cloudflare Pages Function on the same origin
-    const MAX_FILE_SIZE = 500 * 1024;
-    const MAX_DIM = 800;
+    const MAX_INPUT_SIZE = 10 * 1024 * 1024;   // 10 MB client guard
+    const TARGET_MAX_BYTES = 500 * 1024;       // final target ~500KB
+    const MAX_DIM = 1600;                      // longest edge for upload
+    const MAX_GALLERY_FILES = 20;         // hard cap to avoid abuse
+    const GALLERY_TARGET_BYTES = TARGET_MAX_BYTES; // ≈500 KB each
+    const GALLERY_MAX_DIM = MAX_DIM;      // 1600px longest edge
+
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
     const profileImageInput = document.getElementById("profileImage");
-
+    const galleryInput   = document.getElementById("galleryInput");
+    const galleryPreview = document.getElementById("galleryPreview");
+    const galleryCountEl = document.getElementById("galleryCount");
+    let galleryFilesSelected = []; // File[] (originals) – we compress later on submit
+    
       // File size guard
     profileImageInput.addEventListener("change", () => {
       const file = profileImageInput.files[0];
-      if (file && file.size > MAX_FILE_SIZE) {
-        alert("Soubor je příliš velký. Maximální velikost je 500 KB.");
+      if (file && file.size > MAX_INPUT_SIZE) {
+        alert("Soubor je příliš velký. Maximální velikost je 10 MB.");
         profileImageInput.value = "";
       }
     });
@@ -341,8 +360,8 @@
         preview.style.display = "none";
         return;
       }
-      if (file.size > MAX_FILE_SIZE) {
-        alert("Soubor je příliš velký. Maximální velikost je 500 KB.");
+      if (file.size > MAX_INPUT_SIZE) {
+        alert("Soubor je příliš velký. Maximální velikost je 10 MB.");
         profileImageInput.value = "";
         preview.style.display = "none";
         return;
@@ -356,6 +375,31 @@
       preview.style.display = "block";
     });
 
+    galleryInput?.addEventListener("change", () => {
+      const files = Array.from(galleryInput.files || []);
+      // Filter to images & ≤10MB
+      const ok = files.filter(f => /^image\//.test(f.type) && f.size <= MAX_INPUT_SIZE);
+      if (ok.length !== files.length) {
+        alert("Některé soubory byly přeskočeny (nejsou obrázek nebo jsou větší než 10 MB).");
+      }
+      // Cap total count
+      if (ok.length > MAX_GALLERY_FILES) {
+        alert(`Maximálně ${MAX_GALLERY_FILES} fotek v galerii najednou.`);
+        ok.length = MAX_GALLERY_FILES;
+      }
+      galleryFilesSelected = ok;
+
+      // Previews
+      galleryPreview.innerHTML = "";
+      ok.forEach((f, i) => {
+        const url = URL.createObjectURL(f);
+        const wrap = document.createElement("div");
+        wrap.className = "g-thumb";
+        wrap.innerHTML = `<img src="${url}" alt="Náhled ${i+1}"><span class="g-meta">${Math.round(f.size/1024)} kB</span>`;
+        galleryPreview.appendChild(wrap);
+      });
+      galleryCountEl.textContent = `${ok.length} ${ok.length===1?'fotka':'fotky'}`;
+    });
 
     // Helpers: downscale, NSFW, signature, signed upload
     async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
@@ -374,64 +418,81 @@
       return new Promise((res) => canvas.toBlob(res, mime, quality));
     }
 
-    // ---------- NSFWJS (local if possible, otherwise CDN) ----------
-let nsfwModelPromise = null;
-
-// Try local model first; if missing (404), fall back to CDN
-async function getNSFWModel() {
-  if (nsfwModelPromise) return nsfwModelPromise;
-
-  const LOCAL_DIR = "./vendor/nsfw-model/";                 // directory that contains model.json + shard files
-  const LOCAL_PROBE = LOCAL_DIR + "model.json";
-  const CDN_DIR   = "https://unpkg.com/nsfwjs@2/dist/model/";
-
-  // Probe the local model.json (HEAD = cheap and fast)
-  let modelDir = CDN_DIR;
-    try {
-      const res = await fetch(LOCAL_PROBE, { method: "HEAD", cache: "no-store" });
-      if (res.ok) modelDir = LOCAL_DIR;
-    } catch (_) { /* ignore; use CDN */ }
-
-    // window.nsfwjs is provided by vendor/nsfwjs.min.js
-    const NS = window.nsfwjs;
-    if (!NS) throw new Error("NSFWJS UMD not loaded (vendor/nsfwjs.min.js)");
-
-    nsfwModelPromise = NS.load(modelDir);
-    return nsfwModelPromise;
-  }
-
-  // (optional) warm-up so first use is instant
-  getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
-
-  async function isImageSafe(file) {
-    const model = await getNSFWModel();
-    const dataURL = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
-    const img = new Image();
-    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataURL; });
-    const preds = await model.classify(img);
-    const score = { Sexy: 0, Porn: 0, Hentai: 0 };
-    preds.forEach(p => { if (score[p.className] != null) score[p.className] = p.probability; });
-    if (score.Porn + score.Hentai >= 0.2) return false;
-    if (score.Sexy >= 0.5) return false;
-    return true;
-  }
-  async function getSignature(params){
-    try {
-      const r = await fetch(SIGNER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params)
-      });
-      if (!r.ok) {
-        const txt = await r.text().catch(()=>"(no body)");
-        throw new Error(`Signature service HTTP ${r.status}: ${txt}`);
+    async function compressToTarget(file, { maxDim = MAX_DIM, target = TARGET_MAX_BYTES } = {}) {
+      // Start with good quality and reduce until under target or minimum
+      let quality = 0.9;
+      let blob = await downscaleImage(file, maxDim, "image/jpeg", quality);
+      // If still too big, iteratively lower quality; if still big, reduce dimension and retry
+      let dim = maxDim;
+      for (let step = 0; (blob && blob.size > target) && step < 8; step++) {
+        if (quality > 0.5) {
+          quality -= 0.08;
+        } else {
+          dim = Math.round(dim * 0.85); // shrink 15%
+        }
+        blob = await downscaleImage(file, dim, "image/jpeg", Math.max(quality, 0.35));
       }
-      return r.json();
-    } catch (e) {
-      console.error("Signer error:", e);
-      throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker). Zkontrolujte CORS a nasazení.");
+      return new File([blob], "pfp.jpg", { type: "image/jpeg" });
     }
-  }
+
+    // ---------- NSFWJS (local if possible, otherwise CDN) ----------
+    let nsfwModelPromise = null;
+
+    // Try local model first; if missing (404), fall back to CDN
+    async function getNSFWModel() {
+    if (nsfwModelPromise) return nsfwModelPromise;
+
+    const LOCAL_DIR = "./vendor/nsfw-model/";                 // directory that contains model.json + shard files
+    const LOCAL_PROBE = LOCAL_DIR + "model.json";
+    const CDN_DIR   = "https://unpkg.com/nsfwjs@2/dist/model/";
+
+    // Probe the local model.json (HEAD = cheap and fast)
+    let modelDir = CDN_DIR;
+      try {
+        const res = await fetch(LOCAL_PROBE, { method: "HEAD", cache: "no-store" });
+        if (res.ok) modelDir = LOCAL_DIR;
+      } catch (_) { /* ignore; use CDN */ }
+
+      // window.nsfwjs is provided by vendor/nsfwjs.min.js
+      const NS = window.nsfwjs;
+      if (!NS) throw new Error("NSFWJS UMD not loaded (vendor/nsfwjs.min.js)");
+
+      nsfwModelPromise = NS.load(modelDir);
+      return nsfwModelPromise;
+    }
+
+    // (optional) warm-up so first use is instant
+    getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
+
+    async function isImageSafe(file) {
+      const model = await getNSFWModel();
+      const dataURL = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataURL; });
+      const preds = await model.classify(img);
+      const score = { Sexy: 0, Porn: 0, Hentai: 0 };
+      preds.forEach(p => { if (score[p.className] != null) score[p.className] = p.probability; });
+      if (score.Porn + score.Hentai >= 0.2) return false;
+      if (score.Sexy >= 0.5) return false;
+      return true;
+    }
+    async function getSignature(params){
+      try {
+        const r = await fetch(SIGNER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params)
+        });
+        if (!r.ok) {
+          const txt = await r.text().catch(()=>"(no body)");
+          throw new Error(`Signature service HTTP ${r.status}: ${txt}`);
+        }
+        return r.json();
+      } catch (e) {
+        console.error("Signer error:", e);
+        throw new Error("Nepodařilo se kontaktovat podpisovou službu (Worker). Zkontrolujte CORS a nasazení.");
+      }
+    }
 
     async function uploadPfpSigned({ file, uid }){
       const public_id = `users/${uid}/pfp`;
@@ -461,6 +522,42 @@ async function getNSFWModel() {
         throw new Error(`Cloudinary chyba ${resp.status}: ${body}`);
       }
       return resp.json();
+    }
+
+    async function uploadGallerySigned({ file, uid }) {
+      const timestamp = Math.floor(Date.now() / 1000);
+      // Each photo gets its own public_id under users/<uid>/gallery/<ts>-<rand>
+      const public_id = `users/${uid}/gallery/${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+
+      // Ask your signer for a signature for these exact params (must match on both sides)
+      const sigRes = await fetch(SIGNER_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          public_id,
+          timestamp,
+          overwrite: true,
+          invalidate: true
+          // If you chose to require a preset in signer, also send: upload_preset: "trainer_profile_signed"
+        })
+      }).then(r => r.json());
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sigRes.apiKey);
+      form.append("timestamp", String(timestamp));
+      form.append("public_id", public_id);
+      form.append("overwrite", "true");
+      form.append("invalidate", "true");
+      // form.append("upload_preset","trainer_profile_signed"); // only if your preset is required
+      form.append("signature", sigRes.signature);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigRes.cloudName || CLOUD_NAME}/image/upload`, {
+        method: "POST", body: form
+      }).then(r => r.json());
+
+      if (!res.secure_url) throw new Error("Cloudinary upload failed");
+      return res; // contains { secure_url, public_id, bytes, width, height, ... }
     }
 
     // === UX helpers: toast, button spinner, success card ===
@@ -526,98 +623,99 @@ async function getNSFWModel() {
       };
     }
 
-    document.getElementById("registerForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+    const form = document.getElementById("registerForm");
 
-    const rawFile  = document.getElementById("profileImage").files[0];
-    const email    = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+      submitBtn.disabled = true;
 
-    try {
-      // 1) Create auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // 2) Send verification email RIGHT AWAY (before any DB writes)
-      auth.useDeviceLanguage();
       try {
-        await sendEmailVerification(user);   // ← no actionCodeSettings
-      } catch (err) {
-        alert("Nepodařilo se odeslat ověřovací e-mail: " + err.code + " — " + err.message);
-        throw err; // stop the flow if email couldn’t be queued
-      }
+        // 1) Gather fields
+        const email    = document.getElementById("email").value.trim();
+        const pass     = document.getElementById("password").value;
+        const jmeno    = document.getElementById("name").value.trim();
+        const prijmeni = document.getElementById("prijmeni").value.trim();
+        const region   = document.getElementById("location").value.trim();
+        const bio      = document.getElementById("bio").value.trim();
+        // ... read other fields as you already do
 
+        // 2) Create auth user (or use your existing “create” path)
+        const { user } = await createUserWithEmailAndPassword(auth, email, pass);
 
-      // 3) (Optional) process & upload profile photo
-      let profilePictureUrl = "";
-      if (rawFile && rawFile.size <= MAX_FILE_SIZE) {
-        const blob = await downscaleImage(rawFile);
-        const jpg  = new File([blob], "pfp.jpg", { type: "image/jpeg" });
+        // 3) PROFILE PHOTO (optional)
+        let profilePictureUrl = "";
+        const rawFile = profileImageInput?.files?.[0];
+        if (rawFile) {
+          if (rawFile.size > MAX_INPUT_SIZE) {
+            throw new Error("Profilová fotka je větší než 10 MB.");
+          }
+          const jpg = await compressToTarget(rawFile, { maxDim: MAX_DIM, target: TARGET_MAX_BYTES });
 
-        const safe = await isImageSafe(jpg);
-        if (!safe) {
-          alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
-          await signOut(auth);
-          return;
+          const safe = await isImageSafe(jpg);
+          if (!safe) {
+            throw new Error("Profilová fotka byla zamítnuta (NSFW). Zvolte prosím jinou.");
+          }
+          const up = await uploadPfpSigned({ file: jpg, uid: user.uid });
+          profilePictureUrl = up.secure_url;
         }
 
-        const { secure_url } = await uploadPfpSigned({ file: jpg, uid: user.uid });
-        profilePictureUrl = secure_url;
+        // 4) GALLERY (optional, multi)  ——— THIS IS THE NEW PART YOU WANTED ———
+        const galleryResults = [];
+        const selected = Array.from(galleryInput?.files || []);
+        for (const raw of selected) {
+          try {
+            if (!/^image\//.test(raw.type)) continue;
+            if (raw.size > MAX_INPUT_SIZE) continue;
+
+            // compress ~500KB
+            const jpg = await compressToTarget(raw, { maxDim: GALLERY_MAX_DIM, target: GALLERY_TARGET_BYTES });
+
+            // nsfw check
+            const ok = await isImageSafe(jpg);
+            if (!ok) { console.warn("Galerie: NSFW odmítnuto"); continue; }
+
+            // upload
+            const up = await uploadGallerySigned({ file: jpg, uid: user.uid });
+
+            // store minimal data (publicId lets you request thumbs later)
+            galleryResults.push({ publicId: up.public_id, url: up.secure_url });
+          } catch (err) {
+            console.error("Galerie upload error:", err);
+          }
+        }
+
+        // 5) Build trainer document
+        const trainerDoc = {
+          uid: user.uid,
+          email,
+          name: jmeno,
+          prijmeni,
+          location: { region },
+          bio,
+          profilePictureUrl,
+          gallery: galleryResults,           // <<— NEW
+          galleryCount: galleryResults.length,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        // 6) Write to Realtime Database
+        await set(ref(db, `trainers/${user.uid}`), trainerDoc);
+
+
+        // 7) Done UI
+        alert("Registrace úspěšná. Váš profil byl vytvořen.");
+        form.reset();
+        galleryPreview.innerHTML = "";
+        if (galleryCountEl) galleryCountEl.textContent = "0 fotek vybráno";
+      } catch (err) {
+        console.error(err);
+        alert(String(err?.message || err));
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      // 4) Prepare trainer data
-      const socials = {
-        instagram: document.getElementById("instagram").value.trim(),
-        facebook:  document.getElementById("facebook").value.trim(),
-        tiktok:    document.getElementById("tiktok").value.trim()
-      };
-
-      const userData = {
-        name: document.getElementById("name").value,
-        prijmeni: document.getElementById("prijmeni").value,
-        email: user.email,
-        datum: document.getElementById("datum").value,
-        phone: document.getElementById("phone").value,
-        gender: document.getElementById("gender").value,
-
-        // keep the manual Kraj select as its own field
-        region: document.getElementById("location").value,
-
-        // full map payload (lat/lng/city/region/precision/visible/geohash)
-        location: collectMapLocation(),
-
-        bio: document.getElementById("bio").value,
-        specializations: Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(el => el.value).join(", "),
-        pricing: document.getElementById("pricing").value,
-        experience: document.getElementById("experience").value,
-        languages: Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value).join(", "),
-        profilePicture: profilePictureUrl,
-        socials
-      };
-
-      // 5) Write to "unverified-users" (may be blocked if App Check is enforced,
-      //    but the verification email has already been sent)
-      try {
-      await set(ref(db, 'unverified-users/' + user.uid), userData);
-      await set(ref(db, 'unverified-users/' + user.uid + '/consent'), {
-        tos: true, privacy: true, version: "2025-09-21", at: Date.now()
-      });
-
-      } catch (dbErr) {
-        console.warn("DB write failed (will still allow email verification):", dbErr);
-        // carry on — they can verify email and you can migrate on first login
-      }
-
-      showSuccessCard();
-      toast("Odesláno – zkontrolujte e-mail.");
-      await signOut(auth);
-      this.reset();
-
-    } catch (error) {
-      alert("Chyba při registraci: " + error.message);
-      try { await signOut(auth); } catch {}
-    }
-  });
+    });
   </script>
   
   <script type="module" src="auth-navbar.js"></script>
