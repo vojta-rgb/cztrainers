@@ -391,3 +391,5 @@ body.dark .map-picker { color-scheme: dark; }
 .gallery-preview .g-thumb{position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,.06);background:#f8fafc;}
 .gallery-preview img{display:block;width:100%;height:88px;object-fit:cover;}
 .gallery-preview .g-meta{position:absolute;left:6px;bottom:6px;font-size:11px;padding:2px 6px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff}
+
+.rt-loading .rt-spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-bottom-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:rtspin .8s linear infinite}@keyframes rtspin{to{transform:rotate(360deg)}}

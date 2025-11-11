@@ -339,7 +339,6 @@
         profileImageInput.value = "";
       }
     });
-
     // --- preview of selected profile photo ---
     const preview = document.getElementById("profilePreview");
 
@@ -636,7 +635,7 @@
 
       // Disable button while we work
       submitBtn?.setAttribute("disabled", "true");
-
+      setLoading(true);
       let createdUser = null; // for rollback if later steps fail
 
       try {
@@ -721,10 +720,10 @@
         await sendEmailVerification(user);
 
         // 8) Success UI
-        alert("Registrace úspěšná. Poslali jsme ověřovací e-mail.");
         form.reset();
         galleryPreview.innerHTML = "";
         galleryCountEl.textContent = "0 fotek vybráno";
+        showSuccessCard(); // ← show your own success card
       } catch (err) {
         console.error(err);
         // Rollback: if user was created but something failed after, delete the account to avoid “email already in use”
@@ -738,6 +737,7 @@
         alert(String(err?.message || err));
       } finally {
         submitBtn?.removeAttribute("disabled");
+        setLoading(false);
       }
     });
   </script>
