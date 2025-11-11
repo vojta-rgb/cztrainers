@@ -393,3 +393,22 @@ body.dark .map-picker { color-scheme: dark; }
 .gallery-preview .g-meta{position:absolute;left:6px;bottom:6px;font-size:11px;padding:2px 6px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff}
 
 .rt-loading .rt-spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-bottom-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:rtspin .8s linear infinite}@keyframes rtspin{to{transform:rotate(360deg)}}
+/* success card buttons */
+.rt-success-card .rt-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--panel-border,#d1d5db);background:#fff;color:#111827;text-decoration:none;font-weight:600}
+body.dark .rt-success-card .rt-btn{background:#0f172a;color:#e5e7eb;border-color:#334155}
+.rt-success-card .rt-btn-primary{background:#0072CE;border-color:#0072CE;color:#fff}
+.rt-success-card .rt-btn:hover{filter:brightness(1.04)}
+.rt-success-card .rt-btn:active{transform:none}
+
+/* disabled/busy submit state */
+#submitBtn[disabled],#submitBtn.rt-loading{opacity:.7;cursor:not-allowed}
+.rt-loading .rt-spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-bottom-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:rtspin .8s linear infinite}
+@keyframes rtspin{to{transform:rotate(360deg)}}
+
+/* Google Places in dark mode */
+body.dark .pac-target-input{color:#e5e7eb!important;caret-color:#e5e7eb}
+body.dark .pac-target-input::placeholder{color:#9CA3AF}
+body.dark .pac-container{background:#0b1220;border:1px solid #334155;color:#e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:10000}
+body.dark .pac-item{color:#e5e7eb}
+body.dark .pac-item:hover{background:#1f2937}
+body.dark .pac-matched{color:#93c5fd}
