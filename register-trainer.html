@@ -297,7 +297,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut
+      getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -316,7 +316,7 @@
     const MAX_INPUT_SIZE = 10 * 1024 * 1024;   // 10 MB client guard
     const TARGET_MAX_BYTES = 500 * 1024;       // final target ~500KB
     const MAX_DIM = 1600;                      // longest edge for upload
-    const MAX_GALLERY_FILES = 20;         // hard cap to avoid abuse
+    const MAX_GALLERY_FILES = 10;         // hard cap to avoid abuse
     const GALLERY_TARGET_BYTES = TARGET_MAX_BYTES; // ≈500 KB each
     const GALLERY_MAX_DIM = MAX_DIM;      // 1600px longest edge
 
@@ -627,65 +627,80 @@
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!submitBtn) return;
-      submitBtn.disabled = true;
+
+      // Native HTML5 validation first (prevents creating an account on invalid form)
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      // Disable button while we work
+      submitBtn?.setAttribute("disabled", "true");
+
+      let createdUser = null; // for rollback if later steps fail
 
       try {
-        // 1) Gather fields
+        // 1) Read values
         const email    = document.getElementById("email").value.trim();
         const pass     = document.getElementById("password").value;
         const jmeno    = document.getElementById("name").value.trim();
         const prijmeni = document.getElementById("prijmeni").value.trim();
         const region   = document.getElementById("location").value.trim();
         const bio      = document.getElementById("bio").value.trim();
-        // ... read other fields as you already do
 
-        // 2) Create auth user (or use your existing “create” path)
-        const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-
-        // 3) PROFILE PHOTO (optional)
+        // 2) Pre-check and prepare PROFILE image locally (no network yet)
         let profilePictureUrl = "";
-        const rawFile = profileImageInput?.files?.[0];
-        if (rawFile) {
-          if (rawFile.size > MAX_INPUT_SIZE) {
-            throw new Error("Profilová fotka je větší než 10 MB.");
-          }
-          const jpg = await compressToTarget(rawFile, { maxDim: MAX_DIM, target: TARGET_MAX_BYTES });
-
+        let pfpToUpload = null;
+        const rawPfp = (profileImageInput?.files || [])[0] || null;
+        if (rawPfp) {
+          if (!/^image\//.test(rawPfp.type)) throw new Error("Profilová fotka musí být obrázek.");
+          if (rawPfp.size > MAX_INPUT_SIZE) throw new Error("Profilová fotka je větší než 10 MB.");
+          const jpg = await compressToTarget(rawPfp, { maxDim: MAX_DIM, target: TARGET_MAX_BYTES });
           const safe = await isImageSafe(jpg);
-          if (!safe) {
-            throw new Error("Profilová fotka byla zamítnuta (NSFW). Zvolte prosím jinou.");
-          }
-          const up = await uploadPfpSigned({ file: jpg, uid: user.uid });
+          if (!safe) throw new Error("Profilová fotka byla zamítnuta (NSFW).");
+          pfpToUpload = jpg;
+        }
+
+        // 3) Enforce gallery cap at submit time + prepare images locally
+        const picked = galleryFilesSelected?.length
+          ? galleryFilesSelected
+          : Array.from(galleryInput?.files || []);
+        const limited = picked.slice(0, MAX_GALLERY_FILES);
+        if (picked.length > limited.length) {
+          alert(`Nahrávám pouze prvních ${MAX_GALLERY_FILES} fotek z galerie.`);
+        }
+
+        const galleryPrepared = [];
+        for (const raw of limited) {
+          if (!/^image\//.test(raw.type)) continue;
+          if (raw.size > MAX_INPUT_SIZE) continue;
+          const jpg = await compressToTarget(raw, { maxDim: GALLERY_MAX_DIM, target: GALLERY_TARGET_BYTES });
+          const ok  = await isImageSafe(jpg);
+          if (!ok) { console.warn("Galerie: NSFW odmítnuto"); continue; }
+          galleryPrepared.push(jpg);
+        }
+
+        // 4) Only now create the auth user (form + images are valid)
+        const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+        createdUser = user;
+
+        // 5) Upload images (needs uid)
+        if (pfpToUpload) {
+          const up = await uploadPfpSigned({ file: pfpToUpload, uid: user.uid });
           profilePictureUrl = up.secure_url;
         }
 
-        // 4) GALLERY (optional, multi)  ——— THIS IS THE NEW PART YOU WANTED ———
         const galleryResults = [];
-        const selected = Array.from(galleryInput?.files || []);
-        for (const raw of selected) {
+        for (const jpg of galleryPrepared) {
           try {
-            if (!/^image\//.test(raw.type)) continue;
-            if (raw.size > MAX_INPUT_SIZE) continue;
-
-            // compress ~500KB
-            const jpg = await compressToTarget(raw, { maxDim: GALLERY_MAX_DIM, target: GALLERY_TARGET_BYTES });
-
-            // nsfw check
-            const ok = await isImageSafe(jpg);
-            if (!ok) { console.warn("Galerie: NSFW odmítnuto"); continue; }
-
-            // upload
             const up = await uploadGallerySigned({ file: jpg, uid: user.uid });
-
-            // store minimal data (publicId lets you request thumbs later)
             galleryResults.push({ publicId: up.public_id, url: up.secure_url });
           } catch (err) {
             console.error("Galerie upload error:", err);
           }
         }
 
-        // 5) Build trainer document
+        // 6) Save trainer record (Realtime Database in your file)
         const trainerDoc = {
           uid: user.uid,
           email,
@@ -694,26 +709,35 @@
           location: { region },
           bio,
           profilePictureUrl,
-          gallery: galleryResults,           // <<— NEW
+          gallery: galleryResults,
           galleryCount: galleryResults.length,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
+          verified: false
         };
-
-        // 6) Write to Realtime Database
         await set(ref(db, `trainers/${user.uid}`), trainerDoc);
 
+        // 7) Send verification email AFTER successful DB write
+        await sendEmailVerification(user);
 
-        // 7) Done UI
-        alert("Registrace úspěšná. Váš profil byl vytvořen.");
+        // 8) Success UI
+        alert("Registrace úspěšná. Poslali jsme ověřovací e-mail.");
         form.reset();
         galleryPreview.innerHTML = "";
-        if (galleryCountEl) galleryCountEl.textContent = "0 fotek vybráno";
+        galleryCountEl.textContent = "0 fotek vybráno";
       } catch (err) {
         console.error(err);
+        // Rollback: if user was created but something failed after, delete the account to avoid “email already in use”
+        try {
+          if (createdUser && auth.currentUser?.uid === createdUser.uid) {
+            await deleteUser(auth.currentUser);
+          }
+        } catch (delErr) {
+          console.warn("Rollback (delete user) failed:", delErr);
+        }
         alert(String(err?.message || err));
       } finally {
-        submitBtn.disabled = false;
+        submitBtn?.removeAttribute("disabled");
       }
     });
   </script>
