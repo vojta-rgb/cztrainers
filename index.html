@@ -65,7 +65,7 @@
     </div>
 
     <!-- Filters panel -->
-    <div id="filtersPanel" class="filters-panel animate__animated" hidden>
+    <div id="filtersPanel" class="filters-panel" hidden>
       <fieldset>
         <legend>Lokalita</legend>
         <div id="f-locations"></div>
@@ -215,25 +215,24 @@
   let myFavSet = new Set();          // trainer UIDs I favorited
   let favCounts = {};                // { trainerUid: number }
   const favBusy = new Set();
-
-  filtersPanel.classList.add("animate__animated");
-
+  
   function openFilters(){
-    // show + mark open
+    // make visible and start from 0 height
     filtersPanel.removeAttribute("hidden");
     filtersPanel.classList.add("open");
-    // start from 0, then grow to natural height
     filtersPanel.style.maxHeight = "0px";
+
+    // measure natural height
     const target = filtersPanel.scrollHeight;
+
+    // next frame: animate to target
     requestAnimationFrame(() => {
       filtersPanel.style.maxHeight = target + "px";
+      filtersPanel.style.opacity = "1";
+      filtersPanel.style.transform = "translateY(0)"; // see CSS defaults below
     });
-    // pretty content animation
-    filtersPanel.classList.remove("animate__fadeOutUp");
-    filtersPanel.classList.add("animate__fadeInDown");
-    filtersPanel.style.setProperty("--animate-duration","420ms");
 
-    // after height finishes, allow natural growth
+    // after transition: unlock height so inner content can grow naturally
     const onEnd = (e) => {
       if (e.propertyName !== "max-height") return;
       filtersPanel.removeEventListener("transitionend", onEnd);
@@ -243,25 +242,29 @@
   }
 
   function closeFilters(){
-    // lock current height then collapse to 0
+    // lock current height, then collapse to 0
     const current = filtersPanel.scrollHeight;
     filtersPanel.style.maxHeight = current + "px";
+    // next frame: collapse + fade/slide a bit for polish
     requestAnimationFrame(() => {
       filtersPanel.style.maxHeight = "0px";
+      filtersPanel.style.opacity = "0";
+      filtersPanel.style.transform = "translateY(-6px)";
     });
-    filtersPanel.classList.remove("animate__fadeInDown");
-    filtersPanel.classList.add("animate__fadeOutUp");
-    filtersPanel.style.setProperty("--animate-duration","300ms");
 
     const onEnd = (e) => {
       if (e.propertyName !== "max-height") return;
       filtersPanel.removeEventListener("transitionend", onEnd);
       filtersPanel.setAttribute("hidden", "");
-      filtersPanel.classList.remove("open","animate__fadeOutUp");
-      filtersPanel.style.maxHeight = ""; // clean inline style
+      filtersPanel.classList.remove("open");
+      // clean inline styles
+      filtersPanel.style.maxHeight = "";
+      filtersPanel.style.opacity = "";
+      filtersPanel.style.transform = "";
     };
     filtersPanel.addEventListener("transitionend", onEnd, { once:true });
   }
+
 
   filtersToggle?.addEventListener("click", () => {
     const isHidden = filtersPanel.hasAttribute("hidden");

@@ -286,57 +286,17 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .btn-plain:hover{background:#eef2ff;border-color:#c7d2fe}
 .btn-plain.delete-review{color:#b91c1c;border-color:rgba(185,28,28,.25);background:#fff5f5}
 .btn-plain.delete-review:hover{background:#ffe4e6;border-color:#fb7185}
-/* Smooth open/close for filters panel */
-.filters-panel { will-change: transform, opacity; }
-
-/* Respect “reduced motion” preference */
-@media (prefers-reduced-motion: reduce){
-    .animate__animated { animation: none !important; transition: none !important; } 
-}
-
-/* === Collapsing area under the search bar === */
-.filters-collapse{
-  overflow: hidden;                /* hide while sliding */
-  max-height: 0;                   /* collapsed */
-  transition: max-height 360ms ease, margin 240ms ease;
-  will-change: max-height, margin;
-  margin: 0;                       /* no extra gap when closed */
-}
-
-/* When open, we add margin below the filters block so cards don't stick to it */
-.filters-collapse.is-open{
-  margin: 8px 0 12px;
-}
-
-/* Make sure the inner panel itself doesn’t use position fixed/absolute */
-.filters-panel{
-  position: relative;
-  background: var(--panel-bg, #fff);
-  border: 1px solid var(--panel-border, #e5e7eb);
-  border-radius: 12px;
-  padding: 12px;
-}
-body.dark .filters-panel{
-  background: var(--panel-bg, #0f172a);
-  border-color: var(--panel-border, #243244);
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce){
-  .filters-collapse{ transition: none; }
-  .animate__animated{ animation: none !important; }
-}
-
-/* Filters panel: height-based open/close (keeps layout intact) */
-#filtersPanel{
-  overflow: hidden;
-  will-change: max-height, opacity;
-  transition: max-height 360ms ease;
-}
-
-#filtersPanel.open{ margin-bottom:12px; }
-
-@media (prefers-reduced-motion: reduce){
-  #filtersPanel{ transition:none; }
-  .animate__animated{ animation:none !important; }
-}
+/* new panel styles animated */
+#filtersPanel{overflow:hidden;will-change:max-height,opacity,transform;transition:max-height 360ms ease,opacity 220ms ease,transform 220ms ease;opacity:0;transform:translateY(-6px);}
+#filtersPanel.open{margin-bottom:12px;}
+@media (prefers-reduced-motion:reduce){#filtersPanel{transition:none;opacity:1;transform:none;}}
+.filters-panel{background:var(--panel-bg,#fff);border:1px solid var(--panel-border,#e5e7eb);border-radius:14px;padding:16px;}
+body.dark .filters-panel{background:var(--panel-bg,#0f172a);border-color:var(--panel-border,#243244);}
+.filters-panel fieldset{border:0;padding:0;margin:0 0 18px 0;}
+.filters-panel legend{font-weight:700;margin-bottom:10px;}
+.filters-panel .filters-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:8px;}
+@media (min-width:768px){.filters-panel{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;}.filters-panel .filters-actions{grid-column:1/-1;justify-content:flex-end;}}
+@media (min-width:1024px){.filters-panel{display:grid;grid-template-columns:repeat(12,1fr);gap:18px 24px;}.filters-panel fieldset:nth-of-type(1){grid-column:span 4;}.filters-panel fieldset:nth-of-type(2){grid-column:span 3;}.filters-panel fieldset:nth-of-type(3){grid-column:span 2;}.filters-panel fieldset:nth-of-type(4){grid-column:span 1;}.filters-panel fieldset:nth-of-type(5){grid-column:span 2;}.filters-panel fieldset:nth-of-type(6){grid-column:span 3;}.filters-panel fieldset:nth-of-type(7){grid-column:span 3;}.filters-panel .filters-actions{grid-column:1/-1;}}
+#f-locations label,#f-specs label,#f-langs label,#f-genders label{display:block;margin:.28rem 0;}
+.btn:hover{filter:brightness(1.04);}
+.btn:active{transform:none;}
