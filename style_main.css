@@ -293,3 +293,36 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 @media (prefers-reduced-motion: reduce){
     .animate__animated { animation: none !important; transition: none !important; } 
 }
+
+/* === Collapsing area under the search bar === */
+.filters-collapse{
+  overflow: hidden;                /* hide while sliding */
+  max-height: 0;                   /* collapsed */
+  transition: max-height 360ms ease, margin 240ms ease;
+  will-change: max-height, margin;
+  margin: 0;                       /* no extra gap when closed */
+}
+
+/* When open, we add margin below the filters block so cards don't stick to it */
+.filters-collapse.is-open{
+  margin: 8px 0 12px;
+}
+
+/* Make sure the inner panel itself doesn’t use position fixed/absolute */
+.filters-panel{
+  position: relative;
+  background: var(--panel-bg, #fff);
+  border: 1px solid var(--panel-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 12px;
+}
+body.dark .filters-panel{
+  background: var(--panel-bg, #0f172a);
+  border-color: var(--panel-border, #243244);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .filters-collapse{ transition: none; }
+  .animate__animated{ animation: none !important; }
+}

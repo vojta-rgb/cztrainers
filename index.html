@@ -65,8 +65,8 @@
     </div>
 
     <!-- Filters panel -->
-    <div id="filtersPanel" class="filters-panel" hidden>
-      <div class="filters-grid">
+  <div id="filtersCollapse" class="filters-collapse" aria-hidden="true" style="max-height:0;">
+    <div id="filtersPanel" class="filters-panel animate__animated" data-open-anim="animate__fadeInDown" data-close-anim="animate__fadeOutUp">
         <fieldset>
           <legend>Lokalita</legend>
           <div id="f-locations"></div>
@@ -145,8 +145,9 @@
   const userList      = document.getElementById("userList");
   const searchInput   = document.getElementById("search");
   const loader        = document.getElementById("loader");
-  const filtersToggle = document.getElementById("filtersToggle");
-  const filtersPanel  = document.getElementById("filtersPanel");
+  const filtersToggle = document.getElementById("filtersToggle") || document.getElementById("panelOpen");
+  const filtersCollapse = document.getElementById("filtersCollapse");
+  const filtersPanel = document.getElementById("filtersPanel");
   const chipsWrap     = document.getElementById("activeChips");
 
   const boxLocations = document.getElementById("f-locations");
@@ -217,43 +218,68 @@
   let myFavSet = new Set();          // trainer UIDs I favorited
   let favCounts = {};                // { trainerUid: number }
   const favBusy = new Set();
-  
-  filtersToggle.addEventListener("click", () => {
-    const panel = document.getElementById("filtersPanel");
-    const opening = panel.hasAttribute("hidden");
 
-    // Clean any old animation classes so we can re-trigger cleanly
-    panel.classList.remove(
-      "animate__animated",
-      "animate__fadeInUp",
-      "animate__fadeOutDown",
-      "animate__fadeInDown",
-      "animate__fadeOutUp"
-    );
+  // Helper: open with measured height so it pushes layout smoothly
+  function openFilters(){
+    // Prepare: show content for measuring
+    filtersCollapse.setAttribute("aria-hidden","false");
+    filtersCollapse.classList.add("is-open");
+    // remove previous max-height to measure natural size
+    filtersCollapse.style.maxHeight = "none";
+    const targetHeight = filtersCollapse.scrollHeight;
+    // set from 0 -> target to animate
+    filtersCollapse.style.maxHeight = "0px";
+    // next frame: animate to target
+    requestAnimationFrame(() => {
+      filtersCollapse.style.maxHeight = targetHeight + "px";
+    });
 
-    // Ensure animation originates from the top edge
-    panel.style.transformOrigin = "top center";
+    // Pretty content animation with Animate.css
+    filtersPanel.classList.remove("animate__fadeOutUp");
+    filtersPanel.classList.add("animate__fadeInDown");
+    filtersPanel.style.setProperty("--animate-duration","420ms");
+  }
 
-    if (opening) {
-      // SHOW + animate from top
-      panel.removeAttribute("hidden");
-      panel.classList.add("open", "animate__animated", "animate__fadeInDown");
-      panel.style.setProperty("--animate-duration", "420ms");
-      panel.style.setProperty("--animate-delay", "0ms");
-    } else {
-      // Animate out upward, then hide
-      panel.classList.add("animate__animated", "animate__fadeOutUp");
-      panel.style.setProperty("--animate-duration", "320ms");
-      panel.addEventListener(
-        "animationend",
-        function onEnd() {
-          panel.removeEventListener("animationend", onEnd);
-          panel.setAttribute("hidden", "");
-          panel.classList.remove("open", "animate__animated", "animate__fadeOutUp");
-        },
-        { once: true }
-      );
-    }
+  // Helper: close with height collapse, then clean
+  function closeFilters(){
+    // animate height to 0
+    const current = filtersCollapse.scrollHeight;
+    filtersCollapse.style.maxHeight = current + "px"; // lock current
+    requestAnimationFrame(() => {
+      filtersCollapse.style.maxHeight = "0px";
+      filtersCollapse.classList.remove("is-open");
+    });
+
+    // Pretty content animation
+    filtersPanel.classList.remove("animate__fadeInDown");
+    filtersPanel.classList.add("animate__fadeOutUp");
+    filtersPanel.style.setProperty("--animate-duration","300ms");
+
+    // after height transition ends, mark hidden (accessibility + tab stop removal)
+    const onEnd = (e) => {
+      if (e.propertyName !== "max-height") return;
+      filtersCollapse.removeEventListener("transitionend", onEnd);
+      filtersCollapse.setAttribute("aria-hidden","true");
+      // clean transform artifacts
+      filtersPanel.classList.remove("animate__fadeOutUp","animate__animated");
+      // re-add base class so we can animate next time
+      requestAnimationFrame(() => filtersPanel.classList.add("animate__animated"));
+    };
+    filtersCollapse.addEventListener("transitionend", onEnd, { once:true });
+  }
+
+  // Initialize base animate class once
+  filtersPanel.classList.add("animate__animated");
+
+  // Toggle click
+  filtersToggle?.addEventListener("click", () => {
+    const isClosed = filtersCollapse.getAttribute("aria-hidden") !== "false";
+    if (isClosed) openFilters(); else closeFilters();
+  });
+
+  // Optional: close when pressing Escape while focus is inside the filters
+  filtersPanel?.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeFilters();
   });
 
 
