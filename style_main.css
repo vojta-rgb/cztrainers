@@ -326,3 +326,17 @@ body.dark .filters-panel{
   .filters-collapse{ transition: none; }
   .animate__animated{ animation: none !important; }
 }
+
+/* Filters panel: height-based open/close (keeps layout intact) */
+#filtersPanel{
+  overflow: hidden;
+  will-change: max-height, opacity;
+  transition: max-height 360ms ease;
+}
+
+#filtersPanel.open{ margin-bottom:12px; }
+
+@media (prefers-reduced-motion: reduce){
+  #filtersPanel{ transition:none; }
+  .animate__animated{ animation:none !important; }
+}

@@ -65,47 +65,45 @@
     </div>
 
     <!-- Filters panel -->
-  <div id="filtersCollapse" class="filters-collapse" aria-hidden="true" style="max-height:0;">
-    <div id="filtersPanel" class="filters-panel animate__animated" data-open-anim="animate__fadeInDown" data-close-anim="animate__fadeOutUp">
-        <fieldset>
-          <legend>Lokalita</legend>
-          <div id="f-locations"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Specializace</legend>
-          <div id="f-specs">Načítám…</div>
-        </fieldset>
-        <fieldset>
-          <legend>Jazyky</legend>
-          <div id="f-langs">Načítám…</div>
-        </fieldset>
-        <fieldset>
-          <legend>Pohlaví</legend>
-          <div id="f-genders">Načítám…</div>
-        </fieldset>
-        <fieldset>
-          <legend>Zkušenosti (roky)</legend>
-          <div class="number-row">
-            <input type="number" id="f-exp-min" min="0" placeholder="Min" />
-            <input type="number" id="f-exp-max" min="0" placeholder="Max" />
-          </div>
-          <div id="f-exp-hint" class="small"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Oblíbení</legend>
-          <label style="display:block; margin:.25rem 0;">
-            <input type="checkbox" id="f-only-favs"> Moji oblíbení
-          </label>
-        </fieldset>
+    <div id="filtersPanel" class="filters-panel animate__animated" hidden>
+      <fieldset>
+        <legend>Lokalita</legend>
+        <div id="f-locations"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Specializace</legend>
+        <div id="f-specs">Načítám…</div>
+      </fieldset>
+      <fieldset>
+        <legend>Jazyky</legend>
+        <div id="f-langs">Načítám…</div>
+      </fieldset>
+      <fieldset>
+        <legend>Pohlaví</legend>
+        <div id="f-genders">Načítám…</div>
+      </fieldset>
+      <fieldset>
+        <legend>Zkušenosti (roky)</legend>
+        <div class="number-row">
+          <input type="number" id="f-exp-min" min="0" placeholder="Min" />
+          <input type="number" id="f-exp-max" min="0" placeholder="Max" />
+        </div>
+        <div id="f-exp-hint" class="small"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Oblíbení</legend>
+        <label style="display:block; margin:.25rem 0;">
+          <input type="checkbox" id="f-only-favs"> Moji oblíbení
+        </label>
+      </fieldset>
 
-        <fieldset>
-          <legend>Řazení</legend>
-          <select id="f-sort" style="width:100%; height:40px; border-radius:10px; border:1px solid #e5e7eb; padding:0 .6rem;">
-            <option value="default">Výchozí</option>
-            <option value="popular">Nejoblíbenější</option>
-          </select>
-        </fieldset>
-      </div>
+      <fieldset>
+        <legend>Řazení</legend>
+        <select id="f-sort" style="width:100%; height:40px; border-radius:10px; border:1px solid #e5e7eb; padding:0 .6rem;">
+          <option value="default">Výchozí</option>
+          <option value="popular">Nejoblíbenější</option>
+        </select>
+      </fieldset>
       <div class="filters-actions">
         <button id="filtersClear" class="btn">Vymazat vše</button>
         <button id="filtersApply" class="btn primary">Použít</button>
@@ -146,7 +144,6 @@
   const searchInput   = document.getElementById("search");
   const loader        = document.getElementById("loader");
   const filtersToggle = document.getElementById("filtersToggle") || document.getElementById("panelOpen");
-  const filtersCollapse = document.getElementById("filtersCollapse");
   const filtersPanel = document.getElementById("filtersPanel");
   const chipsWrap     = document.getElementById("activeChips");
 
@@ -219,70 +216,57 @@
   let favCounts = {};                // { trainerUid: number }
   const favBusy = new Set();
 
-  // Helper: open with measured height so it pushes layout smoothly
-  function openFilters(){
-    // Prepare: show content for measuring
-    filtersCollapse.setAttribute("aria-hidden","false");
-    filtersCollapse.classList.add("is-open");
-    // remove previous max-height to measure natural size
-    filtersCollapse.style.maxHeight = "none";
-    const targetHeight = filtersCollapse.scrollHeight;
-    // set from 0 -> target to animate
-    filtersCollapse.style.maxHeight = "0px";
-    // next frame: animate to target
-    requestAnimationFrame(() => {
-      filtersCollapse.style.maxHeight = targetHeight + "px";
-    });
+  filtersPanel.classList.add("animate__animated");
 
-    // Pretty content animation with Animate.css
+  function openFilters(){
+    // show + mark open
+    filtersPanel.removeAttribute("hidden");
+    filtersPanel.classList.add("open");
+    // start from 0, then grow to natural height
+    filtersPanel.style.maxHeight = "0px";
+    const target = filtersPanel.scrollHeight;
+    requestAnimationFrame(() => {
+      filtersPanel.style.maxHeight = target + "px";
+    });
+    // pretty content animation
     filtersPanel.classList.remove("animate__fadeOutUp");
     filtersPanel.classList.add("animate__fadeInDown");
     filtersPanel.style.setProperty("--animate-duration","420ms");
+
+    // after height finishes, allow natural growth
+    const onEnd = (e) => {
+      if (e.propertyName !== "max-height") return;
+      filtersPanel.removeEventListener("transitionend", onEnd);
+      filtersPanel.style.maxHeight = "none";
+    };
+    filtersPanel.addEventListener("transitionend", onEnd, { once:true });
   }
 
-  // Helper: close with height collapse, then clean
   function closeFilters(){
-    // animate height to 0
-    const current = filtersCollapse.scrollHeight;
-    filtersCollapse.style.maxHeight = current + "px"; // lock current
+    // lock current height then collapse to 0
+    const current = filtersPanel.scrollHeight;
+    filtersPanel.style.maxHeight = current + "px";
     requestAnimationFrame(() => {
-      filtersCollapse.style.maxHeight = "0px";
-      filtersCollapse.classList.remove("is-open");
+      filtersPanel.style.maxHeight = "0px";
     });
-
-    // Pretty content animation
     filtersPanel.classList.remove("animate__fadeInDown");
     filtersPanel.classList.add("animate__fadeOutUp");
     filtersPanel.style.setProperty("--animate-duration","300ms");
 
-    // after height transition ends, mark hidden (accessibility + tab stop removal)
     const onEnd = (e) => {
       if (e.propertyName !== "max-height") return;
-      filtersCollapse.removeEventListener("transitionend", onEnd);
-      filtersCollapse.setAttribute("aria-hidden","true");
-      // clean transform artifacts
-      filtersPanel.classList.remove("animate__fadeOutUp","animate__animated");
-      // re-add base class so we can animate next time
-      requestAnimationFrame(() => filtersPanel.classList.add("animate__animated"));
+      filtersPanel.removeEventListener("transitionend", onEnd);
+      filtersPanel.setAttribute("hidden", "");
+      filtersPanel.classList.remove("open","animate__fadeOutUp");
+      filtersPanel.style.maxHeight = ""; // clean inline style
     };
-    filtersCollapse.addEventListener("transitionend", onEnd, { once:true });
+    filtersPanel.addEventListener("transitionend", onEnd, { once:true });
   }
 
-  // Initialize base animate class once
-  filtersPanel.classList.add("animate__animated");
-
-  // Toggle click
   filtersToggle?.addEventListener("click", () => {
-    const isClosed = filtersCollapse.getAttribute("aria-hidden") !== "false";
-    if (isClosed) openFilters(); else closeFilters();
+    const isHidden = filtersPanel.hasAttribute("hidden");
+    if (isHidden) openFilters(); else closeFilters();
   });
-
-  // Optional: close when pressing Escape while focus is inside the filters
-  filtersPanel?.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeFilters();
-  });
-
-
 
   // --- Facets helpers ---
   const uniqPush = (set, val) => { if (val && String(val).trim()) set.add(String(val).trim()); };
@@ -685,7 +669,7 @@ const prevCount =
 
   btnApply.addEventListener("click", () => {
     doFilter();
-    filtersPanel.setAttribute("hidden", "");
+    if (!filtersPanel.hasAttribute("hidden")) closeFilters();
   });
   btnClear.addEventListener("click", () => {
     searchInput.value = "";
