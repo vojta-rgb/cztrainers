@@ -66,44 +66,46 @@
 
     <!-- Filters panel -->
     <div id="filtersPanel" class="filters-panel" hidden>
-      <fieldset>
-        <legend>Lokalita</legend>
-        <div id="f-locations"></div>
-      </fieldset>
-      <fieldset>
-        <legend>Specializace</legend>
-        <div id="f-specs">Načítám…</div>
-      </fieldset>
-      <fieldset>
-        <legend>Jazyky</legend>
-        <div id="f-langs">Načítám…</div>
-      </fieldset>
-      <fieldset>
-        <legend>Pohlaví</legend>
-        <div id="f-genders">Načítám…</div>
-      </fieldset>
-      <fieldset>
-        <legend>Zkušenosti (roky)</legend>
-        <div class="number-row">
-          <input type="number" id="f-exp-min" min="0" placeholder="Min" />
-          <input type="number" id="f-exp-max" min="0" placeholder="Max" />
-        </div>
-        <div id="f-exp-hint" class="small"></div>
-      </fieldset>
-      <fieldset>
-        <legend>Oblíbení</legend>
-        <label style="display:block; margin:.25rem 0;">
-          <input type="checkbox" id="f-only-favs"> Moji oblíbení
-        </label>
-      </fieldset>
+      <div class="filters-grid">
+        <fieldset>
+          <legend>Lokalita</legend>
+          <div id="f-locations"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Specializace</legend>
+          <div id="f-specs">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Jazyky</legend>
+          <div id="f-langs">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Pohlaví</legend>
+          <div id="f-genders">Načítám…</div>
+        </fieldset>
+        <fieldset>
+          <legend>Zkušenosti (roky)</legend>
+          <div class="number-row">
+            <input type="number" id="f-exp-min" min="0" placeholder="Min" />
+            <input type="number" id="f-exp-max" min="0" placeholder="Max" />
+          </div>
+          <div id="f-exp-hint" class="small"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Oblíbení</legend>
+          <label style="display:block; margin:.25rem 0;">
+            <input type="checkbox" id="f-only-favs"> Moji oblíbení
+          </label>
+        </fieldset>
 
-      <fieldset>
-        <legend>Řazení</legend>
-        <select id="f-sort" style="width:100%; height:40px; border-radius:10px; border:1px solid #e5e7eb; padding:0 .6rem;">
-          <option value="default">Výchozí</option>
-          <option value="popular">Nejoblíbenější</option>
-        </select>
-      </fieldset>
+        <fieldset>
+          <legend>Řazení</legend>
+          <select id="f-sort" style="width:100%; height:40px; border-radius:10px; border:1px solid #e5e7eb; padding:0 .6rem;">
+            <option value="default">Výchozí</option>
+            <option value="popular">Nejoblíbenější</option>
+          </select>
+        </fieldset>
+      </div>
       <div class="filters-actions">
         <button id="filtersClear" class="btn">Vymazat vše</button>
         <button id="filtersApply" class="btn primary">Použít</button>
@@ -143,8 +145,8 @@
   const userList      = document.getElementById("userList");
   const searchInput   = document.getElementById("search");
   const loader        = document.getElementById("loader");
-  const filtersToggle = document.getElementById("filtersToggle") || document.getElementById("panelOpen");
-  const filtersPanel = document.getElementById("filtersPanel");
+  const filtersToggle = document.getElementById("filtersToggle");
+  const filtersPanel  = document.getElementById("filtersPanel");
   const chipsWrap     = document.getElementById("activeChips");
 
   const boxLocations = document.getElementById("f-locations");
@@ -216,59 +218,11 @@
   let favCounts = {};                // { trainerUid: number }
   const favBusy = new Set();
   
-  function openFilters(){
-    // make visible and start from 0 height
-    filtersPanel.removeAttribute("hidden");
-    filtersPanel.classList.add("open");
-    filtersPanel.style.maxHeight = "0px";
-
-    // measure natural height
-    const target = filtersPanel.scrollHeight;
-
-    // next frame: animate to target
-    requestAnimationFrame(() => {
-      filtersPanel.style.maxHeight = target + "px";
-      filtersPanel.style.opacity = "1";
-      filtersPanel.style.transform = "translateY(0)"; // see CSS defaults below
-    });
-
-    // after transition: unlock height so inner content can grow naturally
-    const onEnd = (e) => {
-      if (e.propertyName !== "max-height") return;
-      filtersPanel.removeEventListener("transitionend", onEnd);
-      filtersPanel.style.maxHeight = "none";
-    };
-    filtersPanel.addEventListener("transitionend", onEnd, { once:true });
-  }
-
-  function closeFilters(){
-    // lock current height, then collapse to 0
-    const current = filtersPanel.scrollHeight;
-    filtersPanel.style.maxHeight = current + "px";
-    // next frame: collapse + fade/slide a bit for polish
-    requestAnimationFrame(() => {
-      filtersPanel.style.maxHeight = "0px";
-      filtersPanel.style.opacity = "0";
-      filtersPanel.style.transform = "translateY(-6px)";
-    });
-
-    const onEnd = (e) => {
-      if (e.propertyName !== "max-height") return;
-      filtersPanel.removeEventListener("transitionend", onEnd);
-      filtersPanel.setAttribute("hidden", "");
-      filtersPanel.classList.remove("open");
-      // clean inline styles
-      filtersPanel.style.maxHeight = "";
-      filtersPanel.style.opacity = "";
-      filtersPanel.style.transform = "";
-    };
-    filtersPanel.addEventListener("transitionend", onEnd, { once:true });
-  }
-
-
-  filtersToggle?.addEventListener("click", () => {
+  // toggle filters panel
+  filtersToggle.addEventListener("click", () => {
     const isHidden = filtersPanel.hasAttribute("hidden");
-    if (isHidden) openFilters(); else closeFilters();
+    if (isHidden) { filtersPanel.removeAttribute("hidden"); filtersPanel.classList.add("open"); }
+    else { filtersPanel.setAttribute("hidden",""); filtersPanel.classList.remove("open"); }
   });
 
   // --- Facets helpers ---
@@ -672,7 +626,7 @@ const prevCount =
 
   btnApply.addEventListener("click", () => {
     doFilter();
-    if (!filtersPanel.hasAttribute("hidden")) closeFilters();
+    filtersPanel.setAttribute("hidden", "");
   });
   btnClear.addEventListener("click", () => {
     searchInput.value = "";
