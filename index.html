@@ -178,6 +178,23 @@
     toastEl.classList.add("show");
     setTimeout(()=>toastEl.classList.remove("show"), 1800);
   };
+  // --- Fixed list of Czech regions for the Location filter ---
+  const CZECH_REGIONS = [
+    "Hlavní město Praha",
+    "Středočeský kraj",
+    "Jihočeský kraj",
+    "Plzeňský kraj",
+    "Karlovarský kraj",
+    "Ústecký kraj",
+    "Liberecký kraj",
+    "Královéhradecký kraj",
+    "Pardubický kraj",
+    "Vysočina",
+    "Jihomoravský kraj",
+    "Olomoucký kraj",
+    "Zlínský kraj",
+    "Moravskoslezský kraj"
+  ];
   // badge catalog (you can extend it)
   const BADGE_META = {
     verified:   { label: 'Ověřený', icon: '✔️', cls: 'b-verified' },
@@ -246,7 +263,7 @@
   }
 
   function populateFilters(){
-    checkboxList(boxLocations, "loc",    facets.locations);
+    checkboxList(boxLocations, "loc",    new Set(CZECH_REGIONS));
     checkboxList(boxSpecs,     "spec",   facets.specs);
     checkboxList(boxLangs,     "lang",   facets.langs);
     checkboxList(boxGenders,   "gender", facets.genders);
@@ -275,16 +292,22 @@
   function applyFilters(users, f){
     const q = f.q;
     let out = users.filter(([id, u]) => {
+      const locObj = u.location || {};
+      const region = (locObj.region || "").trim();
+      const locStr = locationText(locObj); // still used for text search & card meta
+
       if (q) {
-      const locStr = locationText(u.location);
-      const hay = [
-        u.name, u.prijmeni, u.bio,
-        Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
-        locStr
-      ].filter(Boolean).join(" ").toLowerCase();
+        const hay = [
+          u.name, u.prijmeni, u.bio,
+          Array.isArray(u.specializations) ? u.specializations.join(" ") : u.specializations,
+          locStr
+        ].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (f.loc.length && !f.loc.includes(locStr)) return false;
+
+      // region filter against fixed checkboxes
+      if (f.loc.length && !f.loc.includes(region)) return false;
+
 
       if (f.spec.length) {
         const sArr = Array.isArray(u.specializations) ? u.specializations :
