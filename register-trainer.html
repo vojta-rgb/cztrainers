@@ -700,21 +700,36 @@
         }
 
         // 6) Save trainer record (Realtime Database in your file)
+        // Build a full location object from the current UI (keeps lat/lng, public coords, city, region, etc.)
+        const fullLocation = (typeof collectMapLocation === "function") ? collectMapLocation() : { region };
+
+        // Build the trainer document
         const trainerDoc = {
           uid: user.uid,
           email,
           name: jmeno,
           prijmeni,
-          location: { region },
+          location: fullLocation,         // <- full object now
           bio,
           profilePictureUrl,
           gallery: galleryResults,
           galleryCount: galleryResults.length,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp ? serverTimestamp() : Date.now(),
+          updatedAt: serverTimestamp ? serverTimestamp() : Date.now(),
           verified: false
         };
-        await update(ref(db, `trainers/${user.uid}`), trainerDoc);
+
+        // DEBUG: log before writing so you can inspect in the console
+        console.debug("[register] writing trainers/%s ->", user.uid, trainerDoc);
+
+        // Use update() to merge keys without replacing parent node
+        try {
+          await update(ref(db, `trainers/${user.uid}`), trainerDoc);
+          console.debug("[register] trainers/%s updated ok", user.uid);
+        } catch (dbErr) {
+          console.error("[register] failed writing trainers/%s:", user.uid, dbErr);
+          throw dbErr; // let outer catch perform rollback
+        }
 
         // 7) Send verification email AFTER successful DB write
         await sendEmailVerification(user);
