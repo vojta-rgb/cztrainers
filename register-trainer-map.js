@@ -253,31 +253,53 @@ window.setTrainerMapFromHidden = function () {
 // save to RTDB under unverified-users/{uid}/location
 async function writeLocation(uid) {
   if (!db || !uid) return;
-  const visible = document.getElementById("showOnMap")?.checked ?? true;
-  const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
-  const exactLat = Number(document.getElementById("loc_lat").value || 0);
-  const exactLng = Number(document.getElementById("loc_lng").value || 0);
-  const pubLatEl = document.getElementById("loc_lat_public");
-  const pubLngEl = document.getElementById("loc_lng_public");
-  const publicLat = Number(pubLatEl?.value || exactLat || 0);
-  const publicLng = Number(pubLngEl?.value || exactLng || 0);
 
-  const payload = {
-    visibleOnMap: visible,
-    precision,
-    // always persist exact
-    lat: visible ? exactLat : null,
-    lng: visible ? exactLng : null,
-    // optional public pair for display
-    publicLat: visible ? publicLat : null,
-    publicLng: visible ? publicLng : null,
-    city: document.getElementById("loc_city").value || "",
-    region: document.getElementById("loc_region").value || "",
-    geohash: visible ? (document.getElementById("loc_geohash").value || "") : "",
-    updatedAt: Date.now()
-  };
   try {
+    const visible = document.getElementById("showOnMap")?.checked ?? true;
+    const precision = document.querySelector('input[name="locPrecision"]:checked')?.value || "exact";
+
+    // read exact coords (may be empty strings)
+    const exactLatRaw = document.getElementById("loc_lat")?.value;
+    const exactLngRaw = document.getElementById("loc_lng")?.value;
+    const exactLat = exactLatRaw !== undefined && exactLatRaw !== "" ? Number(exactLatRaw) : null;
+    const exactLng = exactLngRaw !== undefined && exactLngRaw !== "" ? Number(exactLngRaw) : null;
+
+    // public coords (fallback to exact if empty)
+    const pubLatRaw = document.getElementById("loc_lat_public")?.value;
+    const pubLngRaw = document.getElementById("loc_lng_public")?.value;
+    const publicLat = pubLatRaw !== undefined && pubLatRaw !== "" ? Number(pubLatRaw) : (exactLat ?? null);
+    const publicLng = pubLngRaw !== undefined && pubLngRaw !== "" ? Number(pubLngRaw) : (exactLng ?? null);
+
+    // If visibleOnMap is true we require at least valid exact coords
+    if (visible && (!isFinite(exactLat) || !isFinite(exactLng))) {
+      console.warn("[map] skipping location write — no valid exact coords and visibleOnMap is true");
+      return;
+    }
+
+    // safe string fields
+    const cityEl = document.getElementById("loc_city");
+    const regionEl = document.getElementById("loc_region");
+    const city = cityEl?.value || "";
+    const region = regionEl?.value || "";
+
+    const geohashVal = (visible && (document.getElementById("loc_geohash")?.value || "")) || "";
+
+    const payload = {
+      visibleOnMap: !!visible,
+      precision: precision,
+      lat: visible && isFinite(exactLat) ? exactLat : null,
+      lng: visible && isFinite(exactLng) ? exactLng : null,
+      publicLat: visible && isFinite(publicLat) ? publicLat : null,
+      publicLng: visible && isFinite(publicLng) ? publicLng : null,
+      city: city,
+      region: region,
+      geohash: geohashVal,
+      updatedAt: Date.now()
+    };
+
     await set(ref(db, "unverified-users/" + uid + "/location"), payload);
+    // small success log for debugging during development
+    console.debug("[map] wrote location for", uid, payload);
   } catch (e) {
     console.warn("[map] location write failed:", e);
   }

@@ -299,7 +299,7 @@
     import {
       getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -714,7 +714,7 @@
           updatedAt: serverTimestamp(),
           verified: false
         };
-        await set(ref(db, `trainers/${user.uid}`), trainerDoc);
+        await update(ref(db, `trainers/${user.uid}`), trainerDoc);
 
         // 7) Send verification email AFTER successful DB write
         await sendEmailVerification(user);
