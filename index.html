@@ -51,6 +51,81 @@
   </nav>
   <script type="module" src="auth-navbar.js"></script>
   
+  <!-- CZTRAINERS: NEW HERO SECTION -->
+  <section class="cz-hero" aria-labelledby="cz-hero-title" role="region">
+    <div class="cz-hero__bg" aria-hidden="true"></div> <!-- background pattern stays visible under overlay -->
+    <div class="cz-hero__overlay" aria-hidden="true"></div> <!-- dark layer for contrast -->
+
+    <div class="cz-container cz-hero__content">
+      <!-- left: text -->
+      <div class="cz-hero__left">
+        <h1 id="cz-hero-title" class="cz-hero__title animate__animated animate__fadeInDown">
+          Najděte ideálního trenéra v ČR — rychle.
+        </h1>
+        <p class="cz-hero__subtitle animate__animated animate__fadeInUp animate__delay-1s">
+          Zobrazíme trenéry na mapě. Hledejte podle lokality, specializace nebo zkušeností.
+        </p>
+
+        <!-- three features -->
+        <div class="cz-features">
+          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0s">
+            <div class="cz-feature__icon">📍</div>
+            <div class="cz-feature__text">
+              <strong>Lokalita</strong><br><span>Najděte trenéry blízko vás</span>
+            </div>
+          </div>
+
+          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0.15s">
+            <div class="cz-feature__icon">🏋️‍♀️</div>
+            <div class="cz-feature__text">
+              <strong>Specializace</strong><br><span>Fitness, silový trénink, běh a víc</span>
+            </div>
+          </div>
+
+          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0.30s">
+            <div class="cz-feature__icon">⏳</div>
+            <div class="cz-feature__text">
+              <strong>Zkušenosti</strong><br><span>Filtrovat podle praxe a zkušeností</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- main CTAs -->
+        <div class="cz-hero__ctas">
+          <a href="mapa-treneru.html"
+            id="cz-hero-map-btn"
+            class="cz-btn cz-btn--primary animate__animated animate__pulse"
+            aria-label="Zobrazit trenéry na mapě">
+            <!-- inline SVG map+pin -->
+            <span class="cz-btn__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" focusable="false">
+                <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M32 6 C20 6 12 14 12 26 C12 40 32 58 32 58 C32 58 52 40 52 26 C52 14 44 6 32 6 Z"/>
+                </g>
+                <circle cx="32" cy="26" r="6"/>
+              </svg>
+            </span>
+            <span>Zobrazit trenéry na mapě</span>
+          </a>
+
+          <button id="cz-hero-search-btn" class="cz-btn cz-btn--outline" aria-label="Přejít na vyhledávání trenérů">
+            Vyhledat trenéra
+          </button>
+        </div>
+
+        <p class="cz-hero__note">Nebo použijte vyhledávání níže pro přesnější výsledky.</p>
+      </div>
+
+      <!-- right: decorative map preview (image) -->
+      <div class="cz-hero__right" data-aos="zoom-in">
+        <!-- replace src with your optimized Cloudinary/preview image if desired -->
+        <img class="cz-hero__map-preview" src="assets/nahled_mapy.png" alt="Náhled mapy trenérů" loading="lazy">
+        <!-- optional decorative pins can be CSS absolutely positioned -->
+      </div>
+    </div>
+  </section>
+  <!-- END CZTRAINERS HERO SECTION -->
+
   <!-- PAGE CONTENT -->
   <div class="container">
     <h1 class="animate__animated animate__fadeInUp">PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
@@ -686,5 +761,38 @@ const prevCount =
     offset: 80                // start a bit before the card hits viewport
   });
 </script>
+  <!-- small script to wire hero buttons & animations (paste near end of body) -->
+  <script>
+    (function(){
+      // Scroll to search (secondary CTA)
+      const sBtn = document.getElementById('cz-hero-search-btn');
+      sBtn?.addEventListener('click', () => {
+        const target = document.getElementById('search-section') || document.getElementById('search-form') || document.querySelector('form#search-form');
+        if (target) {
+          target.scrollIntoView({behavior: 'smooth', block: 'start'});
+          // focus first input if possible
+          const input = target.querySelector('input, select, textarea');
+          if (input) input.focus();
+        } else {
+          // fallback to scroll a bit
+          window.scrollBy({top: 500, left:0, behavior:'smooth'});
+        }
+      });
+
+      // Stop the button pulse after ~2500ms so it's not annoying
+      const mapBtn = document.getElementById('cz-hero-map-btn');
+      if (mapBtn) {
+        setTimeout(() => {
+          mapBtn.classList.remove('animate__pulse');
+        }, 2500);
+      }
+
+      // init AOS if available
+      if (window.AOS) {
+        AOS.init({ once: true, duration: 700, easing: 'ease-out-cubic' });
+      }
+      // if animate.css not loaded explicitly, classes degrade gracefully
+    })();
+  </script>
 </body>
 </html>
