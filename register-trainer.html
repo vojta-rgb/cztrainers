@@ -726,6 +726,12 @@
         try {
           await update(ref(db, `trainers/${user.uid}`), trainerDoc);
           console.debug("[register] trainers/%s updated ok", user.uid);
+          try {
+            await set(ref(db, `debug-writes/${user.uid}`), { ts: Date.now(), ok: true });
+            console.debug("[register] debug-writes ok");
+          } catch(debugErr) {
+            console.warn("[register] debug-writes failed:", debugErr);
+          }
         } catch (dbErr) {
           console.error("[register] failed writing trainers/%s:", user.uid, dbErr);
           throw dbErr; // let outer catch perform rollback
@@ -753,6 +759,7 @@
       } finally {
         submitBtn?.removeAttribute("disabled");
         setLoading(false);
+        window.suspendMapWrites = false;
       }
     });
   </script>

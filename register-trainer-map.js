@@ -252,6 +252,7 @@ window.setTrainerMapFromHidden = function () {
 
 // save to RTDB under unverified-users/{uid}/location
 async function writeLocation(uid) {
+  if (window.suspendMapWrites) return;
   if (!db || !uid) return;
 
   try {

@@ -312,7 +312,7 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .cz-hero__content *{position:relative;z-index:2;}
 
 /* DARK MODE */
-body.dark .cz-hero__overlay{background:rgba(0,0,0,0.60);}
+body.dark .cz-hero__overlay{background:rgba(0,0,0,0.20);}
 body.dark .cz-feature{background:rgba(255,255,255,0.03);box-shadow:0 8px 22px rgba(0,0,0,0.6);}
 body.dark .cz-feature__text,body.dark .cz-hero__subtitle,body.dark .cz-hero__note{color:#dbeeff;}
 body.dark .cz-btn--outline{border-color:rgba(255,255,255,0.12);color:#eaf4ff;}
