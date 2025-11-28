@@ -627,27 +627,46 @@
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Native HTML5 validation first (prevents creating an account on invalid form)
+      // Native HTML5 validation first
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
 
-      // Disable button while we work
+      // UX: block submit
       submitBtn?.setAttribute("disabled", "true");
       setLoading(true);
-      let createdUser = null; // for rollback if later steps fail
+      let createdUser = null;
 
       try {
-        // 1) Read values
+        // ---------- collect simple fields ----------
         const email    = document.getElementById("email").value.trim();
         const pass     = document.getElementById("password").value;
         const jmeno    = document.getElementById("name").value.trim();
         const prijmeni = document.getElementById("prijmeni").value.trim();
-        const region   = document.getElementById("location").value.trim();
+        const datum    = document.getElementById("datum").value || "";
+        const gender   = document.getElementById("gender").value || "";
+        const region   = document.getElementById("location").value.trim() || "";
         const bio      = document.getElementById("bio").value.trim();
+        const pricing  = document.getElementById("pricing").value.trim();
+        const experience = Number(document.getElementById("experience").value || 0);
 
-        // 2) Pre-check and prepare PROFILE image locally (no network yet)
+        // phone normalization (simple): remove non-digits, keep leading + if present
+        let phoneRaw = document.getElementById("phone").value || "";
+        let phoneNormalized = phoneRaw.replace(/[^\d+]/g, "");
+        // optionally ensure +420 if Czech local 9-digit number without +:
+        if (!phoneNormalized.startsWith("+") && phoneNormalized.length === 9) phoneNormalized = "+420" + phoneNormalized;
+
+        // socials
+        const instagram = (document.getElementById("instagram").value || "").trim();
+        const facebook  = (document.getElementById("facebook").value || "").trim();
+        const tiktok    = (document.getElementById("tiktok").value || "").trim();
+
+        // ---------- collect checkbox groups ----------
+        const selectedSpecializations = Array.from(document.querySelectorAll('input[name="specializations"]:checked')).map(n=>n.value);
+        const selectedLanguages = Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(n=>n.value);
+
+        // ---------- prepare images locally (pfp + gallery) ----------
         let profilePictureUrl = "";
         let pfpToUpload = null;
         const rawPfp = (profileImageInput?.files || [])[0] || null;
@@ -660,15 +679,12 @@
           pfpToUpload = jpg;
         }
 
-        // 3) Enforce gallery cap at submit time + prepare images locally
-        const picked = galleryFilesSelected?.length
-          ? galleryFilesSelected
-          : Array.from(galleryInput?.files || []);
+        // gallery prepare & cap
+        const picked = galleryFilesSelected?.length ? galleryFilesSelected : Array.from(galleryInput?.files || []);
         const limited = picked.slice(0, MAX_GALLERY_FILES);
         if (picked.length > limited.length) {
-          alert(`Nahrávám pouze prvních ${MAX_GALLERY_FILES} fotek z galerie.`);
+          toast(`Nahrávám pouze prvních ${MAX_GALLERY_FILES} fotek z galerie.`);
         }
-
         const galleryPrepared = [];
         for (const raw of limited) {
           if (!/^image\//.test(raw.type)) continue;
@@ -679,14 +695,14 @@
           galleryPrepared.push(jpg);
         }
 
-        // 4) Only now create the auth user (form + images are valid)
+        // ---------- create auth user (only once all validations passed) ----------
         const { user } = await createUserWithEmailAndPassword(auth, email, pass);
         createdUser = user;
 
-        // 5) Upload images (needs uid)
+        // ---------- upload images (signed) ----------
         if (pfpToUpload) {
           const up = await uploadPfpSigned({ file: pfpToUpload, uid: user.uid });
-          profilePictureUrl = up.secure_url;
+          profilePictureUrl = up.secure_url || "";
         }
 
         const galleryResults = [];
@@ -699,55 +715,63 @@
           }
         }
 
-        // 6) Save trainer record (Realtime Database in your file)
-        // Build a full location object from the current UI (keeps lat/lng, public coords, city, region, etc.)
-        const fullLocation = (typeof collectMapLocation === "function") ? collectMapLocation() : { region };
+        // ---------- collect full location object (map helper) ----------
+        const fullLocation = (typeof collectMapLocation === "function") ? collectMapLocation() : {
+          region, city: "", lat: null, lng: null, publicLat: null, publicLng: null, precision: "exact", visibleOnMap: true, geohash: "", updatedAt: Date.now()
+        };
 
-        // Build the trainer document
+        // ---------- build final document exactly with fields you requested ----------
         const trainerDoc = {
           uid: user.uid,
           email,
           name: jmeno,
           prijmeni,
-          location: fullLocation,         // <- full object now
+          datum,                     // date of birth
+          phone: phoneNormalized,    // normalized phone
+          gender,
           bio,
-          profilePictureUrl,
-          gallery: galleryResults,
-          galleryCount: galleryResults.length,
+          specializations: selectedSpecializations.length ? selectedSpecializations : null,
+          pricing,
+          experience: Number.isFinite(experience) ? experience : 0,
+          languages: selectedLanguages.length ? selectedLanguages : null,
+          profilePicture: profilePictureUrl || null,      // matches your desired key
+          profilePictureUrl: profilePictureUrl || null,   // keep both for compatibility
+          instagram: instagram || "",
+          facebook: facebook || "",
+          tiktok: tiktok || "",
+          location: fullLocation,
+          gallery: galleryResults.length ? galleryResults : null,
+          galleryCount: galleryResults.length || 0,
           createdAt: serverTimestamp ? serverTimestamp() : Date.now(),
           updatedAt: serverTimestamp ? serverTimestamp() : Date.now(),
           verified: false
         };
 
-        // DEBUG: log before writing so you can inspect in the console
-        console.debug("[register] writing users/%s ->", user.uid, trainerDoc);
+        console.debug("[register] writing unverified-users/%s ->", user.uid, trainerDoc);
 
-        // Use update() to merge keys without replacing parent node
+        // ---------- write to unverified-users/{uid} ----------
         try {
-          await update(ref(db, `users/${user.uid}`), trainerDoc);
-          console.debug("[register] users/%s updated ok", user.uid);
-          try {
-            await set(ref(db, `debug-writes/${user.uid}`), { ts: Date.now(), ok: true });
-            console.debug("[register] debug-writes ok");
-          } catch(debugErr) {
-            console.warn("[register] debug-writes failed:", debugErr);
-          }
+          await update(ref(db, `unverified-users/${user.uid}`), trainerDoc);
+          console.debug("[register] unverified-users/%s updated ok", user.uid);
+          // optional debug write
+          try { await set(ref(db, `debug-writes/${user.uid}`), { ts: Date.now(), ok: true }); } catch(e){/* ignore */ }
         } catch (dbErr) {
-          console.error("[register] failed writing users/%s:", user.uid, dbErr);
-          throw dbErr; // let outer catch perform rollback
+          console.error("[register] failed writing unverified-users/%s:", user.uid, dbErr);
+          throw dbErr;
         }
 
-        // 7) Send verification email AFTER successful DB write
+        // ---------- send verification email ----------
         await sendEmailVerification(user);
 
-        // 8) Success UI
+        // ---------- success UI ----------
         form.reset();
         galleryPreview.innerHTML = "";
         galleryCountEl.textContent = "0 fotek vybráno";
-        showSuccessCard(); // ← show your own success card
+        preview.style.display = "none";
+        showSuccessCard();
       } catch (err) {
-        console.error(err);
-        // Rollback: if user was created but something failed after, delete the account to avoid “email already in use”
+        console.error("[register] error:", err);
+        // rollback: delete created auth user if created
         try {
           if (createdUser && auth.currentUser?.uid === createdUser.uid) {
             await deleteUser(auth.currentUser);
@@ -759,7 +783,6 @@
       } finally {
         submitBtn?.removeAttribute("disabled");
         setLoading(false);
-        window.suspendMapWrites = false;
       }
     });
   </script>
