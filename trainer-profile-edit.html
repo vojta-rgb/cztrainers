@@ -64,6 +64,15 @@
           <p class="hint">Max 500&nbsp;KB · Nevhodné obrázky se zamítnou.</p>
         </div>
 
+        <!-- === Gallery (edit) — paste after profile image field === -->
+        <fieldset class="field-group" id="editGalleryField">
+          <legend>Galerie (upravit)</legend>
+          <p class="hint">Přidejte nebo odeberte fotky. Max 10 fotek, každá ≤ 10MB. Obrázky se zmenší a nahrají na Cloudinary.</p>
+          <input id="galleryInput" type="file" accept="image/*" multiple />
+          <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
+          <p class="hint" id="galleryCount">0 fotek</p>
+        </fieldset>
+
         <!-- Osobní údaje -->
         <h3 class="section">Osobní údaje</h3>
         <div class="grid-2">
@@ -284,6 +293,19 @@
     const preview = document.getElementById("profilePreview");
     let currentUrl = "";
 
+    // --- Gallery config & state (add near other constants) ---
+    const MAX_INPUT_SIZE = 10 * 1024 * 1024;         // 10MB client guard (same as register page)
+    const MAX_GALLERY_FILES = 10;
+    const GALLERY_MAX_DIM = 1600;
+    const GALLERY_TARGET_BYTES = 500 * 1024;
+    const TARGET_MAX_BYTES = 500 * 1024; // fallback target size for compressToTarget
+
+
+    let existingGallery = [];       // [{ publicId, url }] from DB
+    let galleryFilesSelected = [];  // File[] new files selected by user
+    let galleryToDelete = new Set(); // publicIds marked for deletion
+    let galleryUploadedResults = []; // results from newly uploaded files { publicId, url }
+
     let loadedLocation = null;
 
     function collectMapLocation() {
@@ -326,7 +348,7 @@
       const file = imageInput.files[0];
       if (!file) return;
       if (!file.type.startsWith("image/")) {
-        alert("Vybraný soubor není obrázek.");
+        toast("Vybraný soubor není obrázek.");
         imageInput.value = "";
         preview.style.display = "none";
         return;
@@ -359,7 +381,7 @@
       form.instagram.value = (d.instagram ?? socials.instagram ?? "") || "";
       form.facebook.value  = (d.facebook  ?? socials.facebook  ?? "") || "";
       form.tiktok.value    = (d.tiktok    ?? socials.tiktok    ?? "") || "";
-
+      
       const loc = d.location || {};
       loadedLocation = loc;
       document.getElementById("loc_lat").value       = loc.lat ?? "";
@@ -406,21 +428,44 @@
         preview.src = thumb;
         preview.style.display = "block";
       }
+        // --- render existing gallery when filling form ---
+      existingGallery = Array.isArray(d.gallery) ? d.gallery.slice() : [];
+      renderGalleryPreview();
     }
 
-    async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9){
-      try {
-        const img = await new Promise((res, rej) => { const i = new Image(); i.onload=res; i.onerror=rej; i.src=URL.createObjectURL(file); });
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        if (!isFinite(scale) || scale <= 0) return file;
-        const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
-        const canvas = document.createElement("canvas"); canvas.width=w; canvas.height=h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        const blob = await new Promise(res => canvas.toBlob(res, mime, quality));
-        if (!blob || !blob.size) return file;
-        return new File([blob], "pfp.jpg", { type: mime });
-      } catch { return file; }
+    // copy into trainer-profile-edit.html near other image helpers
+    async function downscaleImage(file, maxDim = MAX_DIM, mime = "image/jpeg", quality = 0.9) {
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = rej;
+        i.src = URL.createObjectURL(file);
+      });
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      return new Promise((res) => canvas.toBlob(res, mime, quality));
     }
+
+    async function compressToTarget(file, { maxDim = MAX_DIM, target = TARGET_MAX_BYTES } = {}) {
+      // Start at high quality and reduce until under target or minimum
+      let quality = 0.9;
+      let blob = await downscaleImage(file, maxDim, "image/jpeg", quality);
+      let dim = maxDim;
+      for (let step = 0; (blob && blob.size > target) && step < 8; step++) {
+        if (quality > 0.5) {
+          quality -= 0.08;
+        } else {
+          dim = Math.round(dim * 0.85);
+        }
+        blob = await downscaleImage(file, dim, "image/jpeg", Math.max(quality, 0.35));
+      }
+      return new File([blob], "upload.jpg", { type: "image/jpeg" });
+    }
+
 
     // ---------- NSFWJS (LOCAL MODEL) ----------
     const NSFW_MODEL_PATH = "./vendor/nsfw-model/";
@@ -454,6 +499,39 @@
 
     // Preload once so the first upload is fast
     getNSFWModel().catch(err => console.error("[nsfw] preload failed:", err));
+
+    async function deleteGallerySigned(publicId) {
+      if (!publicId) throw new Error("No publicId");
+      const timestamp = Math.floor(Date.now()/1000);
+      // ask your signer for a destroy signature
+      const sigRes = await fetch(SIGNER_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ op: "destroy", public_id: publicId, timestamp })
+      }).then(r => {
+        if (!r.ok) throw new Error("Signer failed for destroy");
+        return r.json();
+      });
+
+      const cloud = sigRes.cloudName || CLOUD_NAME;
+      const form = new FormData();
+      form.append("public_id", publicId);
+      form.append("api_key", sigRes.apiKey);
+      form.append("timestamp", String(sigRes.timestamp || timestamp));
+      form.append("signature", sigRes.signature);
+
+      // call Cloudinary destroy endpoint
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/destroy`, {
+        method: "POST",
+        body: form
+      });
+      const json = await res.json();
+      // Cloudinary returns { result: "ok" } on success, or result: "not found"
+      if (!res.ok || (json.result !== "ok" && json.result !== "not found")) {
+        throw new Error("Cloudinary destroy failed: " + (json.error?.message || json.result || res.status));
+      }
+      return json;
+    }
 
     async function getSignature(params){
       const r = await fetch(SIGNER_URL, {
@@ -492,6 +570,132 @@
       return JSON.parse(txt);
     }
 
+    async function uploadGallerySigned({ file, uid }) {
+      // same signer contract as registration page
+      const timestamp = Math.floor(Date.now() / 1000);
+      const public_id = `users/${uid}/gallery/${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+
+      const sigRes = await fetch(SIGNER_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          public_id,
+          timestamp,
+          overwrite: true,
+          invalidate: true
+        })
+      }).then(r => {
+        if (!r.ok) throw new Error("Signer failed");
+        return r.json();
+      });
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sigRes.apiKey);
+      form.append("timestamp", String(timestamp));
+      form.append("public_id", public_id);
+      form.append("overwrite", "true");
+      form.append("invalidate", "true");
+      form.append("signature", sigRes.signature);
+
+      const cloud = sigRes.cloudName || CLOUD_NAME;
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, { method: "POST", body: form });
+      const json = await res.json();
+      if (!json.secure_url) throw new Error("Cloudinary upload failed");
+      return { publicId: json.public_id, url: json.secure_url };
+    }
+
+    // Render gallery UI from existingGallery + newly selected files
+    function renderGalleryPreview() {
+      const galleryPreview = document.getElementById("galleryPreview");
+      const galleryCountEl = document.getElementById("galleryCount");
+      if (!galleryPreview || !galleryCountEl) return;
+      galleryPreview.innerHTML = "";
+
+      // existing (from DB)
+      existingGallery.forEach((item, idx) => {
+        const wrap = document.createElement("div");
+        wrap.className = "g-thumb";
+        wrap.dataset.publicId = item.publicId || item.public_id || "";
+        if (galleryToDelete.has(wrap.dataset.publicId)) wrap.classList.add("deleting");
+        wrap.innerHTML = `<img src="${item.url}" alt="Galerie ${idx+1}"><div class="g-meta">DB</div>
+          <div class="g-remove" title="Odebrat">✕</div>`;
+        galleryPreview.appendChild(wrap);
+        wrap.querySelector(".g-remove").addEventListener("click", async () => {
+          const pid = wrap.dataset.publicId;
+          if (!pid) return;
+          const confirmNow = confirm("Opravdu chcete tuto fotku smazat natrvalo? (bude odstraněna z Cloudinary)");
+          if (!confirmNow) return;
+          // inside the click handler after successful deleteGallerySigned(pid)
+          try {
+            wrap.classList.add("deleting");
+            await deleteGallerySigned(pid);
+
+            // remove from existingGallery local array
+            existingGallery = existingGallery.filter(it => (it.publicId || it.public_id || "") !== pid);
+            renderGalleryPreview();
+
+            // Persist change to DB: update user's gallery + galleryCount
+            try {
+              const finalGallery = existingGallery.map(it => ({ publicId: it.publicId || it.public_id, url: it.url || it.secure_url }));
+              await update(ref(db, "users/" + auth.currentUser.uid), {
+                gallery: finalGallery.length ? finalGallery : null,
+                galleryCount: finalGallery.length || 0
+              });
+            } catch (dbErr) {
+              console.warn("Failed to persist gallery deletion to DB:", dbErr);
+              // not fatal — UI already updated; optionally show toast
+            }
+
+            toast("Obrázek odstraněn.");
+          } catch (err) {
+            console.error("Destroy failed:", err);
+            wrap.classList.remove("deleting");
+            toast("Nepodařilo se smazat obrázek. Zkuste to později.");
+          }
+        });
+      });
+
+      // newly selected files (previews)
+      galleryFilesSelected.forEach((f) => {
+        const url = URL.createObjectURL(f);
+        const wrap = document.createElement("div");
+        wrap.className = "g-thumb";
+        wrap.innerHTML = `<img src="${url}" alt="Nová"><div class="g-meta">${Math.round(f.size/1024)} kB</div>
+          <div class="g-remove" title="Odebrat">✕</div>`;
+        galleryPreview.appendChild(wrap);
+
+        // remove by reference (safe even after array changes)
+        wrap.querySelector(".g-remove").addEventListener("click", () => {
+          galleryFilesSelected = galleryFilesSelected.filter(x => x !== f);
+          try { URL.revokeObjectURL(url); } catch(e){}
+          renderGalleryPreview();
+        });
+      });
+
+      galleryCountEl.textContent = `${existingGallery.length - galleryToDelete.size + galleryFilesSelected.length} fotek`;
+    }
+
+    // gallery input change — preview and client-side checks (max count/size)
+    const galleryInputEl = document.getElementById("galleryInput");
+    if (galleryInputEl) {
+      galleryInputEl.addEventListener("change", () => {
+        const files = Array.from(galleryInputEl.files || []);
+        // only images + max size
+        const ok = files.filter(f => /^image\//.test(f.type) && f.size <= MAX_INPUT_SIZE);
+        if (ok.length !== files.length) toast("Některé soubory byly přeskočeny (neplatný formát nebo >10MB).");
+        // cap by remaining allowed
+        const allowed = Math.max(0, MAX_GALLERY_FILES - (existingGallery.length - galleryToDelete.size));
+        if (ok.length > allowed) {
+          toast(`Maximálně ${MAX_GALLERY_FILES} fotek v galerii. Přidávám první ${allowed}.`);
+          ok.length = allowed;
+        }
+        galleryFilesSelected = ok;
+        renderGalleryPreview();
+      });
+    }
+
+
     window.applyLoadedLocationWhenMapReady = function () {
       if (window.setTrainerMapFromHidden) {
         window.setTrainerMapFromHidden();
@@ -504,7 +708,7 @@
     // ---------- Load & Submit ----------
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      alert("Nejste přihlášen.");
+      toast("Nejste přihlášen.");
       window.location.href = "login.html";
       return;
     }
@@ -524,15 +728,15 @@
             fillForm(uvSnap.val());
             window.applyLoadedLocationWhenMapReady?.();
           }
-          else alert("Vaše data nebyla nalezena. Přihlaste se znovu, aby se profil aktivoval.");
+          else toast("Vaše data nebyla nalezena. Přihlaste se znovu, aby se profil aktivoval.");
         } catch (err) {
           console.error("[profile] read error (unverified-users):", err);
-          alert("Nedaří se načíst profilová data (oprávnění).");
+          toast("Nedaří se načíst profilová data (oprávnění).");
         }
       })
       .catch((err) => {
         console.error("[profile] read error (/users):", err);
-        alert("Chyba při načítání profilu: " + err.message);
+        toast("Chyba při načítání profilu: " + err.message);
       });
 
     form.addEventListener("submit", async (e) => {
@@ -545,7 +749,7 @@
 
         // 1) quick guard: file must be an image
         if (!raw.type.startsWith("image/")) {
-          alert("Vybraný soubor není obrázek.");
+          toast("Vybraný soubor není obrázek.");
           return;
         }
 
@@ -556,14 +760,14 @@
           // 3) optional cap AFTER downscale
           const MAX_FILE_SIZE = 500 * 1024; // 500 KB
           if (jpg.size > MAX_FILE_SIZE) {
-            alert("Obrázek je příliš velký i po zmenšení (max 500 KB).");
+            toast("Obrázek je příliš velký i po zmenšení (max 500 KB).");
             return;
           }
 
           // 4) NSFW check
           const safe = await isImageSafe(jpg);
           if (!safe) {
-            alert("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
+            toast("Tento obrázek není vhodný pro profil (NSFW). Zvolte prosím jiný.");
             return;
           }
 
@@ -572,7 +776,7 @@
           newUrl = secure_url;
 
         } catch (err) {
-          alert("Nepodařilo se nahrát obrázek: " + err.message);
+          toast("Nepodařilo se nahrát obrázek: " + err.message);
           return;
         }
       }
@@ -611,13 +815,41 @@
       window.syncHiddenFromMarker?.();
       const locationPayload = collectMapLocation();
 
+      // === GALLERY handling (inside submit flow, after authentication/user check) ===
+      const finalGallery = []; // will hold { publicId, url } objects
+
+      // 1) keep existing items that are NOT marked for deletion
+      for (const it of existingGallery) {
+        const pid = it.publicId || it.public_id || "";
+        if (!galleryToDelete.has(pid)) finalGallery.push({ publicId: pid, url: it.url || it.secure_url || "" });
+      }
+
+      // 2) upload newly selected files (compress + nsfw + upload)
+      for (const raw of galleryFilesSelected) {
+        try {
+          const jpg = await compressToTarget(raw, { maxDim: GALLERY_MAX_DIM, target: GALLERY_TARGET_BYTES });
+          // optional quality loop - you already have compressToTarget on register page; you can reuse it
+          // do NSFW check
+          const ok = await isImageSafe(jpg);
+          if (!ok) { console.warn("NSFW rejected a gallery image"); continue; }
+          const up = await uploadGallerySigned({ file: jpg, uid: user.uid });
+          finalGallery.push({ publicId: up.publicId, url: up.url });
+        } catch (err) {
+          console.error("Gallery upload error:", err);
+        }
+      }
+
+      // 3) attach finalGallery to the object you write to DB
+      updated.gallery = finalGallery.length ? finalGallery : null;
+      updated.galleryCount = finalGallery.length || 0;
+
       try {
         await update(ref(db, "users/" + user.uid), {
           ...updated,
           location: locationPayload
         });
 
-        alert("Profil uložen.");
+        toast("Profil uložen.");
         currentUrl = newUrl;
         if (currentUrl) {
           const thumb = currentUrl.includes("/image/upload/")
@@ -628,7 +860,7 @@
         }
         setTimeout(() => (window.location.href = "index.html"), 600);
       } catch (err) {
-        alert("Chyba: " + err.message);
+        toast("Chyba: " + err.message);
       }
     });
   });

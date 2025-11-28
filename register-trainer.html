@@ -335,7 +335,7 @@
     profileImageInput.addEventListener("change", () => {
       const file = profileImageInput.files[0];
       if (file && file.size > MAX_INPUT_SIZE) {
-        alert("Soubor je příliš velký. Maximální velikost je 10 MB.");
+        toast("Soubor je příliš velký. Maximální velikost je 10 MB.");
         profileImageInput.value = "";
       }
     });
@@ -354,13 +354,13 @@
 
       // guard: only images + size limit
       if (!file.type.startsWith("image/")) {
-        alert("Vybraný soubor není obrázek.");
+        toast("Vybraný soubor není obrázek.");
         profileImageInput.value = "";
         preview.style.display = "none";
         return;
       }
       if (file.size > MAX_INPUT_SIZE) {
-        alert("Soubor je příliš velký. Maximální velikost je 10 MB.");
+        toast("Soubor je příliš velký. Maximální velikost je 10 MB.");
         profileImageInput.value = "";
         preview.style.display = "none";
         return;
@@ -379,11 +379,11 @@
       // Filter to images & ≤10MB
       const ok = files.filter(f => /^image\//.test(f.type) && f.size <= MAX_INPUT_SIZE);
       if (ok.length !== files.length) {
-        alert("Některé soubory byly přeskočeny (nejsou obrázek nebo jsou větší než 10 MB).");
+        toast("Některé soubory byly přeskočeny (nejsou obrázek nebo jsou větší než 10 MB).");
       }
       // Cap total count
       if (ok.length > MAX_GALLERY_FILES) {
-        alert(`Maximálně ${MAX_GALLERY_FILES} fotek v galerii najednou.`);
+        toast(`Maximálně ${MAX_GALLERY_FILES} fotek v galerii najednou.`);
         ok.length = MAX_GALLERY_FILES;
       }
       galleryFilesSelected = ok;
@@ -734,8 +734,7 @@
           pricing,
           experience: Number.isFinite(experience) ? experience : 0,
           languages: selectedLanguages.length ? selectedLanguages : null,
-          profilePicture: profilePictureUrl || null,      // matches your desired key
-          profilePictureUrl: profilePictureUrl || null,   // keep both for compatibility
+          profilePicture: profilePictureUrl || null,
           instagram: instagram || "",
           facebook: facebook || "",
           tiktok: tiktok || "",
@@ -779,7 +778,7 @@
         } catch (delErr) {
           console.warn("Rollback (delete user) failed:", delErr);
         }
-        alert(String(err?.message || err));
+        toast(String(err?.message || err));
       } finally {
         submitBtn?.removeAttribute("disabled");
         setLoading(false);
