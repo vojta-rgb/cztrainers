@@ -720,12 +720,12 @@
         };
 
         // DEBUG: log before writing so you can inspect in the console
-        console.debug("[register] writing trainers/%s ->", user.uid, trainerDoc);
+        console.debug("[register] writing users/%s ->", user.uid, trainerDoc);
 
         // Use update() to merge keys without replacing parent node
         try {
-          await update(ref(db, `trainers/${user.uid}`), trainerDoc);
-          console.debug("[register] trainers/%s updated ok", user.uid);
+          await update(ref(db, `users/${user.uid}`), trainerDoc);
+          console.debug("[register] users/%s updated ok", user.uid);
           try {
             await set(ref(db, `debug-writes/${user.uid}`), { ts: Date.now(), ok: true });
             console.debug("[register] debug-writes ok");
@@ -733,7 +733,7 @@
             console.warn("[register] debug-writes failed:", debugErr);
           }
         } catch (dbErr) {
-          console.error("[register] failed writing trainers/%s:", user.uid, dbErr);
+          console.error("[register] failed writing users/%s:", user.uid, dbErr);
           throw dbErr; // let outer catch perform rollback
         }
 
