@@ -3,6 +3,9 @@ import { getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/fire
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+// Debug log
+console.log('[map-module] register-trainer-map.js loaded');
+
 const app  = getApps().length ? getApp() : null;
 const auth = app ? getAuth(app) : null;
 const db   = app ? getDatabase(app) : null;
@@ -317,5 +320,10 @@ if (auth) {
 }
 
 // exported callback for the loader script
-window.initTrainerPickMap = function () { initTrainerMap(); };
-
+// Register the real callback and flush any queued early call
+window.__initTrainerPickMap_real = function () { try { initTrainerMap(); } catch (e) { console.error('[map] initTrainerMap error', e); } };
+// If the stub detected an early call, flush it now
+if (window.__initTrainerPickMap_pending) {
+  try { window.__initTrainerPickMap_real(); window.__initTrainerPickMap_pending = false; }
+  catch (e) { console.error('[map] error flushing pending initTrainerPickMap', e); }
+}

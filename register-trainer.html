@@ -789,6 +789,21 @@
   
   <script type="module" src="auth-navbar.js"></script>
   <script type="module" src="register-trainer-map.js"></script>
+  <!-- Map callback stub: ensures Google won't call undefined function -->
+  <script>
+    if (!window.initTrainerPickMap) {
+      window.__initTrainerPickMap_pending = false;
+      window.__initTrainerPickMap_real = null;
+      window.initTrainerPickMap = function() {
+        if (typeof window.__initTrainerPickMap_real === 'function') {
+          try { window.__initTrainerPickMap_real(); } catch (e) { console.error('[map] initTrainerPickMap real threw', e); }
+        } else {
+          window.__initTrainerPickMap_pending = true;
+          console.warn('[map] initTrainerPickMap called early - queued until module loads');
+        }
+      };
+    }
+  </script>
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=places&language=cs&region=CZ&callback=initTrainerPickMap&loading=async"></script>
 
   <div id="rt-toast" class="rt-toast" role="status" aria-live="polite"></div>
