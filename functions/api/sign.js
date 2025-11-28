@@ -1,131 +1,88 @@
-// /functions/api/sign.js
-export async function onRequestPost({ request, env }) {
-  // Basic CORS
-  const origin = request.headers.get('Origin') || '';
-  const allowOrigin = env.ALLOWED_ORIGIN && origin === env.ALLOWED_ORIGIN ? origin : '*';
-  const cors = {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: cors });
-  }
+// functions/api/sign.js
+// Cloudflare Pages Function: sign Cloudinary upload & destroy requests
+// Required env vars: CLOUDINARY_API_SECRET, CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME
+// Optional env var: ALLOWED_ORIGIN (for strict CORS)
 
-  try {
-    const body = await request.json();
-    const {
-      public_id,
-      timestamp,
-      overwrite = true,
-      invalidate = true,
-      upload_preset, // optional – include only if you actually use a preset
-    } = body || {};
-
-    // --- Safety 1: required fields
-    if (!public_id || !timestamp) {
-      return new Response(JSON.stringify({ error: 'public_id and timestamp are required' }), {
-        status: 400, headers: { 'Content-Type': 'application/json', ...cors }
-      });
-    }
-
-    // --- Safety 2: public_id path enforcement
-    // Allow only: users/<uid>/pfp  OR  users/<uid>/gallery/<token>
-    const pidOk = /^users\/[a-zA-Z0-9_-]{6,}\/(pfp|gallery\/[a-zA-Z0-9_-]{3,})$/.test(public_id);
-    if (!pidOk) {
-      return new Response(JSON.stringify({ error: 'forbidden public_id' }), {
-        status: 403, headers: { 'Content-Type': 'application/json', ...cors }
-      });
-    }
-
-    // --- Safety 3: whitelist the exact params we sign (sorted)
-    const paramsToSign = { public_id, timestamp, overwrite, invalidate };
-    if (upload_preset) paramsToSign.upload_preset = upload_preset;
-
-    const sorted = Object.keys(paramsToSign)
-      .sort()
-      .map((k) => `${k}=${paramsToSign[k]}`)
-      .join('&');
-
-    // Cloudinary signature = sha1( querystring + api_secret )
-    const toSign = `${sorted}${env.CLOUDINARY_API_SECRET}`;
-    const signatureBuf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(toSign));
-    const signature = [...new Uint8Array(signatureBuf)].map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return new Response(JSON.stringify({
-      signature,
-      apiKey: env.CLOUDINARY_API_KEY,
-      cloudName: env.CLOUDINARY_CLOUD_NAME, // your cloud name
-      timestamp,                             // echo back if useful
-    }), { headers: { 'Content-Type': 'application/json', ...cors }});
-
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e?.message || e) }), {
-      status: 400, headers: { 'Content-Type': 'application/json', ...cors }
-    });
-  }
+export async function onRequestOptions({ request, env }) {
+  const origin = request.headers.get("Origin") || "";
+  const allowOrigin = env.ALLOWED_ORIGIN && origin === env.ALLOWED_ORIGIN ? origin : "*";
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": allowOrigin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
 
-// /functions/api/sign.js  (replace existing onRequestPost)
 export async function onRequestPost({ request, env }) {
-  const origin = request.headers.get('Origin') || '';
-  const allowOrigin = env.ALLOWED_ORIGIN && origin === env.ALLOWED_ORIGIN ? origin : '*';
-  const cors = {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+  const origin = request.headers.get("Origin") || "";
+  const allowOrigin = env.ALLOWED_ORIGIN && origin === env.ALLOWED_ORIGIN ? origin : "*";
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
   };
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: cors });
-  }
 
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { public_id, timestamp, overwrite = true, invalidate = true, upload_preset, op } = body || {};
 
+    // Basic required fields
     if (!public_id || !timestamp) {
-      return new Response(JSON.stringify({ error: 'public_id and timestamp are required' }), {
-        status: 400, headers: { 'Content-Type': 'application/json', ...cors }
+      return new Response(JSON.stringify({ error: "public_id and timestamp are required" }), {
+        status: 400,
+        headers: corsHeaders,
       });
     }
 
-    // allow only safe public_id patterns
+    // Safety: allow only your intended public_id patterns
+    // Adjust this regex if your public_id structure changes.
     const pidOk = /^users\/[a-zA-Z0-9_-]{6,}\/(pfp|gallery\/[a-zA-Z0-9_-]{3,})$/.test(public_id);
     if (!pidOk) {
-      return new Response(JSON.stringify({ error: 'forbidden public_id' }), {
-        status: 403, headers: { 'Content-Type': 'application/json', ...cors }
+      return new Response(JSON.stringify({ error: "forbidden public_id" }), {
+        status: 403,
+        headers: corsHeaders,
       });
     }
 
-    // Build params to sign depending on operation
+    // Build the params object to sign depending on operation
     let paramsToSign = {};
-    if (op === 'destroy') {
-      // Cloudinary destroy signature: sign string "public_id=...&timestamp=..."
+    if (op === "destroy") {
+      // destroy signature uses only public_id and timestamp
       paramsToSign = { public_id, timestamp };
     } else {
-      // default: upload signature (same as before)
+      // upload signature: include overwrite/invalidate and optional upload_preset
       paramsToSign = { public_id, timestamp, overwrite, invalidate };
       if (upload_preset) paramsToSign.upload_preset = upload_preset;
     }
 
+    // Create sorted querystring "key=value&key2=value2"
     const sorted = Object.keys(paramsToSign)
       .sort()
       .map((k) => `${k}=${paramsToSign[k]}`)
-      .join('&');
+      .join("&");
 
+    // Compute SHA-1(signatureString + API_SECRET)
     const toSign = `${sorted}${env.CLOUDINARY_API_SECRET}`;
-    const signatureBuf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(toSign));
-    const signature = [...new Uint8Array(signatureBuf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    const buf = new TextEncoder().encode(toSign);
+    const hashBuffer = await crypto.subtle.digest("SHA-1", buf);
+    const signature = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
+    // Return signer response
     return new Response(JSON.stringify({
       signature,
       apiKey: env.CLOUDINARY_API_KEY,
       cloudName: env.CLOUDINARY_CLOUD_NAME,
       timestamp,
-    }), { headers: { 'Content-Type': 'application/json', ...cors }});
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e?.message || e) }), {
-      status: 400, headers: { 'Content-Type': 'application/json', ...cors }
+    }), { status: 200, headers: corsHeaders });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err?.message || err) }), {
+      status: 500,
+      headers: corsHeaders,
     });
   }
 }
