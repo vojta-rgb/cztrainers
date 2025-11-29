@@ -346,6 +346,8 @@ body.dark .cz-hero__title{color:#fff;}
 .pg-lb-prev{left:8px} .pg-lb-next{right:8px}
 .pg-lb-close{position:absolute;right:8px;top:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 8px;border-radius:8px}
 /*buttonfixes*/
+@media(max-width:640px){
 .cz-hero__ctas {justify-content: center;text-align: center;width: 100%;}
 #cz-hero-map-btn {max-width: 330px;width: 100%;margin: 0 auto;display: flex;justify-content: center;align-items: center;}
 #cz-hero-map-btn .cz-btn__icon svg {width: 22px;height: 22px;}
+}
