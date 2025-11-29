@@ -239,6 +239,7 @@
                     tiktok: user.tiktok
                   })}
                 </div>
+                <div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
               </div>
               <div class="profile-right">
                 <p class="bio-text"><strong>🧍‍♂️ O mně:</strong><br> ${user.bio || "-"}</p>
@@ -257,8 +258,7 @@
                 <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
                 <p class="pricing-text"><strong>💰 Cenník:</strong><br> ${user.pricing || "-"}</p>
               </div>
-              <div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
-
+              //<div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
             </div>
           `;
           // use whichever key holds gallery in your DB (I saw `gallery` in your DB screenshot)
