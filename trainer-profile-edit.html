@@ -279,6 +279,24 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getDatabase(app);
+    const toastEl = document.getElementById('toast') || document.getElementById('rt-toast');
+    function toast(msg){
+      // fallback to native alert if no toast element present
+      if(!toastEl){
+        try{ window.alert(String(msg || "")); } catch(e){ console.log(String(msg || "")); }
+        return;
+      }
+      // show text and ensure previous timer cleared
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      if (toastEl._hideTimer) clearTimeout(toastEl._hideTimer);
+      toastEl._hideTimer = setTimeout(()=> {
+        toastEl.classList.remove("show");
+        toastEl._hideTimer = null;
+      }, 2600);
+    }
+
+    //window.alert = (m) => toast(m);
 
     // ---------- Cloudinary / Worker ----------
     const CLOUD_NAME = "dkt3pdcbe";
