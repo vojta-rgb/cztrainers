@@ -76,23 +76,3 @@ body.dark .btn-cta{ background:#2a2a2a; }
   }
   .me-actions{ grid-template-columns: 1fr; width: 100%; }
 }
-
-/* ----- profile gallery (inline thumbnails + lightbox) ----- */
-.profile-gallery{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 8px;align-items:center}
-.profile-gallery .thumb{position:relative;flex:0 0 120px;height:88px;border-radius:10px;overflow:hidden;background:#f7f9fb;box-shadow:0 6px 18px rgba(2,6,23,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center}
-@media(max-width:720px){ .profile-gallery .thumb{flex:0 0 calc(50% - 8px);height:140px} }
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb.more{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.36);color:#fff;font-weight:700;font-size:20px}
-.thumb .count-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.36);color:#fff;font-size:20px}
-
-/* placeholder when no images */
-.profile-gallery .placeholder{padding:12px;border-radius:10px;color:#6b7280;background:#fafafa;}
-
-/* lightbox */
-#pg-lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);z-index:12000}
-#pg-lightbox.show{display:flex}
-#pg-lightbox .lb-inner{position:relative;max-width:1200px;width:94%;max-height:92%;display:flex;align-items:center;justify-content:center}
-#pg-lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
-.pg-lb-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#fff;border:none;cursor:pointer}
-.pg-lb-prev{left:8px} .pg-lb-next{right:8px}
-.pg-lb-close{position:absolute;right:8px;top:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 8px;border-radius:8px}
