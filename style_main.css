@@ -317,3 +317,11 @@ body.dark .cz-feature{background:rgba(255,255,255,0.03);box-shadow:0 8px 22px rg
 body.dark .cz-feature__text,body.dark .cz-hero__subtitle,body.dark .cz-hero__note{color:#dbeeff;}
 body.dark .cz-btn--outline{border-color:rgba(255,255,255,0.12);color:#eaf4ff;}
 body.dark .cz-hero__title{color:#fff;}
+
+.fade-between {
+  height: 50px;
+  background: linear-gradient(
+    rgba(0,0,0,0.45),   /* top fully dark */
+    rgba(0,0,0,0.0)    /* fade to transparent */
+  );
+}
