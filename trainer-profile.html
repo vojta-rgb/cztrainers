@@ -172,6 +172,7 @@
           <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
           <p class="pricing-text"><strong>💰 Cenník:</strong><br> ${user.pricing || "-"}</p>
         </div>
+        <div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
       </div>
     `;
   }
@@ -233,6 +234,145 @@
   }
   // ----------------------------------------------------------------------
 
+  (function(){
+    const CLOUD = window.CLOUDINARY_CLOUD || "dkt3pdcbe"; // <-- set your cloud name or set window.CLOUDINARY_CLOUD earlier
+
+    function thumbUrl(pid){ return `https://res.cloudinary.com/${CLOUD}/image/upload/c_fill,w_640,h_480,f_auto,q_auto/${encodeURIComponent(pid)}.jpg`; }
+    function fullUrl(pid){ return `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto/${encodeURIComponent(pid)}.jpg`; }
+
+    // IntersectionObserver for lazy-loading images (thumbnails)
+    const observer = 'IntersectionObserver' in window ? new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const img = e.target;
+          const src = img.datasetSrc || img.dataset.src;
+          if (src) { img.src = src; img.removeAttribute('data-src'); img.removeAttribute('data-srcset'); }
+          obs.unobserve(img);
+        }
+      });
+    }, { rootMargin: "200px 0px 200px 0px", threshold: 0.01 }) : null;
+
+    // render gallery into container; gallery param normalized
+    window.initProfileGallery = function(gallery = [], ownerUid = "") {
+      const container = document.getElementById('profileGallery');
+      if (!container) return;
+      // normalize items to { publicId, url }
+      const items = (gallery || []).map(it => {
+        if (!it) return null;
+        if (typeof it === 'string') return { publicId: it, url: null };
+        return { publicId: it.publicId || it.public_id || null, url: it.url || it.secure_url || null };
+      }).filter(Boolean);
+
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        // placeholder. if owner, show upload CTA (optional)
+        const ph = document.createElement('div');
+        ph.className = 'thumb placeholder';
+        ph.innerHTML = ownerUid && auth && auth.currentUser && auth.currentUser.uid === ownerUid
+          ? '<div>No photos yet — <a href="trainer-profile-edit.html">Add gallery</a></div>'
+          : '<div>No photos</div>';
+        container.appendChild(ph);
+        return;
+      }
+
+      // show first 4 slots (3 thumbs + last maybe +N overlay)
+      const visible = Math.min(4, items.length);
+      for (let i=0;i<visible;i++){
+        const it = items[i];
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.tabIndex = 0;
+        div.dataset.index = i;
+
+        const img = document.createElement('img');
+        img.alt = `Foto ${i+1}`;
+        img.loading = 'lazy';
+        // set data-src for lazy load via observer
+        const src = it.publicId ? thumbUrl(it.publicId) : (it.url || '');
+        img.dataset.src = src;
+        if (observer) observer.observe(img);
+        else img.src = src;
+
+        div.appendChild(img);
+        container.appendChild(div);
+
+        div.addEventListener('click', ()=>openLightbox(i, items));
+        div.addEventListener('keydown', e => { if (e.key === 'Enter') openLightbox(i, items); });
+      }
+
+      if (items.length > 4) {
+        // show +N overlay on last thumb (we attach to last thumbnail spot)
+        // replace last thumb with a mixed overlay showing +N but still load thumbnail behind it
+        const index = 3;
+        const last = container.children[index];
+        last.classList.add('more');
+        const overlay = document.createElement('div');
+        overlay.className = 'count-overlay';
+        overlay.textContent = `+${items.length - 3}`;
+        last.appendChild(overlay);
+        last.addEventListener('click', ()=>openLightbox(index, items));
+      }
+    };
+
+    // LIGHTBOX implementation
+    const lb = document.createElement('div');
+    lb.id = 'pg-lightbox';
+    lb.innerHTML = `
+      <div class="lb-inner" role="dialog" aria-modal="true" aria-label="Galerie">
+        <button class="pg-lb-close" aria-label="Zavřít">✕</button>
+        <button class="pg-lb-btn pg-lb-prev" aria-label="Předchozí">◀</button>
+        <img id="pg-lb-img" src="" alt="Galerie obrázek" />
+        <button class="pg-lb-btn pg-lb-next" aria-label="Další">▶</button>
+      </div>
+    `;
+    document.body.appendChild(lb);
+    const lbImg = lb.querySelector('#pg-lb-img');
+    const closeBtn = lb.querySelector('.pg-lb-close');
+    const prevBtn = lb.querySelector('.pg-lb-prev');
+    const nextBtn = lb.querySelector('.pg-lb-next');
+    let lbItems = [];
+    let lbIndex = 0;
+
+    function openLightbox(startIndex, items){
+      lbItems = items || lbItems;
+      lbIndex = Math.max(0, Math.min(startIndex, lbItems.length - 1));
+      const cur = lbItems[lbIndex];
+      lbImg.src = cur.publicId ? fullUrl(cur.publicId) : (cur.url || '');
+      lb.classList.add('show');
+      // lock scroll
+      document.documentElement.style.overflow = 'hidden';
+      // focus close button for accessibility
+      closeBtn.focus();
+    }
+    function closeLightbox(){ lb.classList.remove('show'); lbImg.src = ''; document.documentElement.style.overflow = ''; }
+    function showNext(){ lbIndex = (lbIndex + 1) % lbItems.length; openLightbox(lbIndex); }
+    function showPrev(){ lbIndex = (lbIndex - 1 + lbItems.length) % lbItems.length; openLightbox(lbIndex); }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    nextBtn.addEventListener('click', showNext);
+    prevBtn.addEventListener('click', showPrev);
+    document.addEventListener('keydown', (e)=>{
+      if (!lb.classList.contains('show')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') showNext();
+      if (e.key === 'ArrowLeft') showPrev();
+    });
+
+    // basic touch swipe for lightbox image
+    let startX = 0;
+    lbImg.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+    lbImg.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if (dx > 40) showPrev();
+      if (dx < -40) showNext();
+      startX = 0;
+    });
+
+    // expose helper globally
+    window.__initProfileGallery = window.initProfileGallery;
+  })();
+
   onAuthStateChanged(auth, async (u)=>{
     // default header/pill
     pillText.textContent = u?.emailVerified ? (u.displayName || "Profil") : "Login";
@@ -258,6 +398,8 @@
 
     // preview card
     renderPreview({ ...data, email: data.email || u.email });
+    initProfileGallery(data.gallery || data._gallery || [], u.uid);
+
 
     // load my reviews + enable verify toggle
     renderTrainerReviews(u.uid);
