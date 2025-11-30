@@ -154,6 +154,8 @@
           <div class="socials-container">
             ${renderSocialLinks(socials)}
           </div>
+          <p><strong>Galerie 📸</strong></p>
+          <div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
         </div>
 
         <div class="profile-right">
@@ -172,7 +174,6 @@
           <p><strong>🧠 Zkušenosti:</strong> ${user.experience || "-"} let</p>
           <p class="pricing-text"><strong>💰 Cenník:</strong><br> ${user.pricing || "-"}</p>
         </div>
-        <div id="profileGallery" class="profile-gallery" aria-label="Galerie trenéra" data-owner-id="${user.uid || ''}"></div>
       </div>
     `;
   }

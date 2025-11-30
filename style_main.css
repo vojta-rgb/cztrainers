@@ -50,8 +50,8 @@ body.dark #search::placeholder{color:#a1a1aa;}
 body.dark #search:focus{outline:none;box-shadow:0 0 0 3px rgba(43,125,233,.22);}
 body.dark #search:-webkit-autofill{-webkit-text-fill-color:#eaeaea;-webkit-box-shadow:0 0 0px 1000px #1e1e1e inset;box-shadow:0 0 0px 1000px #1e1e1e inset;}
 /* sum button inside filters tweaks */
-.btn:hover{transform:translateY(-50%) scale(1.03);}
-.btn:active{transform:translateY(-50%) scale(.98);}
+.btn:hover{transform:scale(1.03);}
+.btn:active{transform:scale(.98);}
 
 /* =============== Legacy simple cards (back-compat) =============== */
 .cards{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));}
@@ -330,7 +330,7 @@ body.dark .cz-hero__title{color:#fff;}
 
 /* ----- profile gallery (inline thumbnails + lightbox) ----- */
 .profile-gallery{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 8px;align-items:center}
-.profile-gallery .thumb{position:relative;flex:0 0 120px;height:88px;border-radius:10px;overflow:hidden;background:#f7f9fb;box-shadow:0 6px 18px rgba(2,6,23,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.profile-gallery .thumb{position:relative;flex:0 0 145px;height:88px;border-radius:10px;overflow:hidden;background:#f7f9fb;box-shadow:0 6px 18px rgba(2,6,23,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center}
 @media(max-width:720px){ .profile-gallery .thumb{flex:0 0 calc(50% - 8px);height:140px} }
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .thumb.more{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.36);color:#fff;font-weight:700;font-size:20px}
@@ -347,9 +347,12 @@ body.dark .cz-hero__title{color:#fff;}
 .pg-lb-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#fff;border:none;cursor:pointer}
 .pg-lb-prev{left:8px} .pg-lb-next{right:8px}
 .pg-lb-close{position:absolute;right:8px;top:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 8px;border-radius:8px}
-/*buttonfixes*/
-@media(max-width:640px){
-.cz-hero__ctas {justify-content: center;text-align: center;width: 100%;}
-#cz-hero-map-btn {max-width: 330px;width: 100%;margin: 0 auto;display: flex;justify-content: center;align-items: center;}
-#cz-hero-map-btn .cz-btn__icon svg {width: 22px;height: 22px;}
+/* ---------- HERO CTA mobile fix (minified per-block) ---------- */
+@media (max-width:720px){
+.cz-hero__ctas{flex-direction:column!important;align-items:center!important;justify-content:center!important;width:100%!important;gap:12px!important;padding:0 10px;box-sizing:border-box;}
+#cz-hero-map-btn,.cz-hero__ctas .cz-btn--primary{width:100%!important;max-width:360px!important;margin:0 auto!important;box-sizing:border-box!important;padding-left:14px!important;padding-right:14px!important;display:inline-flex!important;justify-content:center!important;align-items:center!important;min-height:48px!important;}
+#cz-hero-map-btn .cz-btn__icon svg,.cz-hero__ctas .cz-btn--primary .cz-btn__icon svg{width:20px!important;height:20px!important;}
+}
+@media (max-width:420px){
+#cz-hero-map-btn,.cz-hero__ctas .cz-btn--primary{max-width:320px!important;font-size:15px!important;height:48px!important;padding-left:12px!important;padding-right:12px!important;}
 }
