@@ -61,13 +61,13 @@
           <label for="profileImage">Profilový obrázek</label>
           <img id="profilePreview" src="" alt="Profilový obrázek" style="display:none" />
           <input type="file" id="profileImage" accept="image/*" />
-          <p class="hint">Max 500&nbsp;KB · Nevhodné obrázky se zamítnou.</p>
+          <p class="hint">Max 10&nbsp;MB · Nevhodné obrázky se zamítnou.</p>
         </div>
 
         <!-- === Gallery (edit) — paste after profile image field === -->
         <fieldset class="field-group" id="editGalleryField">
           <legend>Galerie (upravit)</legend>
-          <p class="hint">Přidejte nebo odeberte fotky. Max 10 fotek, každá ≤ 10MB. Obrázky se zmenší a nahrají na Cloudinary.</p>
+          <p class="hint">Přidejte nebo odeberte fotky. Max 10 fotek, každá ≤ 10MB.</p>
           <input id="galleryInput" type="file" accept="image/*" multiple />
           <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
           <p class="hint" id="galleryCount">0 fotek</p>
@@ -642,7 +642,7 @@
         wrap.querySelector(".g-remove").addEventListener("click", async () => {
           const pid = wrap.dataset.publicId;
           if (!pid) return;
-          const confirmNow = confirm("Opravdu chcete tuto fotku smazat natrvalo? (bude odstraněna z Cloudinary)");
+          const confirmNow = confirm("Opravdu chcete tuto fotku smazat natrvalo? (bude odstraněna z Databáze");
           if (!confirmNow) return;
           // inside the click handler after successful deleteGallerySigned(pid)
           try {
