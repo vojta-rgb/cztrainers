@@ -238,3 +238,25 @@ a:hover{ text-decoration:underline; }
 .gallery-preview .g-thumb .g-meta{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,0.56);color:#fff;padding:2px 6px;border-radius:6px;font-size:11px}
 .gallery-preview .g-thumb .g-remove{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
 .gallery-preview .g-thumb.deleting{opacity:.45;filter:grayscale(0.3);box-shadow:inset 0 0 0 2px rgba(255,0,0,0.08)}
+
+.btn.primary.loading {
+  position: relative;
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+.btn.primary.loading::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+} 

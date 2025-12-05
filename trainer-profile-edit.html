@@ -760,6 +760,11 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const saveBtn = form.querySelector("button[type='submit']");
+      saveBtn.disabled = true;
+      saveBtn.classList.add("loading");
+      saveBtn.textContent = "Ukládám…";
+
       let newUrl = currentUrl;
 
       if (imageInput.files.length > 0) {
@@ -868,6 +873,7 @@
         });
 
         toast("Profil uložen.");
+        
         currentUrl = newUrl;
         if (currentUrl) {
           const thumb = currentUrl.includes("/image/upload/")
@@ -879,6 +885,12 @@
         setTimeout(() => (window.location.href = "index.html"), 600);
       } catch (err) {
         toast("Chyba: " + err.message);
+      }
+      finally {
+        const saveBtn = form.querySelector("button[type='submit']");
+        saveBtn.disabled = false;
+        saveBtn.classList.remove("loading");
+        saveBtn.textContent = "Uložit změny";
       }
     });
   });
