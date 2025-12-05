@@ -249,12 +249,8 @@
     const langs = getTextList(t.languages);
     const exp   = (t.experience != null && t.experience !== "") ? `${t.experience} let praxe` : "";
     // set blurred background image for sheet (use profilePicture or fallback)
-    const bg = (t.profilePicture && t.profilePicture.length)
-      ? t.profilePicture
-      : "assets/gymilustration.jpg";  // fallback image
-    cardEl.style.setProperty('--ts-bg-img', `url("${bg}")`);
+    cardEl.style.setProperty('--ts-bg-img', 'url("assets/gymilustration.jpg")');
     cardEl.classList.add("has-bg");
-
 
     avatarEl.src = t.profilePicture || "assets/placeholder.jpg";
     avatarEl.alt = name;
