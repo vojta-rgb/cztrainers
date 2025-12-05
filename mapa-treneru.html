@@ -248,6 +248,13 @@
     const specs = getTextList(t.specializations);
     const langs = getTextList(t.languages);
     const exp   = (t.experience != null && t.experience !== "") ? `${t.experience} let praxe` : "";
+    // set blurred background image for sheet (use profilePicture or fallback)
+    const bg = (t.profilePicture && t.profilePicture.length)
+      ? t.profilePicture
+      : "assets/gymilustration.jpg";  // fallback image
+    cardEl.style.setProperty('--ts-bg-img', `url("${bg}")`);
+    cardEl.classList.add("has-bg");
+
 
     avatarEl.src = t.profilePicture || "assets/placeholder.jpg";
     avatarEl.alt = name;
@@ -320,6 +327,9 @@
         sheetEl.setAttribute("aria-hidden", "true");
         scrimEl.setAttribute("aria-hidden", "true");
         cardEl.classList.remove("animate__fadeOutDown");
+        // remove bg after animation to free memory
+        cardEl.style.removeProperty('--ts-bg-img');
+        cardEl.classList.remove('has-bg');
         // URL clean-up
         const url = new URL(location.href);
         url.searchParams.delete("u");

@@ -557,3 +557,64 @@ body.dark .range:disabled::-moz-range-thumb{ border-color:#3a4658; }
 
 /* Dim the radius label when controls disabled */
 .map-near--disabled #nearRadiusValue{ opacity:.6; }
+/* Trainer sheet: blurred background image + overlay for readable text */
+.ts-card{ position:relative; overflow:hidden; background:var(--ts-bg); }
+
+/* background image layer (behind content) */
+.ts-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  background-image: var(--ts-bg-img, url("assets/gymilustration.jpg"));
+  background-size:cover;
+  background-position:center;
+  filter:blur(8px) saturate(0.95);
+  opacity:0.95;
+  transform:scale(1.06);
+}
+
+/* dim / contrast overlay so text is readable in both modes */
+.ts-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:linear-gradient(rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+  mix-blend-mode:overlay;
+  pointer-events:none;
+  transition:background .18s ease, opacity .18s ease;
+}
+
+/* ensure card content sits above layers */
+.ts-card > *{ position:relative; z-index:2; }
+
+/* Dark-mode overlay tweak */
+body.dark .ts-card::after{
+  background:linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.24));
+}
+
+/* reduce blur on small screens for performance and legibility */
+@media (max-width:720px){
+  .ts-card::before{ filter:blur(6px) saturate(0.95); transform:scale(1.03); }
+  .ts-card::after{ background:linear-gradient(rgba(0,0,0,0.44), rgba(0,0,0,0.28)); }
+}
+
+/* very small phones: lighter blur + slightly stronger overlay */
+@media (max-width:420px){
+  .ts-card::before{ filter:blur(4.5px) saturate(0.95); transform:scale(1.02); }
+  .ts-card::after{ background:linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.34)); }
+}
+
+/* If you want a subtler look (optional "frosted" variant) */
+.ts-card.frosted::before{ filter:blur(6px) saturate(0.85) contrast(.95); opacity:.9; }
+.ts-card.frosted::after{ background:linear-gradient(rgba(255,255,255,0.12), rgba(255,255,255,0.06)); }
+
+/* ensure avatars and buttons still have clear contrast */
+.ts-avatar{ border:2px solid rgba(255,255,255,.9); box-shadow:0 6px 18px rgba(0,0,0,.18); }
+body.dark .ts-avatar{ border:2px solid rgba(0,0,0,.6); box-shadow:0 6px 18px rgba(0,0,0,.5); }
+
+/* accessibility - reduced motion: disable transitions */
+@media (prefers-reduced-motion: reduce){
+  .ts-card::before,.ts-card::after{ transition:none; }
+}
