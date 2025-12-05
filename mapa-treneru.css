@@ -235,7 +235,7 @@ body.dark .trainer-pin{ box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 0 2px #1f1f1f;
 /* ===== Bottom Sheet (two-state) ===== */
 :root{
   --ts-bg:#fff;
-  --ts-text:#111;
+  --ts-text:#f4f4f4;
   --ts-muted:#6b7280;
   --ts-border:rgba(17,17,17,.08);
   --ts-accent:#0072CE;
