@@ -108,7 +108,7 @@ body.dark .trainer-card .fav-btn[aria-pressed="true"] .heart{color:#ff8cab;}
 /* =============== Profile page blocks =============== */
 .profile-container{display:flex;flex-wrap:wrap;gap:2rem;padding:2rem;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-top:2rem;}
 body.dark .profile-container{background:#1e1e1e;color:#fff;}
-.profile-left{flex:1 1 250px;max-width:300px;text-align:center;}
+.profile-left{flex:1 1 250px;max-width:300px;text-align:left;}
 .profile-right{flex:2 1 400px;display:flex;flex-direction:column;gap:1rem;}
 .profile-avatar{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--radius);margin-bottom:1rem;}
 @media(max-width:768px){.profile-container{flex-direction:column;align-items:center;}.profile-left,.profile-right{max-width:100%;}}

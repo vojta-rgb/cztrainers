@@ -580,7 +580,8 @@ body.dark .range:disabled::-moz-range-thumb{ border-color:#3a4658; }
   position:absolute;
   inset:0;
   z-index:1;
-  background:linear-gradient(rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+  /*background:linear-gradient(rgba(255,255,255,0.22), rgba(255,255,255,0.12));*/
+  background:linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.24));
   mix-blend-mode:overlay;
   pointer-events:none;
   transition:background .18s ease, opacity .18s ease;
