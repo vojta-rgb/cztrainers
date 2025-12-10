@@ -412,3 +412,73 @@ body.dark .pac-container{background:#0b1220;border:1px solid #334155;color:#e5e7
 body.dark .pac-item{color:#e5e7eb}
 body.dark .pac-item:hover{background:#1f2937}
 body.dark .pac-matched{color:#93c5fd}
+
+/* ===========================
+   Make the background behind map search text gray (dark-mode)
+   Paste at the *end* of register-trainer.css
+   =========================== */
+
+/* 1) input field background (typed text sits on this) */
+body.dark #mapSearch,
+body.theme-dark #mapSearch,
+body.dark-mode #mapSearch,
+body[data-theme="dark"] #mapSearch,
+body.dark .pac-target-input,
+body.theme-dark .pac-target-input,
+body.dark-mode .pac-target-input,
+body[data-theme="dark"] .pac-target-input {
+  background: #ffffff !important;        /* neutral dark-gray behind text */
+  color: #e6e9ee !important;             /* ensure text is light */
+  -webkit-text-fill-color: #000000 !important;
+  caret-color: #e6e9ee !important;
+  border-color: #ffffff !important;
+  mix-blend-mode: normal !important;
+}
+
+/* 2) dropdown container background and border */
+body.dark .pac-container,
+body.theme-dark .pac-container,
+body.dark-mode .pac-container,
+body[data-theme="dark"] .pac-container {
+  background: #ffffff !important;        /* same neutral gray for dropdown */
+  color: #e6e9ee !important;
+  border: 1px solid #394249 !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.45) !important;
+  z-index: 10000 !important;
+}
+
+/* 3) each suggestion line and hover */
+body.dark .pac-item,
+body.theme-dark .pac-item,
+body.dark-mode .pac-item,
+body[data-theme="dark"] .pac-item {
+  background: transparent !important;    /* container supplies the grey; keep items transparent */
+  color: #e6e9ee !important;
+}
+body.dark .pac-item:hover,
+body.theme-dark .pac-item:hover,
+body.dark-mode .pac-item:hover,
+body[data-theme="dark"] .pac-item:hover {
+  background: rgba(255,255,255,0.03) !important; /* subtle hover */
+}
+
+/* 4) matched text highlight (word you typed) — keep it readable, not black */
+body.dark .pac-matched,
+body.theme-dark .pac-matched,
+body.dark-mode .pac-matched,
+body[data-theme="dark"] .pac-matched {
+  background: rgba(255,255,255,0.04) !important; /* faint highlight behind matched text */
+  color: #93c5fd !important;                      /* blue-ish match color remains readable */
+  font-weight:700;
+}
+
+/* 5) placeholder (so placeholder doesn't look weird) */
+body.dark #mapSearch::placeholder,
+body.theme-dark #mapSearch::placeholder,
+body.dark-mode #mapSearch::placeholder,
+body[data-theme="dark"] #mapSearch::placeholder,
+body.dark .pac-target-input::placeholder {
+  color: #000000 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
