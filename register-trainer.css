@@ -26,7 +26,7 @@ body{
 body::before{
   content:"";
   position:fixed; inset:0;
-  background-image:url("assets/dumbell-art.png");
+  background-image:url("assets/BetterDumbell.jpg");
   background-size:180px; background-repeat:repeat;
   opacity:.05; pointer-events:none; z-index:-1;
 }
