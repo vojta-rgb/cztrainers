@@ -231,6 +231,11 @@
 
     let lastAnchor = null; // to restore focus when closing
 
+    function isPublicTrainer(t) {
+      if (!t || !t.status) return false;
+      return t.status === "active" || t.status === "suspended";
+    }
+
     function getTextList(v){
     if (!v) return "";
     if (Array.isArray(v)) return v.filter(Boolean).join(", ");
@@ -570,6 +575,7 @@
 
       const markers = [];
       Object.entries(trainersData).forEach(([uid, t]) => {
+        if (!isPublicTrainer(t)) return;
         const loc = t?.location;
         if (!loc) return;
         if (loc.visibleOnMap === false) return;
@@ -603,16 +609,24 @@
     }
 
     async function fetchTrainers() {
-        const rootRef = ref(db);
-        let pubSnap = null, userSnap = null;
-        try { pubSnap  = await get(child(rootRef, "public-trainers")); } catch (_) {}
-        try { userSnap = await get(child(rootRef, "users")); } catch (_) {}
+      const rootRef = ref(db);
+      let pubSnap = null, userSnap = null;
 
-        const pub   = (pubSnap  && pubSnap.exists())  ? pubSnap.val()  : {};
-        const users = (userSnap && userSnap.exists()) ? userSnap.val() : {};
+      try { pubSnap  = await get(child(rootRef, "public-trainers")); } catch (_) {}
+      try { userSnap = await get(child(rootRef, "users")); } catch (_) {}
 
-        // Merge, prefer live users data when both exist
-        trainersData = { ...(pub || {}), ...(users || {}) };
+      const pub   = (pubSnap  && pubSnap.exists())  ? pubSnap.val()  : {};
+      const users = (userSnap && userSnap.exists()) ? userSnap.val() : {};
+
+      const merged = { ...(pub || {}), ...(users || {}) };
+      const filtered = {};
+
+      Object.entries(merged).forEach(([uid, t]) => {
+        if (!isPublicTrainer(t)) return;          // ✅ STATUS FILTER
+        filtered[uid] = t;
+      });
+
+      trainersData = filtered;
     }
 
     function closePanelIfMobile() {
@@ -759,7 +773,12 @@
         // deep-link: ?u=<uid>
 
         const uidParam = new URL(location.href).searchParams.get("u");
-        if (uidParam && trainersData[uidParam] && trainersData[uidParam].location) {
+        if (
+          uidParam &&
+          trainersData[uidParam] &&
+          isPublicTrainer(trainersData[uidParam]) &&
+          trainersData[uidParam].location
+        ) {
         const t   = trainersData[uidParam];
         const loc = t.location || {};
         if (isFinite(loc.lat) && isFinite(loc.lng) && loc.visibleOnMap !== false) {

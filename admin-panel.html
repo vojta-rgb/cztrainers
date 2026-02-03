@@ -85,6 +85,7 @@
       <div class="tabs">
         <button class="primary" data-tab="t-trainers" aria-selected="true">Trenéři & odznaky</button>
         <button data-tab="t-reports">Nahlášené recenze</button>
+        <button data-tab="t-trainer-reports">Nahlášení trenéři</button>
       </div>
 
       <!-- Trainers tools -->
@@ -111,6 +112,13 @@
         <p class="muted tiny">Zde moderuješ nahlášené recenze. Můžeš skrýt recenzi nebo jen vyčistit hlášení.</p>
         <div id="reportsList" class="list"></div>
       </div>
+
+      <div id="t-trainer-reports" class="section">
+        <p class="muted tiny">
+          Zde vidíš nahlášené trenéry.
+        </p>
+        <div id="trainerReportsList" class="list"></div>
+      </div>
     </aside>
 
     <!-- RIGHT: Detail -->
@@ -122,15 +130,12 @@
 
   <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase, ref, get, set, update, remove, onValue
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    /* ================= FIREBASE INIT ================= */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import { update, set, push } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
 
-    // --- Your project (same as on your site) ---
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
       authDomain: "cztrainers-dat1.firebaseapp.com",
@@ -142,306 +147,484 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
     const auth = getAuth(app);
-    const db   = getDatabase(app);
 
-    // --- UI refs ---
-    const tabsBtns = document.querySelectorAll(".tabs button");
-    const sections = document.querySelectorAll(".section");
-    const who = document.getElementById("who");
-    const btnLogout = document.getElementById("btnLogout");
+    /* ================= STATE ================= */
+    let allReports = [];
+    let reviewReports = [];
+    let trainerReports = [];
+    let selectedReportId = null;
 
-    const q = document.getElementById("q");
-    const trainersList = document.getElementById("trainersList");
-    const presetBadge = document.getElementById("presetBadge");
-    const customBadge = document.getElementById("customBadge");
+    /* ================= ADMIN ACCESS ================= */
+    let currentUser = null;
+    let isAdmin = false;
 
-    const reportsList = document.getElementById("reportsList");
-    const detailTitle = document.getElementById("detailTitle");
-    const detailBody  = document.getElementById("detailBody");
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        location.href = '/login.html';
+        return;
+      }
 
-    // Tabs
-    tabsBtns.forEach(b=>{
-      b.addEventListener("click", ()=>{
-        tabsBtns.forEach(x=>x.setAttribute("aria-selected","false"));
-        sections.forEach(s=>s.classList.remove("active"));
-        b.setAttribute("aria-selected","true");
-        document.getElementById(b.dataset.tab).classList.add("active");
+      currentUser = user;
+
+      const snap = await get(ref(db, `app-users/${user.uid}/role`));
+      isAdmin = snap.val() === 'admin';
+
+      if (!isAdmin) {
+        alert('Not admin');
+        location.href = '/';
+        return;
+      }
+
+      document.getElementById('who').textContent = user.email;
+      initAdminPanel(); // ONLY NOW load reports & bind buttons
+    });
+
+    /* ================= PAGE WORKS ================= */
+
+    document.querySelectorAll(".tabs button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        // button styles
+        document.querySelectorAll(".tabs button")
+          .forEach(b => b.classList.remove("primary"));
+
+        btn.classList.add("primary");
+
+        // sections
+        document.querySelectorAll(".section")
+          .forEach(s => s.classList.remove("active"));
+
+        const target = btn.dataset.tab;
+        if (target) {
+          document.getElementById(target)?.classList.add("active");
+        }
       });
     });
 
-    btnLogout.addEventListener("click", ()=> signOut(auth));
-
-      document.getElementById('btnBack')
-    .addEventListener('click', () => { window.location.href = 'index.html'; });
-
-    // --- Admin gate: /app-users/{uid}/role == 'admin' ---
-    onAuthStateChanged(auth, async (user)=>{
-      if (!user) {
-        who.textContent = "Nepřihlášen – přejdi na Login";
-        alert("Pro vstup do admin panelu se přihlaste.");
-        window.location.href = "login.html";
-        return;
-      }
-      who.textContent = user.email || user.uid;
-
-      const roleSnap = await get(ref(db, "app-users/" + user.uid + "/role"));
-      const isAdmin  = roleSnap.exists() && roleSnap.val() === "admin";
-      if (!isAdmin) {
-        alert("Nemáte oprávnění (admin role).");
-        window.location.href = "index.html";
-        return;
-      }
-
-      // Init admin features
-      loadTrainers();
-      liveReports();
+    document.getElementById("btnLogout")?.addEventListener("click", async () => {
+      await auth.signOut();
+      window.location.href = "login.html";
     });
 
-    // ------- TRAINERS (search + badges) -------
-    let allTrainers = []; // [{uid, name, prijmeni, email, badges, ...}]
-    async function loadTrainers(){
-      // Pull all trainers in /users (small/medium projects; for big use indexed backend)
-      const s = await get(ref(db, "users"));
-      allTrainers = s.exists() ? Object.entries(s.val()).map(([uid, data])=>({ uid, ...(data||{}) })) : [];
-      renderTrainers();
+    document.getElementById("btnBack")?.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    /* ================= LOAD REPORTS ================= */
+    async function loadReports() {
+      const snap = await get(ref(db, "reports"));
+      const raw = snap.exists() ? snap.val() : {};
+
+      allReports = Object.entries(raw).map(([id, r]) => ({
+        reportId: id,
+        ...r
+      }));
+
+      reviewReports = allReports
+        .filter(r => r.targetType === "review")
+        .sort(sortReports);
+
+      trainerReports = allReports
+        .filter(r => r.targetType === "trainer")
+        .sort(sortReports);
+
+      renderReviewReports();
+      renderTrainerReports();
     }
 
-    function renderTrainers(){
-      const term = (q.value||"").toLowerCase().trim();
-      trainersList.innerHTML = "";
+    /* ================= SORT ================= */
+    function sortReports(a, b) {
+      if (a.status !== b.status) {
+        return a.status === "open" ? -1 : 1;
+      }
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    }
 
-      const filtered = allTrainers.filter(t=>{
-        const hay = [t.name, t.prijmeni, t.email].map(x=>(x||"").toLowerCase()).join(" ");
-        return term ? hay.includes(term) : true;
-      });
+    /* ================= RENDER REVIEW REPORTS ================= */
+    function renderReviewReports() {
+      const list = document.getElementById("reportsList");
+      if (!list) return;
 
-      filtered.forEach(t=>{
+      list.innerHTML = "";
+
+      if (!reviewReports.length) {
+        list.innerHTML = `<div class="muted tiny">Žádné nahlášené recenze.</div>`;
+        return;
+      }
+
+      reviewReports.forEach(r => {
         const el = document.createElement("div");
-        el.className = "trainer";
-
-        const full = [t.name, t.prijmeni].filter(Boolean).join(" ") || "(bez jména)";
-        const badges = t.badges || {};
-        const badgesArr = Object.keys(badges).filter(k => badges[k]);
+        el.className = "report-item";
+        el.dataset.id = r.reportId;
 
         el.innerHTML = `
-          <div>
-            <div class="row">
-              <strong>${full}</strong>
-              <span class="muted tiny">${t.email || ""}</span>
-            </div>
-            <div class="badges" style="margin-top:6px">
-              ${badgesArr.length ? badgesArr.map(b=>`<span class="badge">${b}</span>`).join("") : `<span class="muted tiny">Žádné odznaky</span>`}
-            </div>
-          </div>
-          <div class="row">
-            <button data-act="select">Upravit</button>
-          </div>
+          <strong>${escapeHtml(r.reason)}</strong>
+          <div class="tiny muted">${r.status}</div>
+          <div class="tiny muted">${formatDate(r.createdAt)}</div>
         `;
-        el.querySelector("[data-act='select']").addEventListener("click", ()=> showDetail(t));
-        trainersList.appendChild(el);
+
+        el.onclick = () => showReviewReportDetail(r);
+        list.appendChild(el);
       });
     }
 
-    q.addEventListener("input", renderTrainers);
+    /* ================= REVIEW REPORTS STUFF ================= */
 
-    function showDetail(t){
-      detailTitle.textContent = "Trenér: " + ([t.name,t.prijmeni].filter(Boolean).join(" ") || t.uid);
-      const badges = t.badges || {};
-      const list = Object.keys(badges).filter(k=>badges[k]);
+    async function changeReviewStatus(reportId, reviewId, newStatus) {
+      // 1) find the review path
+      const snap = await get(ref(db, "reviews"));
+      if (!snap.exists()) return alert("Recenze nenalezena");
 
-      detailBody.innerHTML = `
-        <div class="row">
-          <div><span class="muted tiny">UID:</span> ${t.uid}</div>
-        </div>
-        <div style="margin:8px 0">
-          <div class="muted tiny">Aktivní odznaky:</div>
-          <div class="badges" id="detailBadges">
-            ${list.length ? list.map(b=>`<span class="badge">${b}</span>`).join("") : '<span class="muted tiny">—</span>'}
-          </div>
-        </div>
+      let trainerId = null;
+      for (const t in snap.val()) {
+        if (snap.val()[t][reviewId]) {
+          trainerId = t;
+          break;
+        }
+      }
+      if (!trainerId) return alert("Recenze nenalezena");
 
-        <div class="row" style="margin:8px 0">
-          <select id="detailPreset">
-            <option value="">— předvolba —</option>
-            <option value="verified">verified</option>
-            <option value="pro">pro</option>
-            <option value="top-rated">top-rated</option>
-            <option value="new">new</option>
-          </select>
-          <input id="detailCustom" type="text" placeholder="vlastní-odznak" />
-          <button id="btnAdd" class="primary">Přidat odznak</button>
-          <button id="btnRemove">Odebrat odznak</button>
-        </div>
+      const now = Date.now();
 
-        <div class="row" style="margin-top:12px">
-          <button id="btnVerify" class="primary">Nastavit verified</button>
-          <button id="btnUnverify">Zrušit verified</button>
-        </div>
-      `;
+      // 2) update review status
+      await update(ref(db, `reviews/${trainerId}/${reviewId}`), {
+        status: newStatus,
+        updatedAt: now
+      });
 
-      // actions
-      const detailBadges = document.getElementById("detailBadges");
-      const preset = document.getElementById("detailPreset");
-      const custom = document.getElementById("detailCustom");
+      // 3) resolve report
+      await update(ref(db, `reports/${reportId}`), {
+        status: "resolved",
+        resolution: newStatus,
+        resolvedAt: now
+      });
 
-      function refreshBadges(bmap){
-        const arr = Object.keys(bmap || {}).filter(k => bmap[k]);
-        detailBadges.innerHTML = arr.length ? arr.map(b=>`<span class="badge">${b}</span>`).join("") : '<span class="muted tiny">—</span>';
+      // 4) write system log
+      await push(ref(db, "system-logs"), {
+        action: newStatus === "active" ? "restore" : newStatus,
+        entityType: "review",
+        entityId: reviewId,
+        actor: "admin",
+        actorUid: auth.currentUser.uid,
+        reason: "report",
+        createdAt: now,
+        expiresAt: now + 1000 * 60 * 60 * 24 * 365
+      });
+
+      alert("Akce provedena");
+      loadReports();
+    }
+
+    function removeReportFromUI(reportId) {
+      const el = document.querySelector(`[data-report-id="${reportId}"]`);
+      if (el) el.remove();
+
+      document.getElementById('detailBody').innerHTML =
+        '<span class="muted tiny">Vyber hlášení vlevo.</span>';
+    }
+
+    async function resolveReviewReport(reportId, resolution) {
+      // SAFETY CHECK (must exist after Step 1)
+      if (!currentUser || !isAdmin) {
+        alert('Admin not ready yet, try again');
+        return;
       }
 
-      document.getElementById("btnAdd").onclick = async ()=>{
-        const b = (preset.value || custom.value || "").trim();
-        if (!b) return alert("Vyber nebo napiš odznak.");
-        const path = ref(db, `users/${t.uid}/badges/${b}`);
-        await set(path, true);
-        t.badges = t.badges || {};
-        t.badges[b] = true;
-        refreshBadges(t.badges);
-        loadTrainers();
-      };
+      const reportRef = ref(db, `reports/${reportId}`);
 
-      document.getElementById("btnRemove").onclick = async ()=>{
-        const b = (preset.value || custom.value || "").trim();
-        if (!b) return alert("Vyber nebo napiš odznak.");
-        const path = ref(db, `users/${t.uid}/badges/${b}`);
-        await remove(path);
-        if (t.badges) delete t.badges[b];
-        refreshBadges(t.badges||{});
-        loadTrainers();
-      };
+      // 1️⃣ UPDATE REPORT (this MUST succeed)
+      await update(reportRef, {
+        status: 'resolved',
+        resolution: resolution,
+        resolvedAt: Date.now()
+      });
 
-      document.getElementById("btnVerify").onclick = async ()=>{
-        await update(ref(db, `users/${t.uid}`), { verified: true });
-        await set(ref(db, `users/${t.uid}/badges/verified`), true);
-        t.verified = true;
-        t.badges = { ...(t.badges||{}), verified:true };
-        refreshBadges(t.badges);
-        loadTrainers();
-      };
-      document.getElementById("btnUnverify").onclick = async ()=>{
-        await update(ref(db, `users/${t.uid}`), { verified: false });
-        await remove(ref(db, `users/${t.uid}/badges/verified`));
-        t.verified = false;
-        if (t.badges) delete t.badges.verified;
-        refreshBadges(t.badges||{});
-        loadTrainers();
-      };
+      // 2️⃣ WRITE SYSTEM LOG (BEST EFFORT — MUST NOT BREAK FLOW)
+      try {
+        const logRef = push(ref(db, 'system-logs'));
+        await set(logRef, {
+          action: resolution,                 // ignored | hidden | deleted
+          entityType: 'review',
+          entityId: reportId,
+          actor: 'admin',
+          actorUid: currentUser.uid,
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365
+        });
+      } catch (err) {
+        console.warn('⚠️ Log write failed, report still resolved', err);
+      }
+
+      // 3️⃣ REMOVE REPORT FROM UI (IMPORTANT)
+      removeReportFromUI(reportId);
+      // refresh left panel after action
+      loadReports();
     }
+    /* ================= REVIEW TRAINERS STUFF ================= */
 
-    // ------- REPORTS (moderation queue) -------
-    // Tiny helpers
-    const starify = (n) => n ? "★".repeat(n) + "☆".repeat(5-n) : "";
-    const fmt = (ts) => ts ? new Date(ts).toLocaleString() : "";
-    const esc = (s="") => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-    // Cache trainer names so we don't fetch repeatedly
-    const __nameCache = {};
-    async function getTrainerLabel(uid){
-    if (__nameCache[uid]) return __nameCache[uid];
-    const s = await get(ref(db, "users/" + uid));
-    const u = s.exists() ? s.val() : {};
-    const label = [u.name, u.prijmeni].filter(Boolean).join(" ") || u.email || uid;
-    __nameCache[uid] = label;
-    return label;
-    }
-
-    // Renders the right-hand detail card
-    async function renderReportDetail(item){
-    const { trainerId, reviewerId, snapshot, reasons, reportersCount } = item;
-    const trainerName = await getTrainerLabel(trainerId);
-
-    detailTitle.textContent = "Detail nahlášené recenze";
-    detailBody.innerHTML = `
-        <div class="row" style="margin-bottom:8px">
-        <div><strong>Trenér:</strong> ${esc(trainerName)}</div>
-        <div class="tiny muted">UID: ${esc(trainerId)}</div>
-        </div>
-        <div class="row" style="margin-bottom:8px">
-        <div><strong>Autor recenze:</strong> ${esc(snapshot.authorName || reviewerId)}</div>
-        <div class="tiny muted">${fmt(snapshot.createdAt)}</div>
-        </div>
-        <div class="tiny" aria-label="Hodnocení">${starify(Number(snapshot.rating||0))}</div>
-        <div style="margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere" class="huge">${esc(snapshot.text || "(bez textu)")}</div>
-        ${reasons.length ? `<div class="tiny muted" style="margin-top:10px">Důvody: ${reasons.map(esc).join(" • ")}</div>` : ""}
-        <div class="tiny muted" style="margin-top:4px">Počet nahlášení: ${reportersCount}</div>
-
-        <div class="row" style="margin-top:14px">
-        <button class="danger" id="detailDel">Skrýt recenzi</button>
-        <button id="detailClear">Označit jako vyřízené</button>
-        </div>
-    `;
-
-    // actions
-    document.getElementById("detailDel").onclick = async () => {
-        if (!confirm("Smazat tuto recenzi?")) return;
-        await remove(ref(db, `reviews/${trainerId}/${reviewerId}`));
-        await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
-    };
-    document.getElementById("detailClear").onclick = async () => {
-        await remove(ref(db, `reviewReportsQueue/${trainerId}/${reviewerId}`));
-    };
-    }
-
-    // LEFT LIST: compact tiles; click -> detail on right
-    function liveReports(){
-    onValue(ref(db, "reviewReportsQueue"), async (snap) => {
-        reportsList.innerHTML = "";
-        if (!snap.exists()) {
-        reportsList.innerHTML = `<div class="muted tiny">Žádná nahlášení.</div>`;
-        detailTitle.textContent = "Detail";
-        detailBody.textContent = "Vyber trenéra vlevo.";
+    async function changeTrainerStatus(reportId, trainerUid, action) {
+      if (!currentUser || !isAdmin) {
+        alert("Admin not ready");
         return;
-        }
+      }
 
-        const items = []; // each: {trainerId, reviewerId, snapshot, reasons[], reportersCount}
-        const root = snap.val();
+      const now = Date.now();
 
-        for (const trainerId of Object.keys(root)) {
-        for (const reviewerId of Object.keys(root[trainerId])) {
-            const reportersMap = root[trainerId][reviewerId] || {};
-            const reports = Object.values(reportersMap);
+      // map admin action → trainer status
+      const statusMap = {
+        hidden: "hidden",
+        active: "active",
+        deleted: "deleted",
+        suspended: "suspended"
+      };
 
-            // pick newest snapshot for preview
-            const newest = [...reports].sort((a,b)=>(b?.createdAt||0)-(a?.createdAt||0))[0] || {};
-            const snapshot = newest.reviewSnapshot || {};
+      const newStatus = statusMap[action];
+      if (!newStatus) {
+        alert("Invalid trainer action");
+        return;
+      }
 
-            items.push({
-            trainerId,
-            reviewerId,
-            snapshot,
-            reportersCount: reports.length,
-            reasons: [...new Set(reports.map(r => r?.reason).filter(Boolean))],
-            });
-        }
-        }
+      // 1️⃣ UPDATE TRAINER STATUS
+      await update(ref(db, `users/${trainerUid}`), {
+        status: newStatus,
+        updatedAt: now
+      });
 
-        // Render compact tiles (like an inbox)
-        items.forEach((it, idx) => {
-        const tile = document.createElement("div");
-        tile.className = "report-item";
-        tile.innerHTML = `
-            <div class="report-line">
-            <strong>${esc(it.snapshot.authorName || it.reviewerId || "Autor")}</strong>
-            <span class="stars tiny">${starify(Number(it.snapshot.rating||0))}</span>
-            <span class="time tiny muted">${fmt(it.snapshot.createdAt)}</span>
-            <span class="bubble">${it.reportersCount}</span>
-            </div>
-            <div class="excerpt muted tiny">${esc((it.snapshot.text || "").slice(0,80))}${(it.snapshot.text||"").length>80?"…":""}</div>
-        `;
-        tile.addEventListener("click", async () => {
-            // highlight selection
-            document.querySelectorAll(".report-item.active").forEach(x=>x.classList.remove("active"));
-            tile.classList.add("active");
-            await renderReportDetail(it);
-        });
-        reportsList.appendChild(tile);
+      // 2️⃣ RESOLVE REPORT
+      await update(ref(db, `reports/${reportId}`), {
+        status: "resolved",
+        resolution: action === "active" ? "hidden" : action,
+        resolvedAt: now
+      });
 
-        // Auto-select first item
-        if (idx === 0) { tile.click(); }
-        });
-    });
+      // 3️⃣ WRITE SYSTEM LOG
+      await push(ref(db, "system-logs"), {
+        action: action === "active" ? "restore" : action,
+        entityType: "trainer",
+        entityId: trainerUid,
+        actor: "admin",
+        actorUid: currentUser.uid,
+        reason: "report",
+        createdAt: now,
+        expiresAt: now + 1000 * 60 * 60 * 24 * 365
+      });
+
+      // 4️⃣ UI CLEANUP
+      alert("Akce provedena");
+      loadReports();
+      document.getElementById("detailBody").innerHTML =
+        `<span class="muted tiny">Vyber hlášení vlevo.</span>`;
     }
+
+    async function resolveTrainerReport(reportId, resolution) {
+      if (!currentUser || !isAdmin) return;
+
+      const now = Date.now();
+
+      await update(ref(db, `reports/${reportId}`), {
+        status: "resolved",
+        resolution: resolution,
+        resolvedAt: now
+      });
+
+      // IGNORE DOES NOT CHANGE TRAINER → NO STATUS UPDATE
+      await push(ref(db, "system-logs"), {
+        action: "restore",
+        entityType: "trainer",
+        entityId: reportId,
+        actor: "admin",
+        actorUid: currentUser.uid,
+        reason: "report",
+        createdAt: now,
+        expiresAt: now + 1000 * 60 * 60 * 24 * 365
+      });
+
+      loadReports();
+      document.getElementById("detailBody").innerHTML =
+        `<span class="muted tiny">Vyber hlášení vlevo.</span>`;
+    }
+
+    /* ================= RENDER TRAINER REPORTS ================= */
+    async function renderTrainerReports() {
+      const list = document.getElementById("trainerReportsList");
+      if (!list) return;
+
+      list.innerHTML = "";
+
+      if (!trainerReports.length) {
+        list.innerHTML = `<div class="muted tiny">Žádní nahlášení trenéři.</div>`;
+        return;
+      }
+
+      for (const r of trainerReports) {
+        const trainerSnap = await get(ref(db, "users/" + r.targetId));
+        const t = trainerSnap.exists() ? trainerSnap.val() : null;
+
+        const el = document.createElement("div");
+        el.className = "report-item";
+        el.dataset.id = r.reportId;
+
+        el.innerHTML = `
+          <strong>${t ? escapeHtml(`${t.name || ""} ${t.prijmeni || ""}`.trim()) : "Profil neexistuje"}</strong>
+          <div class="tiny muted">${escapeHtml(r.reason)}</div>
+          <div class="tiny muted">${r.status}</div>
+          <div class="tiny muted">${formatDate(r.createdAt)}</div>
+        `;
+
+        el.onclick = () => showTrainerReportDetail(r, t);
+        list.appendChild(el);
+      }
+    }
+
+    /* ================= REVIEW DETAIL ================= */
+    async function showReviewReportDetail(r) {
+      const title = document.getElementById("detailTitle");
+      const body  = document.getElementById("detailBody");
+
+      if (!title || !body) return;
+
+      title.textContent = "Nahlášená recenze";
+      body.innerHTML = "<p class='muted'>Načítání…</p>";
+
+      const review = await findReviewById(r.targetId);
+
+      body.innerHTML = `
+        <p><strong>Důvod:</strong> ${escapeHtml(r.reason)}</p>
+        ${r.description ? `<p><h3 style="color: green;">${escapeHtml(r.description)}<h3></p>` : ""}
+
+        <hr>
+
+        ${review ? `
+          <p><strong>Autor:</strong> ${escapeHtml(review.authorName || "—")}</p>
+          <p><strong>Hodnocení:</strong> ${review.rating} ⭐</p>
+          <p><h3 style="color: yellow;">${escapeHtml(review.text)}</h3></p>
+        ` : `<p class="muted">Recenze již neexistuje.</p>`}
+
+        <hr>
+
+        <div class="row">
+          <button onclick="resolveReviewReport('${r.reportId}', 'ignored')">
+            Ignorovat
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'hidden')" class="danger">
+            Skrýt recenzi
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'active')">
+            Obnovit recenzi
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'deleted')" class="danger">
+            Smazat recenzi
+          </button>
+        </div>
+      `;
+    }
+
+     /* ================= TRAINER DETAIL ================= */
+
+    function showTrainerReportDetail(r, t) {
+      const title = document.getElementById("detailTitle");
+      const body  = document.getElementById("detailBody");
+
+      title.textContent = "Nahlášený trenér";
+
+      body.innerHTML = `
+        <p><strong>Důvod:</strong> ${escapeHtml(r.reason)}</p>
+        ${r.description ? `<p><h3 style="color: yellow;">${escapeHtml(r.description)}</h3></p>` : ""}
+
+        <hr>
+
+        ${
+          t
+            ? `
+              <p><strong>Jméno:</strong> ${escapeHtml(`${t.name || ""} ${t.prijmeni || ""}`.trim())}</p>
+              <p><strong>Status:</strong> ${t.status || "—"}</p>
+              <p>
+                <a href="/profile.html?id=${r.targetId}" target="_blank">
+                  Otevřít profil trenéra →
+                </a>
+              </p>
+
+              <hr>
+
+              <div class="row">
+                <button onclick="resolveTrainerReport('${r.reportId}', 'ignored')">
+                  Ignorovat
+                </button>
+
+                <button onclick="changeTrainerStatus('${r.reportId}', '${r.targetId}', 'hidden')" class="danger">
+                  Skrýt trenéra
+                </button>
+
+                <button onclick="changeTrainerStatus('${r.reportId}', '${r.targetId}', 'active')">
+                  Obnovit trenéra
+                </button>
+
+                <button onclick="changeTrainerStatus('${r.reportId}', '${r.targetId}', 'suspended')" class="danger">
+                  Podezřívat trenéra
+                </button>
+
+                <button onclick="changeTrainerStatus('${r.reportId}', '${r.targetId}', 'deleted')" class="danger">
+                  Smazat trenéra
+                </button>
+              </div>
+            `
+            : `<p class="muted">Profil již neexistuje.</p>`
+        }
+      `;
+      }
+
+    /* ================= HELPERS ================= */
+    async function findReviewById(reviewId) {
+      const snap = await get(ref(db, "reviews"));
+      if (!snap.exists()) return null;
+
+      const data = snap.val();
+      for (const trainerId in data) {
+        if (data[trainerId][reviewId]) {
+          return data[trainerId][reviewId];
+        }
+      }
+      return null;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "—";
+      return new Date(ts).toLocaleString();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/[&<>"']/g, m => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      }[m]));
+    }
+    /* ================= INIT ================= */
+
+    function initAdminPanel() {
+      console.log("✅ Admin panel initialized");
+
+      // load reports immediately
+      loadReports();
+
+      // default tab state (reports visible when clicking tab)
+      document.querySelector('[data-tab="t-reports"]')?.addEventListener("click", () => {
+        loadReports();
+      });
+    }
+
+    // expose moderation actions for inline buttons
+    window.resolveReviewReport = resolveReviewReport;
+    window.resolveTrainerReport = resolveTrainerReport;
+    window.changeReviewStatus = changeReviewStatus;
+    window.changeTrainerStatus = changeTrainerStatus;
   </script>
 </body>
 </html>

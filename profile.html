@@ -66,14 +66,18 @@
         Zpět na trenéry
       </button>
 
+      <button id="btnShowReviews" class="action-btn action-btn--primary" type="button" title="Skočit na recenze">
+        Zobrazit recenze
+      </button>
+
       <button id="btnFav" class="action-btn action-btn--heart" type="button" title="Uložit trenéra do oblíbených">
         <span class="heart" aria-hidden="true">♡</span>
         <span class="label">Uložit</span>
         <span class="count" id="favCount">0</span>
       </button>
 
-      <button id="btnShowReviews" class="action-btn action-btn--primary" type="button" title="Skočit na recenze">
-        Zobrazit recenze
+      <button id="btnReportTrainer" class=" action-btn action-btn--ghost" type="button" title="Nahlásit trenéra" >
+      🚩 Nahlásit trenéra
       </button>
 
       <!-- New: open map centered on this trainer -->
@@ -111,6 +115,27 @@
 
   <div id="toast" class="toast"></div>
 
+  <div id="reportModal" class="report-modal hidden">
+    <div class="report-sheet">
+      <h3>Nahlásit recenzi</h3>
+
+      <form id="reportForm">
+        <div id="reportReasons"></div>
+
+        <textarea
+          id="reportDescription"
+          placeholder="Volitelný popis (max. 300 znaků)"
+          maxlength="300"
+        ></textarea>
+
+        <div class="report-actions">
+          <button type="button" id="cancelReport">Zrušit</button>
+          <button type="submit">Odeslat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module">
     /* ===== Firebase imports ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -141,6 +166,79 @@
     const btnFav         = document.getElementById("btnFav");
     const btnShowReviews = document.getElementById("btnShowReviews");
     const favCountEl     = document.getElementById("favCount");
+
+    const reportModal = document.getElementById("reportModal");
+    const reportReasonsEl = document.getElementById("reportReasons");
+    const reportForm = document.getElementById("reportForm");
+    const reportDescription = document.getElementById("reportDescription");
+    const cancelReportBtn = document.getElementById("cancelReport");
+
+    let activeReport = null; // { targetType, targetId }
+
+    const REVIEW_REPORT_REASONS = [
+      { code: "spam", label: "Spam nebo reklama" },
+      { code: "off_topic", label: "Nesouvisí s trenérem" },
+      { code: "vulgar", label: "Urážlivý nebo vulgární obsah" },
+      { code: "sexual", label: "Sexuální obsah" },
+      { code: "violence", label: "Výhružky nebo násilí" },
+      { code: "fake_review", label: "Nepravdivá recenze" },
+      { code: "conflict_of_interest", label: "Střet zájmů" },
+      { code: "gdpr_violation", label: "Obsahuje osobní údaje" }
+    ];
+
+    const TRAINER_REPORT_REASONS = [
+      { code: "fake_profile", label: "Falešný profil" },
+      { code: "impersonation", label: "Vydává se za jinou osobu" },
+      { code: "stolen_photos", label: "Použité cizí / kradené fotografie" },
+      { code: "misleading_info", label: "Zavádějící informace" },
+      { code: "scam", label: "Podvodné jednání" },
+      { code: "unlicensed", label: "Neoprávněné podnikání" },
+      { code: "gdpr_violation", label: "Porušení GDPR (osobní údaje)" },
+      { code: "terms_violation", label: "Porušení podmínek služby" }
+    ];
+    
+    function isPublicTrainer(user) {
+      if (!user || !user.status) return false;
+      return user.status === "active" || user.status === "suspended";
+    }
+
+    function openReportModal(targetType, targetId) {
+      activeReport = { targetType, targetId };
+
+      const reasons =
+        targetType === "trainer"
+          ? TRAINER_REPORT_REASONS
+          : REVIEW_REPORT_REASONS;
+
+      reportReasonsEl.innerHTML = reasons.map(r => `
+        <label>
+          <input type="radio" name="reason" value="${r.code}" required>
+          ${r.label}
+        </label>
+      `).join("");
+
+      const title = reportModal.querySelector("h3");
+      if (title) {
+        title.textContent =
+          targetType === "trainer"
+            ? "Nahlásit trenéra"
+            : "Nahlásit recenzi";
+      }
+
+      reportDescription.value = "";
+      reportModal.classList.remove("hidden");
+    }
+
+
+    function closeReportModal() {
+      activeReport = null;
+      reportModal.classList.add("hidden");
+    }
+
+    cancelReportBtn.onclick = closeReportModal;
+    reportModal.onclick = e => {
+      if (e.target === reportModal) closeReportModal();
+    };
     
     function locationText(loc) {
       if (!loc) return "";
@@ -220,7 +318,19 @@
       get(userRef).then(snapshot => {
         if (snapshot.exists()) {
           const user = snapshot.val();
-
+          // 🔐 STATUS GUARD
+          if (!isPublicTrainer(user)) {
+            profileCard.innerHTML = `
+              <div class="profile-blocked">
+                <h2>Profil není dostupný</h2>
+                <p>Tento profil není veřejně dostupný.</p>
+                <button class="action-btn action-btn--ghost" onclick="window.location.href='index.html'">
+                  Zpět na seznam trenérů
+                </button>
+              </div>
+            `;
+            return;
+          }
           const specializations = Array.isArray(user.specializations)
             ? user.specializations.join(', ')
             : (typeof user.specializations === 'string' ? user.specializations : '-');
@@ -614,11 +724,6 @@
             reportBtn.dataset.rid = uid;
             actions.appendChild(reportBtn);
             card.appendChild(actions);
-
-            const alreadyRef = ref(db, `reviewReportsQueue/${userId}/${uid}/${currentUserId}`);
-            onValue(alreadyRef, (s) => {
-              if (s.exists()) { reportBtn.disabled = true; reportBtn.textContent = "Nahlášeno"; }
-            }, { onlyOnce: true });
           }
 
           // hook edit button for my own review
@@ -649,54 +754,123 @@
     }
     loadReviews();
 
-    // One-click report → writes to moderation queue; one report per user per review
+    // report button on review opens report window
     reviewsList.addEventListener("click", async (e) => {
       const btn = e.target.closest(".report-btn");
       if (!btn) return;
 
+      if (!auth.currentUser) {
+        toast("Pro nahlášení se musíte přihlásit.");
+        return;
+      }
+
+      const reviewId = btn.dataset.rid;
+      if (!reviewId) return;
+
       const user = auth.currentUser;
-      if (!user) { toast("Pro nahlášení se přihlaste."); return; }
+      if (!user) return;
 
-      // Find the review card and its data
-      const card = btn.closest(".review-card");
-      if (!card) return;
+      try {
+        const alreadyRef = ref(db, `reportsByUser/${user.uid}/review/${reviewId}`);
+        const snap = await get(alreadyRef);
 
-      const reviewerId = card.dataset.reviewerId;   // author of the review (uid)
-      if (!reviewerId) return;
-
-      // Prevent duplicate reports by same user on the same review
-      const reportRef = ref(db, `reviewReportsQueue/${userId}/${reviewerId}/${user.uid}`);
-
-      // Prepare a tiny snapshot (helps you moderate even if review later changes)
-      const payload = {
-        reason: "Uživatel nahlásil recenzi",
-        createdAt: Date.now(),
-        reporterUid: user.uid,
-        reviewSnapshot: {
-          text: card.dataset.text || "",
-          rating: Number(card.dataset.rating) || 0,
-          createdAt: Number(card.dataset.createdAt) || 0,
-          authorName: card.dataset.authorName || "Uživatel",
-          path: `reviews/${userId}/${reviewerId}` // where it currently lives
+        if (snap.exists()) {
+          toast("Tuto recenzi jste již nahlásil.");
+          return;
         }
+
+        openReportModal("review", reviewId);
+
+      } catch (err) {
+        console.error("Report precheck failed:", err);
+        toast("Nelze ověřit stav nahlášení.");
+      }
+    });
+    const btnReportTrainer = document.getElementById("btnReportTrainer");
+
+    if (btnReportTrainer) {
+      btnReportTrainer.addEventListener("click", async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+          toast("Pro nahlášení trenéra se musíte přihlásit.");
+          return;
+        }
+
+        // Prevent self-report
+        if (user.uid === userId) {
+          toast("Nemůžete nahlásit sami sebe.");
+          return;
+        }
+
+        try {
+          const alreadyRef = ref(
+            db,
+            `reportsByUser/${user.uid}/trainer/${userId}`
+          );
+          const snap = await get(alreadyRef);
+
+          if (snap.exists()) {
+            toast("Tento profil jste již nahlásil.");
+            return;
+          }
+
+          openReportModal("trainer", userId);
+
+        } catch (err) {
+          console.error("Trainer report precheck failed:", err);
+          toast("Nelze ověřit stav nahlášení.");
+        }
+      });
+    }
+
+    reportForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const submitBtn = reportForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      if (!activeReport) return;
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const reason = reportForm.reason.value;
+      const description = reportDescription.value.trim();
+
+      const now = Date.now();
+      const reportId = crypto.randomUUID();
+
+      const data = {
+        targetType: activeReport.targetType,
+        targetId: activeReport.targetId,
+
+        reporterUid: user.uid,
+
+        reason,
+        description: description || "",
+
+        status: "open",
+        resolution: null,
+
+        createdAt: now,
+        resolvedAt: null,
+        expiresAt: now + 1000 * 60 * 60 * 24 * 365 // 12 months
       };
 
       try {
-        await set(reportRef, payload); // write once; overwrites if same reporter re-clicks
-        // UI feedback (no alert)
-        btn.disabled = true;
-        btn.textContent = "Nahlášeno";
-        const pill = document.createElement("span");
-        pill.className = "reported-pill";
-        pill.textContent = "Odesláno k moderaci";
-        btn.after(pill);
-
-        toast("Děkujeme, nahlášení bylo odesláno.");
+        await set(ref(db, `reports/${reportId}`), data);
+        await set(
+          ref(db, `reportsByUser/${user.uid}/${activeReport.targetType}/${activeReport.targetId}`),
+          { createdAt: now }
+        );
+        toast("Nahlášení bylo odesláno.");
+        closeReportModal();
       } catch (err) {
-        console.error("Report failed:", err);
+        console.error(err);
+        if (submitBtn) submitBtn.disabled = false;
         toast("Nepodařilo se odeslat nahlášení.");
       }
     });
+
     // DELETE my own review
     reviewsList.addEventListener("click", async (e) => {
       const delBtn = e.target.closest(".delete-review");
@@ -901,6 +1075,7 @@
       }
     });
   </script>
+
   <script type="module" src="auth-navbar.js"></script>
 </body>
 </html>
