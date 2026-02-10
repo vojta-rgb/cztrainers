@@ -528,11 +528,6 @@
         // start from your existing array logic
         const badges = [];
 
-        // old boolean (keep)
-        if (user.verified === true) {
-          badges.push({ key: "verified", label: "Ověřený", icon: "✔" });
-        }
-
         // old array (keep)
         if (Array.isArray(user.badges)) {
           user.badges.forEach(b => {
@@ -596,7 +591,7 @@
               <span>🧠 ${user.experience ?? "-"} let praxe</span>
             </div>
 
-            <!-- ${shownBadges ? `<div class="badges">${shownBadges}</div>` : ""} --> 
+            <!-- ${shownBadges ? `<div class="badges">${shownBadges}</div>` : ""} COMMENTED OUT (I DONT NEED THEM YET) --> 
 
             <div class="tags">
               ${show.map(t => `<span class="tag">${t}</span>`).join("")}

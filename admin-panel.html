@@ -159,6 +159,9 @@
     /* ================= ADMIN ACCESS ================= */
     let currentUser = null;
     let isAdmin = false;
+    /* ================= BADGES ================= */
+    let allTrainers = [];
+    let selectedTrainerUid = null;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -211,6 +214,141 @@
       window.location.href = "index.html";
     });
 
+    document.getElementById("q").addEventListener("input", () => {
+      renderTrainersList();
+    });
+
+    /* ================= BADGES PART ================= */
+
+    async function loadTrainers() {
+      const snap = await get(ref(db, "users"));
+      const data = snap.exists() ? snap.val() : {};
+
+      allTrainers = Object.entries(data).map(([uid, u]) => ({
+        uid,
+        ...u
+      }));
+
+      renderTrainersList();
+    }
+
+    function renderTrainersList() {
+      const list = document.getElementById("trainersList");
+      if (!list) return;
+
+      const q = document.getElementById("q").value.trim().toLowerCase();
+
+      list.innerHTML = "";
+
+      const filtered = allTrainers.filter(t => {
+        const s =
+          `${t.name || ""} ${t.prijmeni || ""} ${t.emailPublic || ""}`.toLowerCase();
+        return s.includes(q);
+      });
+
+      if (!filtered.length) {
+        list.innerHTML = `<div class="muted tiny">Žádní trenéři.</div>`;
+        return;
+      }
+
+      for (const t of filtered) {
+        const el = document.createElement("div");
+        el.className = "trainer";
+
+        el.innerHTML = `
+          <div>
+            <strong>${escapeHtml(`${t.name || ""} ${t.prijmeni || ""}`.trim())}</strong>
+            <div class="tiny muted">${escapeHtml(t.emailPublic || "")}</div>
+          </div>
+          <div class="tiny muted">${t.status || ""}</div>
+        `;
+
+        el.onclick = () => showTrainerBadgesDetail(t.uid);
+
+        list.appendChild(el);
+      }
+    }
+
+    async function showTrainerBadgesDetail(uid) {
+      selectedTrainerUid = uid;
+
+      const snap = await get(ref(db, `users/${uid}`));
+      if (!snap.exists()) {
+        document.getElementById("detailBody").innerHTML =
+          `<span class="muted tiny">Profil neexistuje.</span>`;
+        return;
+      }
+
+      const t = snap.val();
+      const badges = t.badges || {};
+
+      const title = document.getElementById("detailTitle");
+      const body  = document.getElementById("detailBody");
+
+      title.textContent = "Odznaky trenéra";
+
+      const badgesHtml = Object.keys(badges).length
+        ? Object.keys(badges).map(b =>
+            `<span class="badge">
+              ${escapeHtml(b)}
+              <button onclick="removeBadge('${uid}','${b}')">✕</button>
+            </span>`
+          ).join(" ")
+        : `<span class="muted tiny">Žádné odznaky</span>`;
+
+      body.innerHTML = `
+        <p><strong>${escapeHtml(`${t.name || ""} ${t.prijmeni || ""}`.trim())}</strong></p>
+
+        <div class="badges" style="margin:8px 0">
+          ${badgesHtml}
+        </div>
+
+        <hr>
+
+        <div class="row">
+          <button class="primary" onclick="addSelectedBadge()">
+            Přidat odznak
+          </button>
+        </div>
+      `;
+    }
+
+    async function addSelectedBadge() {
+      if (!selectedTrainerUid) {
+        alert("Vyber trenéra");
+        return;
+      }
+
+      const preset = document.getElementById("presetBadge").value.trim();
+      const custom = document.getElementById("customBadge").value.trim();
+
+      const badge = custom || preset;
+
+      if (!badge) {
+        alert("Vyber nebo napiš odznak");
+        return;
+      }
+
+      await set(
+        ref(db, `users/${selectedTrainerUid}/badges/${badge}`),
+        true
+      );
+
+      document.getElementById("customBadge").value = "";
+      document.getElementById("presetBadge").value = "";
+
+      showTrainerBadgesDetail(selectedTrainerUid);
+    }
+
+    async function removeBadge(uid, badge) {
+      await set(
+        ref(db, `users/${uid}/badges/${badge}`),
+        null
+      );
+
+      showTrainerBadgesDetail(uid);
+    }
+    
     /* ================= LOAD REPORTS ================= */
     async function loadReports() {
       const snap = await get(ref(db, "reports"));
@@ -611,13 +749,14 @@
     function initAdminPanel() {
       console.log("✅ Admin panel initialized");
 
-      // load reports immediately
       loadReports();
+      loadTrainers();
 
-      // default tab state (reports visible when clicking tab)
-      document.querySelector('[data-tab="t-reports"]')?.addEventListener("click", () => {
-        loadReports();
-      });
+      document.querySelector('[data-tab="t-reports"]')
+        ?.addEventListener("click", () => loadReports());
+
+      document.querySelector('[data-tab="t-trainers"]')
+        ?.addEventListener("click", () => loadTrainers());
     }
 
     // expose moderation actions for inline buttons
@@ -625,6 +764,9 @@
     window.resolveTrainerReport = resolveTrainerReport;
     window.changeReviewStatus = changeReviewStatus;
     window.changeTrainerStatus = changeTrainerStatus;
+
+    window.addSelectedBadge = addSelectedBadge;
+    window.removeBadge = removeBadge;
   </script>
 </body>
 </html>
