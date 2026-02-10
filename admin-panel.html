@@ -25,6 +25,7 @@
     input[type="text"],select{width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb}
     button{padding:8px 12px;border-radius:8px;border:1px solid #374151;background:#0b1220;color:#e5e7eb;cursor:pointer}
     button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    button:hover {background-color: #2980b9;transform: scale(1.1);box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .list{max-height:70vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .trainer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border:1px solid #1f2937;border-radius:10px;background:#0b1220}
@@ -84,8 +85,8 @@
     <aside class="card">
       <div class="tabs">
         <button class="primary" data-tab="t-trainers" aria-selected="true">Trenéři & odznaky</button>
-        <button data-tab="t-reports">Nahlášené recenze</button>
-        <button data-tab="t-trainer-reports">Nahlášení trenéři</button>
+        <button class="primary" data-tab="t-reports">Nahlášené recenze</button>
+        <button class="primary" data-tab="t-trainer-reports">Nahlášení trenéři</button>
       </div>
 
       <!-- Trainers tools -->
@@ -110,6 +111,12 @@
       <!-- Reports tools -->
       <div id="t-reports" class="section">
         <p class="muted tiny">Zde moderuješ nahlášené recenze. Můžeš skrýt recenzi nebo jen vyčistit hlášení.</p>
+
+        <div class="row" style="margin-bottom:8px">
+          <button id="btnReviewReports">Otevřená hlášení</button>
+          <button id="btnHiddenReviews">Skryté recenze</button>
+        </div>
+
         <div id="reportsList" class="list"></div>
       </div>
 
@@ -117,6 +124,12 @@
         <p class="muted tiny">
           Zde vidíš nahlášené trenéry.
         </p>
+
+        <div class="row" style="margin-bottom:8px">
+          <button id="btnTrainerReports">Otevřená hlášení</button>
+          <button id="btnHiddenTrainers">Skrytí trenéři</button>
+        </div>
+
         <div id="trainerReportsList" class="list"></div>
       </div>
     </aside>
@@ -124,7 +137,7 @@
     <!-- RIGHT: Detail -->
     <section class="card" id="detail">
       <h3 id="detailTitle" style="margin:0 0 8px">Detail</h3>
-      <div id="detailBody" class="muted tiny">Vyber trenéra vlevo.</div>
+      <div id="detailBody" class="muted tiny">Vyber trenéra/recenzi vlevo.</div>
     </section>
   </div>
 
@@ -155,6 +168,8 @@
     let reviewReports = [];
     let trainerReports = [];
     let selectedReportId = null;
+    let reviewListMode = "reports";   // reports | hidden
+    let trainerListMode = "reports";  // reports | hidden
 
     /* ================= ADMIN ACCESS ================= */
     let currentUser = null;
@@ -349,7 +364,8 @@
       showTrainerBadgesDetail(uid);
     }
     
-    /* ================= LOAD REPORTS ================= */
+    /* ================= LOAD ALL REPORTS ================= */
+
     async function loadReports() {
       const snap = await get(ref(db, "reports"));
       const raw = snap.exists() ? snap.val() : {};
@@ -360,18 +376,18 @@
       }));
 
       reviewReports = allReports
-        .filter(r => r.targetType === "review")
+        .filter(r => r.targetType === "review" && r.status === "open")
         .sort(sortReports);
 
       trainerReports = allReports
-        .filter(r => r.targetType === "trainer")
+        .filter(r => r.targetType === "trainer" && r.status === "open")
         .sort(sortReports);
 
       renderReviewReports();
       renderTrainerReports();
     }
 
-    /* ================= SORT ================= */
+    // sorting reports
     function sortReports(a, b) {
       if (a.status !== b.status) {
         return a.status === "open" ? -1 : 1;
@@ -380,6 +396,7 @@
     }
 
     /* ================= RENDER REVIEW REPORTS ================= */
+
     function renderReviewReports() {
       const list = document.getElementById("reportsList");
       if (!list) return;
@@ -499,7 +516,152 @@
       // refresh left panel after action
       loadReports();
     }
-    /* ================= REVIEW TRAINERS STUFF ================= */
+    
+    /* ================= REVIEW DETAIL ================= */
+
+    async function showReviewReportDetail(r) {
+      const title = document.getElementById("detailTitle");
+      const body  = document.getElementById("detailBody");
+
+      if (!title || !body) return;
+
+      title.textContent = "Nahlášená recenze";
+      body.innerHTML = "<p class='muted'>Načítání…</p>";
+
+      const review = await findReviewById(r.targetId);
+
+      body.innerHTML = `
+        <p><strong>Důvod:</strong> ${escapeHtml(r.reason)}</p>
+        ${r.description ? `<p><h3 style="color: green;">${escapeHtml(r.description)}<h3></p>` : ""}
+
+        <hr>
+
+        ${review ? `
+          <p><strong>Autor:</strong> ${escapeHtml(review.authorName || "—")}</p>
+          <p><strong>Hodnocení:</strong> ${review.rating} ⭐</p>
+          <p><strong>Obsah recenze: </strong><h3 style="color: yellow;">${escapeHtml(review.text)}</h3></p>
+        ` : `<p class="muted">Recenze již neexistuje.</p>`}
+
+        <hr>
+
+        <div class="row">
+          <button onclick="resolveReviewReport('${r.reportId}', 'ignored')">
+            Ignorovat
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'hidden')" class="danger">
+            Skrýt recenzi
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'active')">
+            Obnovit recenzi
+          </button>
+
+          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'deleted')" class="danger">
+            Smazat recenzi
+          </button>
+        </div>
+      `;
+    }
+
+    /* ================= HIDDEN REVIEWS ================= */
+
+    async function renderHiddenReviews() {
+      const list = document.getElementById("reportsList");
+      if (!list) return;
+
+      list.innerHTML = "";
+
+      const snap = await get(ref(db, "reviews"));
+      if (!snap.exists()) {
+        list.innerHTML = `<div class="muted tiny">Žádné skryté recenze.</div>`;
+        return;
+      }
+
+      const rows = [];
+
+      const data = snap.val();
+      for (const trainerId in data) {
+        for (const reviewId in data[trainerId]) {
+          const r = data[trainerId][reviewId];
+          if (r.status === "hidden") {
+            rows.push({
+              trainerId,
+              reviewId,
+              review: r
+            });
+          }
+        }
+      }
+
+      if (!rows.length) {
+        list.innerHTML = `<div class="muted tiny">Žádné skryté recenze.</div>`;
+        return;
+      }
+
+      for (const row of rows) {
+        const el = document.createElement("div");
+        el.className = "report-item";
+
+        el.innerHTML = `
+          <strong>${escapeHtml(row.review.authorName || "—")}</strong>
+          <div class="tiny muted">Skrytá recenze</div>
+          <div class="excerpt">${escapeHtml(row.review.text || "")}</div>
+        `;
+
+        el.onclick = () => {
+          showHiddenReviewDetail(row.trainerId, row.reviewId, row.review);
+        };
+
+        list.appendChild(el);
+      }
+    }
+
+    function showHiddenReviewDetail(trainerId, reviewId, review) {
+
+      document.getElementById("detailTitle").textContent = "Skrytá recenze";
+
+      document.getElementById("detailBody").innerHTML = `
+        <p><strong>Autor:</strong> ${escapeHtml(review.authorName || "—")}</p>
+        <p><strong>Hodnocení:</strong> ${review.rating} ⭐</p>
+
+        <p><h3 style="color:yellow">${escapeHtml(review.text || "")}</h3></p>
+
+        <hr>
+
+        <div class="row">
+          <button onclick="restoreHiddenReview('${trainerId}','${reviewId}')">
+            Obnovit recenzi
+          </button>
+        </div>
+      `;
+    }
+
+    async function restoreHiddenReview(trainerId, reviewId) {
+
+      const now = Date.now();
+
+      await update(ref(db, `reviews/${trainerId}/${reviewId}`), {
+        status: "active",
+        updatedAt: now
+      });
+
+      try {
+        await push(ref(db, "system-logs"), {
+          action: "restore",
+          entityType: "review",
+          entityId: reviewId,
+          actor: "admin",
+          actorUid: currentUser.uid,
+          createdAt: now,
+          expiresAt: now + 1000 * 60 * 60 * 24 * 365
+        });
+      } catch(e) {}
+
+      renderHiddenReviews();
+    }
+
+    /* ================= TRAINERS REPORTS STUFF ================= */
 
     async function changeTrainerStatus(reportId, trainerUid, action) {
       if (!currentUser || !isAdmin) {
@@ -584,6 +746,7 @@
     }
 
     /* ================= RENDER TRAINER REPORTS ================= */
+
     async function renderTrainerReports() {
       const list = document.getElementById("trainerReportsList");
       if (!list) return;
@@ -613,52 +776,6 @@
         el.onclick = () => showTrainerReportDetail(r, t);
         list.appendChild(el);
       }
-    }
-
-    /* ================= REVIEW DETAIL ================= */
-    async function showReviewReportDetail(r) {
-      const title = document.getElementById("detailTitle");
-      const body  = document.getElementById("detailBody");
-
-      if (!title || !body) return;
-
-      title.textContent = "Nahlášená recenze";
-      body.innerHTML = "<p class='muted'>Načítání…</p>";
-
-      const review = await findReviewById(r.targetId);
-
-      body.innerHTML = `
-        <p><strong>Důvod:</strong> ${escapeHtml(r.reason)}</p>
-        ${r.description ? `<p><h3 style="color: green;">${escapeHtml(r.description)}<h3></p>` : ""}
-
-        <hr>
-
-        ${review ? `
-          <p><strong>Autor:</strong> ${escapeHtml(review.authorName || "—")}</p>
-          <p><strong>Hodnocení:</strong> ${review.rating} ⭐</p>
-          <p><h3 style="color: yellow;">${escapeHtml(review.text)}</h3></p>
-        ` : `<p class="muted">Recenze již neexistuje.</p>`}
-
-        <hr>
-
-        <div class="row">
-          <button onclick="resolveReviewReport('${r.reportId}', 'ignored')">
-            Ignorovat
-          </button>
-
-          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'hidden')" class="danger">
-            Skrýt recenzi
-          </button>
-
-          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'active')">
-            Obnovit recenzi
-          </button>
-
-          <button onclick="changeReviewStatus('${r.reportId}', '${r.targetId}', 'deleted')" class="danger">
-            Smazat recenzi
-          </button>
-        </div>
-      `;
     }
 
      /* ================= TRAINER DETAIL ================= */
@@ -715,7 +832,97 @@
       `;
       }
 
+    /* ================= HIDDEN TRAINERS ================= */
+
+    async function renderHiddenTrainers() {
+
+      const list = document.getElementById("trainerReportsList");
+      if (!list) return;
+
+      list.innerHTML = "";
+
+      const snap = await get(ref(db, "users"));
+      if (!snap.exists()) {
+        list.innerHTML = `<div class="muted tiny">Žádní skrytí trenéři.</div>`;
+        return;
+      }
+
+      const users = snap.val();
+
+      const hidden = Object.entries(users)
+        .filter(([uid,u]) => u.status === "hidden");
+
+      if (!hidden.length) {
+        list.innerHTML = `<div class="muted tiny">Žádní skrytí trenéři.</div>`;
+        return;
+      }
+
+      for (const [uid, t] of hidden) {
+
+        const el = document.createElement("div");
+        el.className = "report-item";
+
+        el.innerHTML = `
+          <strong>${escapeHtml(`${t.name || ""} ${t.prijmeni || ""}`.trim())}</strong>
+          <div class="tiny muted">Skrytý trenér</div>
+        `;
+
+        el.onclick = () => showHiddenTrainerDetail(uid, t);
+
+        list.appendChild(el);
+      }
+    }
+
+    function showHiddenTrainerDetail(uid, t) {
+
+      document.getElementById("detailTitle").textContent = "Skrytý trenér";
+
+      document.getElementById("detailBody").innerHTML = `
+        <p><strong>Jméno:</strong> ${escapeHtml(`${t.name||""} ${t.prijmeni||""}`.trim())}</p>
+        <p><strong>Status:</strong> ${t.status}</p>
+
+        <p>
+          <a href="/profile.html?id=${uid}" target="_blank">
+            Otevřít profil →
+          </a>
+        </p>
+
+        <hr>
+
+        <div class="row">
+          <button onclick="restoreHiddenTrainer('${uid}')">
+            Obnovit trenéra
+          </button>
+        </div>
+      `;
+    }
+
+    async function restoreHiddenTrainer(uid) {
+
+      const now = Date.now();
+
+      await update(ref(db, `users/${uid}`), {
+        status: "active",
+        updatedAt: now
+      });
+
+      try {
+        await push(ref(db, "system-logs"), {
+          action: "restore",
+          entityType: "trainer",
+          entityId: uid,
+          actor: "admin",
+          actorUid: currentUser.uid,
+          createdAt: now,
+          expiresAt: now + 1000 * 60 * 60 * 24 * 365
+        });
+      } catch(e) {}
+
+      renderHiddenTrainers();
+    }
+
     /* ================= HELPERS ================= */
+
     async function findReviewById(reviewId) {
       const snap = await get(ref(db, "reviews"));
       if (!snap.exists()) return null;
@@ -744,6 +951,7 @@
         "'": "&#039;"
       }[m]));
     }
+    
     /* ================= INIT ================= */
 
     function initAdminPanel() {
@@ -752,11 +960,29 @@
       loadReports();
       loadTrainers();
 
-      document.querySelector('[data-tab="t-reports"]')
-        ?.addEventListener("click", () => loadReports());
+      document.querySelector('[data-tab="t-reports"]')?.addEventListener("click", () => loadReports());
+      document.querySelector('[data-tab="t-trainers"]')?.addEventListener("click", () => loadTrainers());
 
-      document.querySelector('[data-tab="t-trainers"]')
-        ?.addEventListener("click", () => loadTrainers());
+      document.getElementById("btnReviewReports")?.addEventListener("click", () => {
+        reviewListMode = "reports";
+        renderReviewReports();
+      });
+
+      document.getElementById("btnHiddenReviews")?.addEventListener("click", () => {
+        reviewListMode = "hidden";
+        renderHiddenReviews();
+      });
+
+      document.getElementById("btnTrainerReports")?.addEventListener("click", () => {
+        trainerListMode = "reports";
+        renderTrainerReports();
+      });
+
+      document.getElementById("btnHiddenTrainers")?.addEventListener("click", () => {
+        trainerListMode = "hidden";
+        renderHiddenTrainers();
+      });
+
     }
 
     // expose moderation actions for inline buttons
@@ -767,6 +993,9 @@
 
     window.addSelectedBadge = addSelectedBadge;
     window.removeBadge = removeBadge;
+
+    window.restoreHiddenReview = restoreHiddenReview;
+    window.restoreHiddenTrainer = restoreHiddenTrainer;
   </script>
 </body>
 </html>
