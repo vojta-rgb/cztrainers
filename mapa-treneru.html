@@ -483,6 +483,7 @@
         map = new google.maps.Map(mapDiv, {
           center, zoom, mapId: currentMapId(),
           gestureHandling: gestureHandlingMode(),
+          colorScheme: document.body.classList.contains("dark") ? google.maps.ColorScheme.DARK : google.maps.ColorScheme.LIGHT,
           fullscreenControl: true
         });
         drawUserOverlays();
@@ -740,6 +741,7 @@
           zoom: 6,
           mapId: currentMapId(),
           gestureHandling: gestureHandlingMode(),
+          colorScheme: document.body.classList.contains("dark") ? google.maps.ColorScheme.DARK : google.maps.ColorScheme.LIGHT,
           fullscreenControl: false
         });
         // close only on explicit map taps (not drag/zoom to avoid instant close)
@@ -810,8 +812,6 @@
         window.initTrainersMap = start;
     })();
   </script>
-
-
 
   <!-- Google Maps JS -->
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCkboX_dqsdoPwyVYuNoxeBieZZnUILzU&libraries=marker,places&language=cs&region=CZ&callback=initTrainersMap&loading=async"></script>

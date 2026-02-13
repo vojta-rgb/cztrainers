@@ -141,6 +141,7 @@ function initTrainerMap() {
   gmap = new google.maps.Map(mapEl, {
     center: { lat: 49.8175, lng: 15.4730 },
     zoom: 7,
+    colorScheme: document.body.classList.contains("dark") ? google.maps.ColorScheme.DARK : google.maps.ColorScheme.LIGHT,
     mapId: MAP_ID_PICKER
   });
 

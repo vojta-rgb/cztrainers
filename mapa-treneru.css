@@ -235,14 +235,14 @@ body.dark .trainer-pin{ box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 0 2px #1f1f1f;
 /* ===== Bottom Sheet (two-state) ===== */
 :root{
   --ts-bg:#fff;
-  --ts-text:#f4f4f4;
+  --ts-text:#000000;
   --ts-muted:#6b7280;
   --ts-border:rgba(17,17,17,.08);
   --ts-accent:#0072CE;
   --ts-elev:0 10px 30px rgba(0,0,0,.18);
 }
 body.dark{
-  --ts-bg:#161616;
+  --ts-bg:#202020;
   --ts-text:#f4f4f4;
   --ts-muted:#a9acb3;
   --ts-border:rgba(255,255,255,.10);
@@ -566,7 +566,7 @@ body.dark .range:disabled::-moz-range-thumb{ border-color:#3a4658; }
   position:absolute;
   inset:0;
   z-index:0;
-  background-image: var(--ts-bg-img, url("assets/gymilustration.jpg"));
+  /*background-image: var(--ts-bg-img, url("assets/gymilustration.jpg"));*/
   background-size:cover;
   background-position:center;
   filter:blur(8px) saturate(0.95);
