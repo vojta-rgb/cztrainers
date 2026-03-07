@@ -237,8 +237,7 @@
         await Promise.allSettled([
           remove(ref(db, "users/" + uid)),
           remove(ref(db, "unverified-users/" + uid)),
-          remove(ref(db, "app-users/" + uid)),   // if you also store simple users
-          remove(ref(db, "roles/" + uid))        // if you keep roles
+          remove(ref(db, "app-users/" + uid))   // if you also store simple users
         ]);
 
         // Auth removal

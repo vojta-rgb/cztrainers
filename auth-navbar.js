@@ -37,12 +37,17 @@ const show = (el, visible) => {
   }
 };
 
-async function getRole(uid){
+async function getUserType(uid){
   try {
-    const snap = await get(ref(db, "roles/" + uid));
-    if (snap.exists()) return snap.val();        // e.g. "user" | "trainer"
+    const trainerSnap = await get(ref(db, "users/" + uid));
+
+    if (trainerSnap.exists()) {
+      return "trainer";
+    }
+
   } catch {}
-  return null;
+
+  return "user";
 }
 
 // Prefer real name from DB over email/local-part
@@ -151,22 +156,22 @@ onAuthStateChanged(auth, async (user) => {
   let pillClickable = true;
 
   if (user && user.emailVerified) {
-    const role = await getRole(user.uid);
+    const type = await getUserType(user.uid);
     const display = user.displayName || (user.email ? user.email.split("@")[0] : "Uživatel");
 
-    if (role === "user") {
-      state = "app-user";          // regular app user (not trainer)
+    if (type === "user") {
+      state = "app-user";         // regular app user (not trainer)
       name = display;
-      pillHref = "#";              // no-op
+      pillHref = "#";             // no-op
       pillClickable = false;
     } else {
-      state = "trainer";           // trainer (or unknown role defaults here)
+      state = "trainer";          // trainer (or unknown role defaults here)
       name = display;
       pillHref = "trainer-profile.html";
       pillClickable = true;
     }
     // Prefer resolving a real name from DB if available
-    try { name = await resolveDisplayName(user.uid, role, user) || name; } catch {}
+    try { name = await resolveDisplayName(user.uid, type, user) || name; } catch {}
   }
 
   if (pill) {

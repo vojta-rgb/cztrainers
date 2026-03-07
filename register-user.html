@@ -122,7 +122,7 @@
   <!-- Shared navbar auth logic (toggles register/login vs profile/account/logout) -->
   <script type="module" src="auth-navbar.js"></script>
 
-  <!-- Firebase: create user + separate under /app-users and /roles -->
+  <!-- Firebase: create user + separate under /app-users -->
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -196,9 +196,6 @@
             at: now
           }
         });
-
-        // Flat roles map for quick checks/rules
-        await set(ref(db, "roles/" + uid), "user");
 
         // Store consent version + timestamp
         const consentVersion = "2025-09-21"; // bump when you change texts
