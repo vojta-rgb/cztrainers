@@ -302,7 +302,7 @@
   <script src="vendor/nsfwjs.min.js"></script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -328,7 +328,7 @@
     const GALLERY_MAX_DIM = MAX_DIM;      // 1600px longest edge
 
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 

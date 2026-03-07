@@ -144,7 +144,7 @@
   <!-- Firebase -->
   <script type="module">
     /* ================= FIREBASE INIT ================= */
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
     import { update, set, push } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
@@ -159,7 +159,7 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
 

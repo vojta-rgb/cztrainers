@@ -84,9 +84,9 @@
 
   <!-- --- YOUR ORIGINAL JS (unchanged) --- -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -98,7 +98,7 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
@@ -128,6 +128,37 @@
       }
     }
 
+    async function syncUserLoginState(user) {
+      const uid = user.uid;
+      const userRef = ref(db, "app-users/" + uid);
+
+      const snap = await get(userRef);
+      if (!snap.exists()) return;
+
+      const data = snap.val();
+      const now = Date.now();
+
+      const updates = {};
+
+      // update emailVerified only once
+      if (!data.emailVerified && user.emailVerified) {
+        updates.emailVerified = true;
+      }
+
+      // throttle lastLoginAt (5 minutes)
+      const last = data.lastLoginAt || 0;
+      const FIVE_MIN = 5 * 60 * 1000;
+
+      if (now - last > FIVE_MIN) {
+        updates.lastLoginAt = now;
+      }
+
+      // write only if something changed
+      if (Object.keys(updates).length > 0) {
+        await update(userRef, updates);
+      }
+    }
+
     async function doLogin() {
       const email = emailEl.value.trim();
       const password = passwordEl.value;
@@ -149,6 +180,7 @@
         }
 
         await migrateIfNeeded(user.uid);
+        await syncUserLoginState(user);
 
         showMsg("Přihlášení úspěšné.", true);
         setTimeout(() => (window.location.href = "index.html"), 600);

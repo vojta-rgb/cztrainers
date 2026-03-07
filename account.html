@@ -80,7 +80,7 @@
 
   <!-- FUNCTIONALITY -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth, onAuthStateChanged,
       reauthenticateWithCredential, reauthenticateWithPopup,
@@ -101,7 +101,7 @@
       appId: "1:369200533487:web:eb31707c0de4bda2b8f01a"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
     const functions = getFunctions(app);

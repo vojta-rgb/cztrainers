@@ -182,13 +182,19 @@
         const uid = cred.user.uid;
 
         // Separate bucket for simple users
+        const now = Date.now();
         await set(ref(db, "app-users/" + uid), {
-          name,
-          email,
+          name: name,
+          email: email,
           role: "user",
           emailVerified: false,
-          createdAt: Date.now(),
-          ageConfirmed: true
+
+          createdAt: now,
+
+          ageConfirmed: {
+            value: true,
+            at: now
+          }
         });
 
         // Flat roles map for quick checks/rules
