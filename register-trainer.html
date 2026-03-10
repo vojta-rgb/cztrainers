@@ -728,6 +728,8 @@
         };
 
         // ---------- build final document exactly with fields you requested ----------
+        const now = Date.now();
+
         const trainerDoc = {
           uid: user.uid,
           email,
@@ -748,8 +750,11 @@
           location: fullLocation,
           gallery: galleryResults.length ? galleryResults : null,
           galleryCount: galleryResults.length || 0,
-          createdAt: serverTimestamp ? serverTimestamp() : Date.now(),
-          updatedAt: serverTimestamp ? serverTimestamp() : Date.now(),
+          createdAt: now,
+          updatedAt: now,
+          plan: "free",
+          planExpiresAt: null,
+          featuredUntil: null,
           verified: false
         };
 

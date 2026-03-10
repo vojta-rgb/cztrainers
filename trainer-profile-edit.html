@@ -878,7 +878,8 @@
       try {
         await update(ref(db, "users/" + user.uid), {
           ...updated,
-          location: locationPayload
+          location: locationPayload,
+          updatedAt: Date.now()
         });
 
         toast("Profil uložen.");
