@@ -1,127 +1,266 @@
-/* === CZTRAINERS NAV (blue, normal corners, dark-mode ready) === */
-:root{
-  --nav-blue:#0072CE;
-  --nav-h:64px;             /* approx navbar height; adjust if you change logo size */
+/* === CZTRAINERS NAV — v3 === */
+:root {
+  --nav-blue: #0072CE;
+  --nav-h: 64px;
 }
 
-/* Bar */
-.cznav{
-  position:sticky; top:0; z-index:1002;
-  display:flex; align-items:center; justify-content:space-between;
-  gap:.6rem; /* ensure space between logo and right cluster */
-  padding:.8rem 1.2rem;
-  background:var(--nav-blue); color:#fff;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
-  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+/* ════════════════════════════════════════
+   BAR
+   Logo and right-cluster use position:absolute
+   so they are always pinned to their edges.
+   The inline links sit in the flex centre —
+   truly centred regardless of visibility.
+   ════════════════════════════════════════ */
+.cznav {
+  position: sticky;
+  top: 0;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  height: var(--nav-h);
+  background: var(--nav-blue);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
-.cznav *{ box-sizing:border-box; }
+.cznav * { box-sizing: border-box; }
 
-/* Logo */
-.cznav__logo{ flex:0 0 auto; }
-.cznav__logo img{ height:50px; display:block; }
-
-/* Right side cluster */
-.cznav__right{ margin-left:auto; display:inline-flex; align-items:center; gap:.75rem; }
-
-/* Profile/Login pill */
-.cznav__pill{
-  display:inline-flex; align-items:center; gap:.45rem;
-  padding:.45rem .9rem; border-radius:999px;
-  border:1px solid rgba(255,255,255,.9);
-  color:#fff; text-decoration:none; font-weight:700; line-height:1;
-  background:transparent; white-space:nowrap;
-  /* Allow pill to be the first thing that shrinks */
-  flex:1 1 auto; max-width:52vw; min-width:0; overflow:hidden;
+/* Logo — pinned left */
+.cznav__logo {
+  position: absolute;
+  left: 1.5rem;
+  display: flex;
+  align-items: center;
 }
-.cznav__pill:hover{ background:rgba(255,255,255,.12); }
-/* Truncate long names inside the pill */
-#profilePill svg{ flex:0 0 auto; }
-#pillText{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cznav__logo img { height: 46px; display: block; }
 
-/* Theme toggle (emoji) */
-.cznav__theme{ background:transparent; border:0; color:#fff; padding:0; cursor:pointer; line-height:1; font-size:20px; }
-.cznav__theme{ flex:0 0 auto; }
-
-/* Hamburger with X animation */
-.cznav__hamburger{
-  display:inline-flex; flex-direction:column; justify-content:center; align-items:center;
-  gap:6px; width:44px; height:36px; padding:6px;
-  background:transparent; border:0; border-radius:10px; cursor:pointer; color:#fff;
-  position:relative; z-index:1003; -webkit-tap-highlight-color:transparent;
-}
-.cznav__hamburger{ flex:0 0 auto; }
-.cznav__hamburger:focus-visible{ outline:2px solid rgba(255,255,255,.6); outline-offset:2px; }
-.cznav__hamburger span{ width:26px; height:3px; border-radius:3px; background:currentColor; transition:transform .22s ease, opacity .22s ease; transform-origin:center; }
-.cznav__hamburger.active span:nth-child(1){ transform:translateY(9px) rotate(45deg); }
-.cznav__hamburger.active span:nth-child(2){ opacity:0; }
-.cznav__hamburger.active span:nth-child(3){ transform:translateY(-9px) rotate(-45deg); }
-
-/* Links (shared) */
-.cznav__link{
-  display:flex; align-items:center; justify-content:center;
-  width:100%; text-decoration:none; font-weight:700;
-  border-radius:12px; padding:.6rem .9rem; transition:filter .15s ease, background .15s ease, color .15s ease;
+/* Right cluster — pinned right */
+.cznav__right {
+  position: absolute;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
 }
 
-/* -------- Desktop dropdown (small blue panel under the bar) -------- */
-@media (min-width:768px){
-  .cznav__menu{
-    display:none;
-    position:absolute; right:12px; top:calc(100% + 8px);
-    min-width:260px; padding:.6rem;
-    background:var(--nav-blue); color:#fff;
-    border-radius:12px; border:0;
-    box-shadow:0 10px 28px rgba(0,0,0,.18);
-    flex-direction:column; gap:.55rem; z-index:1001;
+/* Inline links — centred in the bar */
+.cznav__links {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+}
+.cznav__navlink {
+  display: inline-flex;
+  align-items: center;
+  padding: .45rem .85rem;
+  border-radius: 8px;
+  color: rgba(255,255,255,.82);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.cznav__navlink:hover  { background: rgba(255,255,255,.13); color: #fff; }
+.cznav__navlink.active { background: rgba(255,255,255,.18); color: #fff; }
+
+/* ── Profile / Login pill ── */
+.cznav__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .45rem 1rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255,255,255,.55);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background .15s, border-color .15s;
+}
+.cznav__pill:hover {
+  background: rgba(255,255,255,.22);
+  border-color: rgba(255,255,255,.8);
+}
+#profilePill svg { flex: 0 0 auto; }
+#pillText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Theme toggle ── */
+.cznav__theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  padding: 0;
+}
+.cznav__theme:hover {
+  background: rgba(255,255,255,.22);
+  border-color: rgba(255,255,255,.6);
+}
+.cznav__theme #themeIcon { display: none; }
+
+/* ── Hamburger ── */
+.cznav__hamburger {
+  display: none;
+  flex-shrink: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 36px;
+  padding: 6px;
+  background: rgba(255,255,255,.1);
+  border: 1.5px solid rgba(255,255,255,.3);
+  border-radius: 9px;
+  cursor: pointer;
+  color: #fff;
+  z-index: 1003;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.cznav__hamburger:hover { background: rgba(255,255,255,.2); }
+.cznav__hamburger:focus-visible { outline: 2px solid rgba(255,255,255,.6); outline-offset: 2px; }
+.cznav__hamburger span {
+  width: 22px;
+  height: 2.5px;
+  border-radius: 3px;
+  background: currentColor;
+  transition: transform .22s ease, opacity .22s ease;
+  transform-origin: center;
+}
+.cznav__hamburger.active span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.cznav__hamburger.active span:nth-child(2) { opacity: 0; }
+.cznav__hamburger.active span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+/* ── Dropdown / sheet link base ── */
+.cznav__link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: .7rem 1rem;
+  transition: background .15s, color .15s;
+}
+
+/* ════════════════════════════════════
+   DESKTOP >= 768px
+   ════════════════════════════════════ */
+@media (min-width: 768px) {
+  .cznav__links     { display: flex; }
+  .cznav__hamburger { display: none; }
+
+  /* Fixed — position:absolute fails because position:sticky
+     does not create a containing block for absolute children */
+  .cznav__menu {
+    display: none;
+    position: fixed;
+    right: 0;
+    top: var(--nav-h);
+    min-width: 220px;
+    padding: .5rem;
+    background: var(--nav-blue);
+    border-radius: 0 0 0 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    flex-direction: column;
+    gap: .4rem;
+    z-index: 1001;
   }
-  .cznav__menu.active{ display:flex !important; }
+  .cznav__menu.active { display: flex !important; }
 
-  .cznav__link{
-    background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.16);
+  .cznav__link {
+    background: rgba(255,255,255,.07);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.14);
+    font-size: 14px;
+    justify-content: flex-start;
   }
-  .cznav__link:hover{ background:rgba(255,255,255,.14); }
+  .cznav__link:hover { background: rgba(255,255,255,.16); }
 }
 
-/* -------- Mobile full-screen sheet (covers page) -------- */
-@media (max-width:767.98px){
-  .cznav__logo img{ height:40px; }
-  .cznav__right{ gap:.5rem; min-width:0; }
-  .cznav__pill{ padding:.35rem .7rem; font-size:14px; }
-  /* Slightly tighter truncation budget on small screens */
-  .cznav__pill{ max-width:58vw; }
+/* ════════════════════════════════════
+   MOBILE < 768px
+   ════════════════════════════════════ */
+@media (max-width: 767.98px) {
+  .cznav__links     { display: none; }
+  .cznav__hamburger { display: inline-flex; }
+  .cznav__logo img  { height: 40px; }
+  .cznav__right     { gap: .45rem; }
 
-  .cznav{ position:sticky; top:0; z-index:1002; }
-
-  .cznav__menu{
-    position:fixed; left:0; right:0; top:var(--nav-h); bottom:0;  /* start below navbar */
-    background:var(--nav-blue); color:#fff;
-    display:flex; flex-direction:column; gap:.75rem;
-    padding:12px 16px 24px;                         /* content padding only */
-    z-index:1001;                                   /* keep under the bar */
-    transform:translateY(8px); opacity:0; pointer-events:none;
-    transition:transform .25s ease, opacity .25s ease;
+  .cznav__menu {
+    position: fixed;
+    left: 0; right: 0;
+    top: var(--nav-h);
+    bottom: 0;
+    background: var(--nav-blue);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 16px 16px 32px;
+    z-index: 1001;
+    transform: translateY(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .25s ease, opacity .25s ease;
+    overflow-y: auto;
   }
-  .cznav__menu.active{ transform:none; opacity:1; pointer-events:auto; }
-
-  .cznav__link{
-    background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18);
+  .cznav__menu.active {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
   }
-  .cznav__link:hover{ background:rgba(255,255,255,.16); }
+
+  .cznav__link {
+    background: rgba(255,255,255,.09);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.16);
+    font-size: 16px;
+    padding: .85rem 1rem;
+    justify-content: flex-start;
+  }
+  .cznav__link:hover { background: rgba(255,255,255,.16); }
 }
 
-/* Ultra-narrow devices: hide the pill if there's no space */
-@media (max-width:340px){
-  .cznav__pill{ display:none; }
+/* ── Pill responsiveness ── */
+/* 481-640px: icon only */
+@media (min-width: 481px) and (max-width: 640px) {
+  #pillText    { display: none; }
+  .cznav__pill { padding: .38rem .5rem; }
+}
+/* <=480px: hide pill */
+@media (max-width: 480px) {
+  .cznav__pill { display: none; }
 }
 
-/* Always respect hidden (auth buttons) */
-.cznav__menu [hidden]{ display:none !important; }
+/* ── Always respect [hidden] ── */
+.cznav__menu [hidden] { display: none !important; }
 
-/* Dark mode — keep blue bar/sheet, just ensure contrast */
+/* ── Dark mode ── */
 body.dark .cznav,
-body.dark .cznav__menu{ color:#fff; }
-body.dark .cznav__pill{ border-color:rgba(255,255,255,.9); }
-body.dark .cznav__hamburger{ color:#fff; }
+body.dark .cznav__menu  { color: #fff; }
+body.dark .cznav__pill  { border-color: rgba(255,255,255,.55); }
+body.dark .cznav__hamburger { color: #fff; }
 
-/* Reset stray page styles */
-html,body{ margin:0; padding:0; }
+/* ── Reset ── */
+html, body { margin: 0; padding: 0; }

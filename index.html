@@ -21,120 +21,189 @@
 <body>
   <!-- Navbar (isolated) -->
   <nav class="cznav" aria-label="Hlavní navigace">
+    <!-- Logo -->
     <div class="cznav__logo">
       <a href="index.html">
         <img src="assets/CZTrainersNew.png" alt="CZTRAINERS Logo" />
       </a>
     </div>
-
-    <!-- Right cluster: profile pill + theme + burger -->
+    <!-- Inline links (desktop only — hidden on mobile via CSS) -->
+    <div class="cznav__links" aria-label="Hlavní menu">
+      <a href="index.html"          class="cznav__navlink">Domů</a>
+      <a href="mapa-treneru.html"   class="cznav__navlink">Mapa Trenérů</a>
+      <a href="o-nas.html"          class="cznav__navlink">O nás</a>
+    </div>
+    <!-- Right cluster: pill + theme + hamburger -->
     <div class="cznav__right">
+      <!-- Profile / Login pill (controlled by auth-navbar.js) -->
       <a id="profilePill" class="cznav__pill" href="register.html" aria-label="Přihlásit / registrace">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M6 20a6 6 0 0112 0"></path>
+        <!-- user icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M6 20a6 6 0 0112 0"/>
         </svg>
-        <span id="pillText">Login</span>
+        <span id="pillText">Přihlásit se</span>
       </a>
-
+      <!-- Theme toggle — SVG icons swapped by JS below -->
       <button id="themeToggle" class="cznav__theme" type="button" aria-label="Přepnout motiv">
-        <span id="themeIcon">☀️</span>
+        <!-- Sun (shown in dark mode → click to go light) -->
+        <svg id="iconSun" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="display:none" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1"  x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1"  y1="12" x2="3"  y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
+          <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+        </svg>
+        <!-- Moon (shown in light mode → click to go dark) -->
+        <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+        </svg>
       </button>
-
-      <button id="hamburger" class="cznav__hamburger" type="button" aria-label="Menu">
+      <!-- Hamburger (mobile only — hidden on desktop via CSS) -->
+      <button id="hamburger" class="cznav__hamburger" type="button" aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
-
-    <!-- Dropdown -->
+    <!-- Dropdown / mobile sheet -->
     <div id="navLinks" class="cznav__menu" role="menu" aria-label="Navigace">
-      <a href="index.html" class="cznav__link">Domů</a>
-      <a href="mapa-treneru.html" class="cznav__link">Mapa Trenérů</a>
-      <a href="o-nas.html" class="cznav__link">O nás</a>
-      <a href="login.html" class="cznav__link" id="loginBtn">Přihlášení</a>
-      <a href="#" class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
+      <a href="index.html"         class="cznav__link">Domů</a>
+      <a href="mapa-treneru.html"  class="cznav__link">Mapa Trenérů</a>
+      <a href="o-nas.html"         class="cznav__link">O nás</a>
+      <a href="login.html"         class="cznav__link" id="loginBtn">Přihlášení</a>
+      <a href="#"                  class="cznav__link" id="logoutBtn" style="display:none">Odhlásit se</a>
     </div>
   </nav>
   <script type="module" src="auth-navbar.js"></script>
   
-  <!-- CZTRAINERS: NEW HERO SECTION -->
+  <!-- ═══════════════════════════════════════
+       HERO SECTION
+       Background: CSS gradient (no image)
+       Wave divider: inline SVG, scales to any width
+       Counter: updated dynamically from Firebase
+  ═══════════════════════════════════════ -->
   <section class="cz-hero" aria-labelledby="cz-hero-title" role="region">
-    <div class="cz-hero__bg" aria-hidden="true"></div> <!-- background pattern stays visible under overlay -->
-    <div class="cz-hero__overlay" aria-hidden="true"></div> <!-- dark layer for contrast -->
+    <div class="cz-hero__content">
 
-    <div class="cz-container cz-hero__content">
-      <!-- left: text -->
+      <!-- LEFT: text + stats + CTAs -->
       <div class="cz-hero__left">
-        <h1 id="cz-hero-title" class="cz-hero__title animate__animated animate__fadeInDown">
-          Najděte ideálního trenéra v ČR — rychle.
+
+        <!-- Status badge — changes to launch mode when trainer count is low -->
+        <div class="cz-hero__badge" id="heroBadge">
+          <div class="cz-hero__badge-dot" id="heroBadgeDot"></div>
+          <span id="heroBadgeText">Ověření trenéři v celé ČR</span>
+        </div>
+
+        <h1 id="cz-hero-title" class="cz-hero__title">
+          Najděte <u>ideálního</u><br>trenéra rychle.
         </h1>
-        <p class="cz-hero__subtitle animate__animated animate__fadeInUp animate__delay-1s">
-          Zobrazíme trenéry na mapě. Hledejte podle lokality, specializace nebo zkušeností.
+        <p class="cz-hero__subtitle">
+          Zobrazíme trenéry na mapě. Hledejte podle lokality, specializace nebo zkušeností — zcela zdarma.
         </p>
 
-        <!-- three features 
-        <div class="cz-features">
-          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0s">
-            <div class="cz-feature__icon">📍</div>
-            <div class="cz-feature__text">
-              <strong>Lokalita</strong><br><span>Najděte trenéry blízko vás</span>
-            </div>
+        <!-- Stats — counts updated dynamically from Firebase -->
+        <div class="cz-hero__stats" id="heroStats">
+          <div class="cz-hero__stat">
+            <span class="cz-hero__stat-n" id="statTrainers">—</span>
+            <span class="cz-hero__stat-l">Trenérů</span>
           </div>
-
-          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0.15s">
-            <div class="cz-feature__icon">🏋️‍♀️</div>
-            <div class="cz-feature__text">
-              <strong>Specializace</strong><br><span>Fitness, silový trénink, běh a víc</span>
-            </div>
+          <div class="cz-hero__stat-div"></div>
+          <div class="cz-hero__stat">
+            <span class="cz-hero__stat-n" id="statRegions">14</span>
+            <span class="cz-hero__stat-l">Krajů</span>
           </div>
-
-          <div class="cz-feature animate__animated animate__fadeInUp" style="animation-delay: 0.30s">
-            <div class="cz-feature__icon">⏳</div>
-            <div class="cz-feature__text">
-              <strong>Zkušenosti</strong><br><span>Filtrovat podle praxe a zkušeností</span>
-            </div>
+          <div class="cz-hero__stat-div"></div>
+          <div class="cz-hero__stat">
+            <span class="cz-hero__stat-n">100%</span>
+            <span class="cz-hero__stat-l">Zdarma</span>
           </div>
         </div>
-        -->
-        <!-- main CTAs -->
+
+        <!-- CTAs -->
         <div class="cz-hero__ctas">
-          <a href="mapa-treneru.html"
-            id="cz-hero-map-btn"
-            class="cz-btn cz-btn--primary animate__animated animate__pulse"
-            aria-label="Zobrazit trenéry na mapě">
-            <!-- inline SVG map+pin -->
+          <a href="mapa-treneru.html" class="cz-btn cz-btn--primary" aria-label="Zobrazit trenéry na mapě">
             <span class="cz-btn__icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" focusable="false">
-                <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M32 6 C20 6 12 14 12 26 C12 40 32 58 32 58 C32 58 52 40 52 26 C52 14 44 6 32 6 Z"/>
-                </g>
-                <circle cx="32" cy="26" r="6"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
               </svg>
             </span>
-            <span>Zobrazit trenéry na mapě</span>
+            <span>Mapa trenérů</span>
           </a>
-
           <button id="cz-hero-search-btn" class="cz-btn cz-btn--outline" aria-label="Přejít na vyhledávání trenérů">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
             Vyhledat trenéra
           </button>
         </div>
 
-        <p class="cz-hero__note">Nebo použijte vyhledávání níže pro přesnější výsledky.</p>
       </div>
 
-      <!-- right: decorative map preview (image) -->
-      <div class="cz-hero__right" data-aos="zoom-in">
-          <a href="mapa-treneru.html">
-            <img class="cz-hero__map-preview" src="assets/cztrainersmap.png" alt="Náhled mapy trenérů" loading="lazy">
-          </a>
+      <!-- RIGHT: map preview card -->
+      <div class="cz-hero__right">
+        <div class="cz-hero__map-card">
+          <div class="cz-hero__map-card-top">
+            <span class="cz-hero__map-card-title">Mapa trenérů v ČR</span>
+            <span class="cz-hero__live">
+              <span class="cz-hero__live-dot"></span>
+              Živě
+            </span>
+          </div>
+          <div class="cz-hero__map-img-wrap">
+            <a href="mapa-treneru.html">
+              <img class="cz-hero__map-preview" src="assets/cztrainersmap.png" alt="Náhled mapy trenérů" loading="lazy">
+            </a>
+          </div>
+          <!-- Mini trainer previews — hidden until trainers load -->
+          <div class="cz-hero__map-mini-row" id="heroMiniCards" style="display:none">
+            <div class="cz-hero__mini-card" id="heroMini1">
+              <div class="cz-hero__mini-av" id="heroMiniAv1"></div>
+              <div>
+                <div class="cz-hero__mini-name" id="heroMiniName1"></div>
+                <div class="cz-hero__mini-city" id="heroMiniCity1"></div>
+              </div>
+            </div>
+            <div class="cz-hero__mini-card" id="heroMini2">
+              <div class="cz-hero__mini-av" id="heroMiniAv2"></div>
+              <div>
+                <div class="cz-hero__mini-name" id="heroMiniName2"></div>
+                <div class="cz-hero__mini-city" id="heroMiniCity2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+    </div>
+
+    <!-- Wave divider — pure SVG, scales perfectly to any screen width -->
+    <div class="cz-hero__wave" aria-hidden="true">
+      <svg viewBox="0 0 1200 52" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,0 C200,52 500,8 800,36 C1000,56 1100,18 1200,30 L1200,0 Z" fill="var(--light)"/>
+      </svg>
     </div>
   </section>
-  <!-- END CZTRAINERS HERO SECTION -->
-  <div class="fade-between"></div>
+
   <!-- PAGE CONTENT -->
   <div class="container">
-    <h1 class="animate__animated animate__fadeInUp">PROFESIONÁLNÍ TRENÉŘI V ČESKÉ REPUBLICE</h1>
+
+    <!-- Section header -->
+    <div class="cz-section-head">
+      <div>
+        <h2 class="cz-section-title">Profesionální <span>trenéři</span></h2>
+        <p class="cz-section-sub">Procházejte ověřené trenéry nebo použijte filtry pro přesnější výsledky</p>
+      </div>
+      <a href="mapa-treneru.html" class="cz-see-all">Zobrazit na mapě →</a>
+    </div>
 
     <!-- Toolbar: search + filters button + active chips -->
     <div class="toolbar">
@@ -195,6 +264,39 @@
 
     <div id="loader" class="loader">Načítám uživatele...</div>
     <div id="userList" class="cards"></div>
+
+    <!-- Empty state — shown when 0 active trainers in DB -->
+    <div id="emptyState" class="cz-empty" style="display:none" aria-live="polite">
+      <div class="cz-empty__icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0072CE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <h3 class="cz-empty__title">Zatím žádní trenéři</h3>
+      <p class="cz-empty__sub">Platforma právě startuje. Buďte jedním z prvních trenérů a získejte výhodu viditelnosti mezi prvními!</p>
+      <a href="register.html" class="cz-empty__btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="19" y1="8" x2="19" y2="14"/>
+          <line x1="22" y1="11" x2="16" y2="11"/>
+        </svg>
+        Zaregistrovat se jako trenér
+      </a>
+    </div>
+
+    <!-- CTA strip — recruit trainers -->
+    <div class="cz-cta-strip" role="complementary" aria-label="Výzva pro trenéry">
+      <h2 class="cz-cta-strip__title">Jste trenér? Přidejte se zdarma.</h2>
+      <p class="cz-cta-strip__sub">Vytvořte si profil, prezentujte své služby a buďte nalezeni klienty z celé ČR.</p>
+      <a href="register.html" class="cz-cta-strip__btn">
+        Zaregistrovat se →
+      </a>
+    </div>
+
   </div>
 
   <div id="toast" class="toast"></div>
@@ -605,6 +707,10 @@
 
       // Tell AOS new nodes were added
       if (window.AOS && !window.__aosBooted) { window.__aosBooted = true; AOS.refresh(); }
+
+      // Show empty state if no results
+      const emptyEl = document.getElementById("emptyState");
+      if (emptyEl) emptyEl.style.display = (users.length === 0 && allUsers.length === 0) ? "flex" : "none";
     }
     // --- Favorite toggling ---
     async function toggleFavorite(trainerId, btn){
@@ -734,6 +840,38 @@
         if (!user || !user.email) return false;
         return isPublicTrainer(user);
       });
+
+      // ── Dynamic hero counter ──
+      const count = allUsers.length;
+      const statEl = document.getElementById("statTrainers");
+      if (statEl) statEl.textContent = count;
+
+      // ── Badge: launch mode when < 5 trainers ──
+      const badgeText = document.getElementById("heroBadgeText");
+      const badgeDot  = document.getElementById("heroBadgeDot");
+      if (count < 5 && badgeText) {
+        badgeText.textContent = "Právě spouštíme · Registrace zdarma";
+        if (badgeDot) badgeDot.style.background = "#fbbf24";
+      }
+
+      // ── Mini cards in map card: show 2 random active trainers ──
+      if (count >= 2) {
+        const sample = allUsers.slice(0, 2);
+        const miniRow = document.getElementById("heroMiniCards");
+        if (miniRow) miniRow.style.display = "grid";
+        sample.forEach(([uid, u], i) => {
+          const n = i + 1;
+          const av   = document.getElementById("heroMiniAv"   + n);
+          const name = document.getElementById("heroMiniName" + n);
+          const city = document.getElementById("heroMiniCity" + n);
+          if (!av || !name || !city) return;
+          const initials = ((u.name||"?")[0] + (u.prijmeni||"")[0]).toUpperCase();
+          av.textContent   = initials;
+          name.textContent = [u.name, u.prijmeni].filter(Boolean).join(" ") || "Trenér";
+          city.textContent = "📍 " + (u.location?.city || u.location?.region || "ČR");
+        });
+      }
+
       facets = buildFacets(allUsers);
       populateFilters();
       doFilter();

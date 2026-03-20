@@ -131,15 +131,24 @@ if (hamburger && navLinks) {
   });
 }
 
-// Theme (single button)
+// Theme (single button) + SVG icon sync
 (function bindTheme(){
   const btn  = document.getElementById("themeToggle");
-  const icon = document.getElementById("themeIcon");
   if (!btn) return;
+
+  const sun  = document.getElementById("iconSun");
+  const moon = document.getElementById("iconMoon");
+
+  const syncIcons = (isDark) => {
+    // dark mode  → show sun  (clicking it returns to light)
+    // light mode → show moon (clicking it goes dark)
+    if (sun)  sun.style.display  = isDark ? "block" : "none";
+    if (moon) moon.style.display = isDark ? "none"  : "block";
+  };
 
   const setMode = (isDark) => {
     document.body.classList.toggle("dark", isDark);
-    if (icon) icon.textContent = isDark ? "🌙" : "☀️";
+    syncIcons(isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
 
