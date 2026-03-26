@@ -25,6 +25,113 @@ const logoutBtn = document.getElementById("logoutBtn");
 const hamburger = document.getElementById("hamburger");
 const navLinks  = document.getElementById("navLinks");
 
+// ── Pill dropdown (desktop only) ──────────────────────────────────────────────
+// Injected once, shown/hidden as needed. Sits right below the pill.
+let pillDropdown = null;
+
+function createPillDropdown() {
+  if (pillDropdown) return;
+
+  pillDropdown = document.createElement("div");
+  pillDropdown.id = "pillDropdown";
+  pillDropdown.setAttribute("role", "menu");
+  pillDropdown.setAttribute("aria-label", "Možnosti účtu");
+
+  // Inline styles — no extra CSS file needed, works on every page
+  Object.assign(pillDropdown.style, {
+    position:     "fixed",
+    top:          "0",          // set dynamically on open
+    right:        "0",          // set dynamically on open
+    minWidth:     "160px",
+    background:   "#0072CE",
+    borderRadius: "0 0 0 12px",
+    boxShadow:    "0 12px 32px rgba(0,0,0,.22)",
+    padding:      "6px",
+    zIndex:       "1050",
+    display:      "none",
+    flexDirection:"column",
+    gap:          "4px",
+  });
+
+  const logoutItem = document.createElement("button");
+  logoutItem.textContent = "Odhlásit se";
+  logoutItem.setAttribute("role", "menuitem");
+  Object.assign(logoutItem.style, {
+    display:      "flex",
+    alignItems:   "center",
+    width:        "100%",
+    padding:      "10px 14px",
+    background:   "rgba(255,255,255,.07)",
+    border:       "1px solid rgba(255,255,255,.14)",
+    borderRadius: "10px",
+    color:        "#fff",
+    fontSize:     "14px",
+    fontWeight:   "700",
+    cursor:       "pointer",
+    fontFamily:   "inherit",
+    textAlign:    "left",
+  });
+  logoutItem.addEventListener("mouseenter", () => {
+    logoutItem.style.background = "rgba(255,255,255,.16)";
+  });
+  logoutItem.addEventListener("mouseleave", () => {
+    logoutItem.style.background = "rgba(255,255,255,.07)";
+  });
+  logoutItem.addEventListener("click", async () => {
+    closePillDropdown();
+    try {
+      await signOut(auth);
+      window.location.href = "index.html";
+    } catch (err) {
+      alert("Chyba při odhlášení: " + (err?.message || err));
+    }
+  });
+
+  pillDropdown.appendChild(logoutItem);
+  document.body.appendChild(pillDropdown);
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!pillDropdown || pillDropdown.style.display === "none") return;
+    if (pill && pill.contains(e.target)) return;
+    if (pillDropdown.contains(e.target)) return;
+    closePillDropdown();
+  });
+
+  // Close on Esc
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePillDropdown();
+  });
+}
+
+function openPillDropdown() {
+  if (!pillDropdown || !pill) return;
+
+  // Only on desktop (hamburger hidden means desktop nav is active)
+  if (window.innerWidth < 768) return;
+
+  const rect = pill.getBoundingClientRect();
+  // Align dropdown's top-right corner with pill's bottom-right corner
+  pillDropdown.style.top   = (rect.bottom + 6) + "px";
+  pillDropdown.style.right = (window.innerWidth - rect.right) + "px";
+  pillDropdown.style.display = "flex";
+  pillDropdown.style.borderRadius = "0 0 12px 12px";
+}
+
+function closePillDropdown() {
+  if (pillDropdown) pillDropdown.style.display = "none";
+}
+
+function togglePillDropdown(e) {
+  e.preventDefault();
+  if (!pillDropdown || pillDropdown.style.display === "none") {
+    openPillDropdown();
+  } else {
+    closePillDropdown();
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Helpers
 const show = (el, visible) => {
   if (!el) return;
@@ -40,13 +147,8 @@ const show = (el, visible) => {
 async function getUserType(uid){
   try {
     const trainerSnap = await get(ref(db, "users/" + uid));
-
-    if (trainerSnap.exists()) {
-      return "trainer";
-    }
-
+    if (trainerSnap.exists()) return "trainer";
   } catch {}
-
   return "user";
 }
 
@@ -86,7 +188,6 @@ async function resolveDisplayName(uid, role, user){
 
 // Hamburger toggle
 if (hamburger && navLinks) {
-  // initial a11y state
   hamburger.setAttribute("aria-expanded", "false");
 
   const closeMenu = () => {
@@ -95,24 +196,16 @@ if (hamburger && navLinks) {
     hamburger.setAttribute("aria-expanded", "false");
   };
 
-  const openMenu = () => {
-    navLinks.classList.add("active");
-    hamburger.classList.add("active");
-    hamburger.setAttribute("aria-expanded", "true");
-  };
-
   hamburger.addEventListener("click", () => {
     const open = navLinks.classList.toggle("active");
-    hamburger.classList.toggle("active", open);       // <-- needed for bar → X animation
+    hamburger.classList.toggle("active", open);
     hamburger.setAttribute("aria-expanded", open ? "true" : "false");
   });
 
-  // Close when clicking a link inside
   navLinks.querySelectorAll("a,button").forEach(el => {
     el.addEventListener("click", closeMenu);
   });
 
-  // Close on outside click
   document.addEventListener("click", (e) => {
     if (!navLinks.classList.contains("active")) return;
     if (e.target === hamburger || hamburger.contains(e.target)) return;
@@ -120,12 +213,10 @@ if (hamburger && navLinks) {
     closeMenu();
   });
 
-  // Close on Esc
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
 
-  // Close if resizing back to desktop
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 768) closeMenu();
   });
@@ -140,8 +231,6 @@ if (hamburger && navLinks) {
   const moon = document.getElementById("iconMoon");
 
   const syncIcons = (isDark) => {
-    // dark mode  → show sun  (clicking it returns to light)
-    // light mode → show moon (clicking it goes dark)
     if (sun)  sun.style.display  = isDark ? "block" : "none";
     if (moon) moon.style.display = isDark ? "none"  : "block";
   };
@@ -158,43 +247,46 @@ if (hamburger && navLinks) {
 
 // Auth → UI
 onAuthStateChanged(auth, async (user) => {
-  // default state (guest)
-  let state = "guest";
-  let name  = "Register";
+  let state    = "guest";
+  let name     = "Registrace";
   let pillHref = "register.html";
-  let pillClickable = true;
 
   if (user && user.emailVerified) {
-    const type = await getUserType(user.uid);
+    const type    = await getUserType(user.uid);
     const display = user.displayName || (user.email ? user.email.split("@")[0] : "Uživatel");
 
     if (type === "user") {
-      state = "app-user";         // regular app user (not trainer)
-      name = display;
-      pillHref = "#";             // no-op
-      pillClickable = false;
+      state    = "app-user";
+      name     = display;
+      pillHref = "#";
     } else {
-      state = "trainer";          // trainer (or unknown role defaults here)
-      name = display;
+      state    = "trainer";
+      name     = display;
       pillHref = "trainer-profile.html";
-      pillClickable = true;
     }
-    // Prefer resolving a real name from DB if available
     try { name = await resolveDisplayName(user.uid, type, user) || name; } catch {}
   }
 
   if (pill) {
     pill.href = pillHref;
-    pill.style.pointerEvents = pillClickable ? "auto" : "none";
+    pill.style.pointerEvents = "auto";
+    pill.onclick = null;
     if (pillText) pillText.textContent = name;
+
+    if (state === "app-user") {
+      // Desktop: clicking pill opens logout dropdown
+      // Mobile: logout is available in the hamburger sheet via logoutBtn
+      createPillDropdown();
+      pill.onclick = togglePillDropdown;
+      pill.style.cursor = "pointer";
+    }
   }
 
-  // Use `hidden` so external CSS can't force them visible
   show(loginBtn,  state === "guest");
   show(logoutBtn, state !== "guest");
 });
 
-// Logout
+// Logout button (mobile sheet / hamburger menu)
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async (e) => {
     e.preventDefault();
