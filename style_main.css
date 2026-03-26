@@ -7,7 +7,7 @@ body.dark{--actions-bg:#151a22;--actions-br:rgba(255,255,255,.08);--actions-shad
 body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;transition:background .3s,color .3s;}
 body.dark{background:#121212;color:var(--light);}
 .container{max-width:1200px;margin:0 auto;padding:2rem;}
-h1{text-align:left;margin-bottom:2rem;color:var(--primary);}
+h1{text-align:center;margin-bottom:2rem;color:var(--primary);}
 
 /* =============== Search / toolbar ======== na prepis >:D ======= */
 .toolbar{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin:1rem 0;}
@@ -304,7 +304,7 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .cz-hero__left{padding:0;}
 .cz-hero__badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.92);font-size:12px;font-weight:600;padding:5px 13px;border-radius:999px;margin-bottom:22px;letter-spacing:.2px;}
 .cz-hero__badge-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25);flex-shrink:0;}
-.cz-hero__title{font-weight:900;font-size:clamp(32px,4.2vw,52px);line-height:1.06;letter-spacing:-1.5px;color:#fff;margin:0 0 16px;}
+.cz-hero__title{font-weight:900;font-size:clamp(32px,4.2vw,52px);line-height:1.06;letter-spacing:-1.5px;color:#fff;margin:0 0 16px;text-align:left;}
 .cz-hero__title u{text-decoration:none;border-bottom:3px solid rgba(255,255,255,.38);padding-bottom:3px;}
 .cz-hero__subtitle{font-size:clamp(15px,1.8vw,17px);color:rgba(255,255,255,.76);line-height:1.65;margin-bottom:28px;max-width:420px;}
 .cz-hero__stats{display:inline-flex;align-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:14px 20px;gap:0;margin-bottom:34px;}
@@ -354,7 +354,6 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
   .cz-hero__ctas{justify-content:center;}
   .cz-hero__map-card{max-width:480px;margin:0 auto;}
   .cz-hero__subtitle{max-width:100%;margin:0 0 28px;}
-  h1{text-align:center;}
 }
 
 @media (max-width: 600px){
