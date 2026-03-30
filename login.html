@@ -93,7 +93,7 @@
 
       <div class="field">
         <label for="password">Heslo</label>
-        <input type="password" id="password" placeholder="Min. 6 znaků"data-showpw placeholder="••••••••" required />
+        <input type="password" id="password" placeholder="Min. 6 znaků" data-showpw required />
       </div>
 
       <button id="loginFormBtn" class="btn primary">Přihlásit se</button>
@@ -147,11 +147,49 @@
       if (verifiedSnap.exists()) return;
 
       const unverifiedSnap = await get(unverifiedRef);
-      if (unverifiedSnap.exists()) {
-        const userData = unverifiedSnap.val();
-        await set(verifiedRef, userData);
-        await remove(unverifiedRef);
-      }
+      if (!unverifiedSnap.exists()) return;
+
+      const raw = unverifiedSnap.val();
+      const now = Date.now();
+
+      // ── Normalise socials ──
+      // Support both new nested format and legacy flat fields
+      const socials = raw.socials || {
+        instagram: raw.instagram || "",
+        facebook:  raw.facebook  || "",
+        tiktok:    raw.tiktok    || "",
+      };
+
+      // ── Build the clean users/ document ──
+      const userData = { ...raw };
+
+      // Remove fields that belong only in unverified-users
+      delete userData.expiresAt;
+      delete userData.verified;   // never belonged here
+      delete userData.uid;        // uid is the key, not a field
+
+      // Remove legacy flat socials if present (replaced by nested)
+      delete userData.instagram;
+      delete userData.facebook;
+      delete userData.tiktok;
+
+      // Remove plan fields from unverified (we set them fresh below)
+      delete userData.plan;
+      delete userData.planExpiresAt;
+      delete userData.featuredUntil;
+
+      // Apply nested socials
+      userData.socials = socials;
+
+      // Fields added on first verified login
+      userData.status        = "active";
+      userData.plan          = "free";
+      userData.planExpiresAt = null;
+      userData.featuredUntil = null;
+      userData.updatedAt     = now;
+
+      await set(verifiedRef, userData);
+      await remove(unverifiedRef);
     }
 
     async function syncUserLoginState(user) {

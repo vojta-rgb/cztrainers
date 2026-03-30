@@ -758,13 +758,16 @@
         // ---------- build final document exactly with fields you requested ----------
         const now = Date.now();
 
+        // Read consent checkboxes
+        const agreeAge     = document.getElementById("age16")?.checked || false;
+        const agreeConsent = document.getElementById("consentTos")?.checked || false;
+
         const trainerDoc = {
-          uid: user.uid,
           email,
           name: jmeno,
           prijmeni,
-          datum,                     // date of birth
-          phone: phoneNormalized,    // normalized phone
+          datum,
+          phone: phoneNormalized,
           gender,
           bio,
           specializations: selectedSpecializations.length ? selectedSpecializations : null,
@@ -772,18 +775,26 @@
           experience: Number.isFinite(experience) ? experience : 0,
           languages: selectedLanguages.length ? selectedLanguages : null,
           profilePicture: profilePictureUrl || null,
-          instagram: instagram || "",
-          facebook: facebook || "",
-          tiktok: tiktok || "",
+          socials: {
+            instagram: instagram || "",
+            facebook:  facebook  || "",
+            tiktok:    tiktok    || "",
+          },
           location: fullLocation,
           gallery: galleryResults.length ? galleryResults : null,
           galleryCount: galleryResults.length || 0,
+          ageConfirmed: {
+            value: agreeAge,
+            at:    now,
+          },
+          consent: {
+            tos:     agreeConsent,
+            privacy: agreeConsent,
+            version: "2025-09-21",
+            at:      now,
+          },
           createdAt: now,
-          updatedAt: now,
-          plan: "free",
-          planExpiresAt: null,
-          featuredUntil: null,
-          verified: false
+          expiresAt: now + 24 * 60 * 60 * 1000,
         };
 
         console.debug("[register] writing unverified-users/%s ->", user.uid, trainerDoc);
