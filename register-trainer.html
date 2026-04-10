@@ -802,8 +802,6 @@
         // ---------- write to unverified-users/{uid} ----------
         try {
           await update(ref(db, `unverified-users/${user.uid}`), trainerDoc);
-          console.debug("[register] unverified-users/%s updated ok", user.uid);
-          // optional debug write
           try { await set(ref(db, `debug-writes/${user.uid}`), { ts: Date.now(), ok: true }); } catch(e){/* ignore */ }
         } catch (dbErr) {
           console.error("[register] failed writing unverified-users/%s:", user.uid, dbErr);

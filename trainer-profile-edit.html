@@ -864,9 +864,11 @@
         languages: selectedLanguages,
         email: user.email,
         profilePicture: newUrl,
-        instagram: form.instagram.value.trim(),
-        facebook: form.facebook.value.trim(),
-        tiktok: form.tiktok.value.trim()
+        socials: {
+          instagram: form.instagram.value.trim(),
+          facebook:  form.facebook.value.trim(),
+          tiktok:    form.tiktok.value.trim(),
+        }
       };
 
       // include the map picker payload
