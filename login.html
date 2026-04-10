@@ -182,10 +182,11 @@
       userData.socials = socials;
 
       // Fields added on first verified login
+      // Note: Firebase RTDB drops null values silently — use 0 as sentinel for "not set"
       userData.status        = "active";
       userData.plan          = "free";
-      userData.planExpiresAt = null;
-      userData.featuredUntil = null;
+      userData.planExpiresAt = 0;
+      userData.featuredUntil = 0;
       userData.updatedAt     = now;
 
       await set(verifiedRef, userData);
