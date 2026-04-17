@@ -70,7 +70,7 @@
     }
 </style>
 </head>
-<body>
+<body style="visibility:hidden">
   <header>
     <h1>🛡️ Admin panel</h1>
     <div class="row">
@@ -145,9 +145,8 @@
   <script type="module">
     /* ================= FIREBASE INIT ================= */
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-    import { update, set, push } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+    import { getDatabase, ref, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -196,6 +195,7 @@
       }
 
       document.getElementById('who').textContent = user.email;
+      document.body.style.visibility = 'visible'; // reveal page only after auth confirmed
       initAdminPanel(); // ONLY NOW load reports & bind buttons
     });
 
