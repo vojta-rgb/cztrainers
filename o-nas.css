@@ -9,7 +9,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--light);
+  background: #F1F5F9;
   color: var(--dark);
   margin: 0;
   transition: background 0.3s, color 0.3s;
@@ -17,32 +17,13 @@ body {
   position: relative;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("assets/BetterDumbell.jpg");
-  background-size: 200px;
-  background-repeat: repeat;
-  opacity: 0.08;
-  z-index: -1;
-}
-
 body.dark {
   background: #121212;
   color: #f4f4f4;
 }
 
-body.dark::before {
-  opacity: 0.04;
-}
-
 /* Overlay */
 .overlay {
-  background-color: rgba(0, 0, 0, 0.149);
   min-height: 100vh;
   padding: 40px 20px;
   display: flex;
@@ -59,13 +40,13 @@ body.dark::before {
 .header h1 {
   font-size: 3rem;
   margin-bottom: 10px;
-  color: white;
+  color: #0072CE;
 }
 
 .header p {
   font-size: 1.2rem;
   font-weight: 300;
-  color: white;
+  color: #0072CE;
 }
 
 /* Content box */

@@ -4,7 +4,7 @@
 body.dark{--actions-bg:#151a22;--actions-br:rgba(255,255,255,.08);--actions-shadow:0 10px 30px rgba(0,0,0,.45);}
 
 /* =============== Base =============== */
-body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;transition:background .3s,color .3s;}
+body{font-family:'Inter',sans-serif;background:#F1F5F9;color:var(--dark);min-height:100vh;transition:background .3s,color .3s;}
 body.dark{background:#121212;color:var(--light);}
 .container{max-width:1200px;margin:0 auto;padding:2rem;}
 h1{text-align:center;margin-bottom:2rem;color:var(--primary);}

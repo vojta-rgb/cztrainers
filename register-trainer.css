@@ -4,7 +4,7 @@
   --text: #111827;
   --muted:#6b7280;
   --border:#e5e7eb;
-  --bg:#f7f9fc;
+  --bg:#F1F5F9;
   --card:#ffffff;
   --radius:14px;
   --shadow: 0 8px 28px rgba(16,24,40,.08);
@@ -23,24 +23,16 @@ body{
   -moz-osx-font-smoothing:grayscale;
   transition: background .25s ease, color .25s ease;
 }
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background-image:url("assets/BetterDumbell.jpg");
-  background-size:180px; background-repeat:repeat;
-  opacity:.05; pointer-events:none; z-index:-1;
-}
 
 /* Dark */
 body.dark{
   --text:#e5e7eb;
   --muted:#9aa4b2;
   --border:#2a3342;
-  --bg:#111418;
+  --bg:#121212;
   --card:#171a20;
   --shadow: 0 10px 34px rgba(0,0,0,.45);
 }
-body.dark::before{ opacity:.03; }
 
 /* ---------- Page wrapper ---------- */
 .page-wrapper{
