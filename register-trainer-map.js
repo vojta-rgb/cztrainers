@@ -311,9 +311,10 @@ async function writeLocation(uid) {
 }
 
 // mirror your sign-in flow: as soon as the user exists, write current location
+// window.suspendMapWrites = true disables this (set by the edit page)
 if (auth) {
   onAuthStateChanged(auth, (user) => {
-    if (user && user.uid !== wroteForUid) {
+    if (user && user.uid !== wroteForUid && !window.suspendMapWrites) {
       wroteForUid = user.uid;
       writeLocation(user.uid);
     }

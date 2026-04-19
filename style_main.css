@@ -346,6 +346,7 @@ body.dark .action-btn--heart .count{background:#222a36;color:#cfd5e1;}
 .cz-hero__wave svg{display:block;width:100%;height:52px;}
 
 @media (max-width: 960px){
+  .cz-hero__title{text-align:center}
   .cz-hero__content{grid-template-columns:1fr;gap:36px;padding:0 32px;}
   .cz-hero__right{order:2;}
   .cz-hero__left{order:1;text-align:center;}
