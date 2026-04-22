@@ -114,8 +114,7 @@
       verifyBeforeUpdateEmail, sendEmailVerification, sendPasswordResetEmail,
       updatePassword, deleteUser
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+    import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASK2terL9kejt9JTJr944WCFYzRkK8AGU",
@@ -130,8 +129,6 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-    const functions = getFunctions(app);
-
     // Simple toast
     function toast(msg) {
       const t = document.getElementById("toast");
@@ -207,66 +204,85 @@
 
       try {
         const uid = user.uid;
+        const now = Date.now();
 
-        // read profile to see if we need extra cleanup
-        const snap = await get(ref(db, "users/" + uid));
-        const data = snap.exists() ? snap.val() : null;
-
-        // --- Archive a minimal snapshot BEFORE deletion ---
+        // ── 1. Read profile data before anything is deleted ──
         const [snapUsers, snapApp, snapUnv] = await Promise.all([
           get(ref(db, "users/" + uid)),
           get(ref(db, "app-users/" + uid)),
           get(ref(db, "unverified-users/" + uid)),
         ]);
 
-        const source = snapUsers.exists()
-          ? "users"
-          : snapApp.exists()
-          ? "app-users"
-          : snapUnv.exists()
-          ? "unverified-users"
-          : "none";
+        const trainerData = snapUsers.exists() ? snapUsers.val() : null;
+        const base = trainerData || snapApp.val() || snapUnv.val() || {};
 
-        const base = snapUsers.val() || snapApp.val() || snapUnv.val() || {};
+        // ── 2. Delete Cloudinary images using /api/sign ──
+        async function cloudinaryDestroy(publicId) {
+          try {
+            const timestamp = Math.floor(Date.now() / 1000);
+            const sigRes = await fetch("/api/sign", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ public_id: publicId, timestamp, op: "destroy" })
+            });
+            if (!sigRes.ok) { console.warn("[delete] sign failed for", publicId); return; }
+            const { signature, apiKey, cloudName } = await sigRes.json();
 
-        const archive = {
-          uid,
-          archivedAt: Date.now(),
-          reason: "user-initiated",   // or "account-deletion"
-          source,
-          profile: {
-            name: base.name || null,
-            prijmeni: base.prijmeni || null,
-            email: user.email || base.email || null,
-            location: base.location || null,
-            specializations: base.specializations || null,
-            languages: base.languages || null,
-            profilePicture: base.profilePicture || null,
-          },
-        };
+            const form = new FormData();
+            form.append("public_id", publicId);
+            form.append("timestamp", timestamp);
+            form.append("api_key", apiKey);
+            form.append("signature", signature);
 
-        try {
-          await set(ref(db, "deleted-users/" + uid), archive);
-        } catch (e) {
-          console.warn("Archiving to deleted-users failed (will continue):", e);
+            await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+              method: "POST", body: form
+            });
+            console.debug("[delete] Cloudinary removed:", publicId);
+          } catch (e) {
+            console.warn("[delete] Cloudinary destroy failed for", publicId, e);
+          }
         }
 
-        // Try delete Cloudinary avatar (you uploaded with public_id `users/<uid>/pfp`)
-        try {
-          const delFn = httpsCallable(functions, "deleteCloudinaryImage");
-          await delFn({ publicId: `users/${uid}/pfp` });
-        } catch (e) {
-          console.warn("Cloudinary delete skipped/failed:", e);
+        if (trainerData) {
+          // Delete profile picture
+          if (trainerData.profilePicture) {
+            await cloudinaryDestroy(`users/${uid}/pfp`);
+          }
+          // Delete all gallery images
+          const gallery = Array.isArray(trainerData.gallery) ? trainerData.gallery : [];
+          await Promise.allSettled(
+            gallery.map(img => {
+              const pid = img.publicId || img.public_id;
+              return pid ? cloudinaryDestroy(pid) : Promise.resolve();
+            })
+          );
         }
 
-        // DB cleanup (both places, just in case)
+        // ── 3. Write system log ──
+        const logRef = push(ref(db, "system-logs"));
+        try {
+          await set(logRef, {
+            action:     "deleted",
+            entityType: "account",
+            entityId:   uid,
+            actor:      "user",
+            actorUid:   uid,
+            reason:     "user_request",
+            createdAt:  now,
+            expiresAt:  now + 365 * 24 * 60 * 60 * 1000,  // 1 year retention
+          });
+        } catch (e) {
+          console.warn("[delete] system-log write failed (continuing):", e);
+        }
+
+        // ── 4. DB cleanup ──
         await Promise.allSettled([
           remove(ref(db, "users/" + uid)),
           remove(ref(db, "unverified-users/" + uid)),
-          remove(ref(db, "app-users/" + uid))   // if you also store simple users
+          remove(ref(db, "app-users/" + uid)),
         ]);
 
-        // Auth removal
+        // ── 5. Delete Firebase Auth user ──
         await deleteUser(user);
 
         toast("Účet smazán.");

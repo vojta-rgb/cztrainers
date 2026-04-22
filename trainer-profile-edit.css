@@ -1,7 +1,7 @@
 /* ========= Theme tokens ========= */
 :root{
   --primary:#0072CE;
-  --bg:#f4f7fb;
+  --bg:#F1F5F9;
   --text:#0f172a;
   --muted:#6b7280;
   --card:#ffffff;
@@ -20,24 +20,17 @@ body{
   -moz-osx-font-smoothing:grayscale;
   transition:background .25s,color .25s;
 }
-/* playful dumbbell pattern like the register page */
-body::before{
-  content:"";
-  position:fixed; inset:0; pointer-events:none; z-index:-1;
-  background-image:url("assets/BetterDumbell.jpg");
-  background-size:200px; background-repeat:repeat;
-  opacity:.08;
-}
+
 
 /* ========= Dark mode ========= */
 body.dark{
-  --bg:#0e1116;
+  --bg:#121212;
   --text:#eef2ff;
   --card:#12161e;
   --border:#2a2f3a;
   --shadow:0 8px 32px rgba(0,0,0,.35);
 }
-body.dark::before{ opacity:.045; }
+
 
 /* ========= Layout container (matches register) ========= */
 .page-wrapper{
@@ -259,4 +252,4 @@ a:hover{ text-decoration:underline; }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-} 
+}

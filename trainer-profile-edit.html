@@ -934,6 +934,10 @@
   });
   </script>
 
+  <script>
+    // Prevent register-trainer-map.js from writing to unverified-users on the edit page
+    window.suspendMapWrites = true;
+  </script>
   <script type="module" src="register-trainer-map.js"></script>
   <!-- Map callback stub: ensures Google won't call undefined function comment -->
   <script>
