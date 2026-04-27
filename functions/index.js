@@ -56,25 +56,37 @@ async function cloudinaryDestroy(publicId) {
     const str = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
     const signature = crypto.createHash("sha1").update(str).digest("hex");
 
-    const form = new URLSearchParams();
-    form.append("public_id", publicId);
-    form.append("timestamp",  String(timestamp));
-    form.append("api_key",    apiKey);
-    form.append("signature",  signature);
+    // Use application/x-www-form-urlencoded — most reliable for Cloudinary destroy
+    const body = new URLSearchParams({
+      public_id: publicId,
+      timestamp: String(timestamp),
+      api_key:   apiKey,
+      signature: signature,
+    }).toString();
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
-      { method: "POST", body: form }
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      }
     );
 
-    const data = await res.json();
+    const text = await res.text(); // read as text first to debug
+    console.debug(`  Cloudinary raw response for ${publicId}: ${text}`);
+
+    let data;
+    try { data = JSON.parse(text); } catch { data = {}; }
+
     if (data.result === "ok") {
       console.log(`  Cloudinary deleted: ${publicId}`);
+    } else if (data.result === "not found") {
+      console.log(`  Cloudinary: already gone or never existed: ${publicId}`);
     } else {
-      console.warn(`  Cloudinary result for ${publicId}:`, data.result);
+      console.warn(`  Cloudinary unexpected result for ${publicId}:`, text);
     }
   } catch (e) {
-    // Never block cleanup over a single image failure
     console.warn(`  Cloudinary destroy failed for ${publicId}:`, e.message);
   }
 }
