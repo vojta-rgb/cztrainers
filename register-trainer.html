@@ -99,7 +99,7 @@
         <!-- === Gallery (multiple images) === -->
         <fieldset class="field-group">
           <legend>Galerie</legend>
-          <p class="hint">Vyberte více fotek (JPG/PNG/WebP/AVIF). Max 10&nbsp;MB za soubor.</p>
+          <p class="hint">Vyberte více fotek (JPG/PNG/WebP/AVIF). Max 4 fotky, každá ≤ 10&nbsp;MB.</p>
 
           <input id="galleryInput" type="file" accept="image/*" multiple />
           <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
@@ -351,7 +351,7 @@
     const MAX_INPUT_SIZE = 10 * 1024 * 1024;   // 10 MB client guard
     const TARGET_MAX_BYTES = 500 * 1024;       // final target ~500KB
     const MAX_DIM = 1600;                      // longest edge for upload
-    const MAX_GALLERY_FILES = 10;         // hard cap to avoid abuse
+    const MAX_GALLERY_FILES = 4;          // hard cap to avoid abuse
     const GALLERY_TARGET_BYTES = TARGET_MAX_BYTES; // ≈500 KB each
     const GALLERY_MAX_DIM = MAX_DIM;      // 1600px longest edge
 

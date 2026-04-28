@@ -100,7 +100,7 @@
         <!-- === Gallery (edit) — paste after profile image field === -->
         <fieldset class="field-group" id="editGalleryField">
           <legend>Galerie (upravit)</legend>
-          <p class="hint">Přidejte nebo odeberte fotky. Max 10 fotek, každá ≤ 10MB.</p>
+          <p class="hint">Přidejte nebo odeberte fotky. Max 4 fotky, každá ≤ 10MB.</p>
           <input id="galleryInput" type="file" accept="image/*" multiple />
           <div id="galleryPreview" class="gallery-preview" aria-live="polite"></div>
           <p class="hint" id="galleryCount">0 fotek</p>
@@ -348,7 +348,7 @@
 
     // --- Gallery config & state (add near other constants) ---
     const MAX_INPUT_SIZE = 10 * 1024 * 1024;         // 10MB client guard (same as register page)
-    const MAX_GALLERY_FILES = 10;
+    const MAX_GALLERY_FILES = 4;
     const GALLERY_MAX_DIM = 1600;
     const GALLERY_TARGET_BYTES = 500 * 1024;
     const TARGET_MAX_BYTES = 500 * 1024; // fallback target size for compressToTarget
@@ -736,7 +736,7 @@
         const files = Array.from(galleryInputEl.files || []);
         // only images + max size
         const ok = files.filter(f => /^image\//.test(f.type) && f.size <= MAX_INPUT_SIZE);
-        if (ok.length !== files.length) toast("Některé soubory byly přeskočeny (neplatný formát nebo >10MB).");
+        if (ok.length !== files.length) toast("Některé soubory byly přeskočeny (neplatný formát nebo >10MB nebo překročen limit 4 fotky).");
         // cap by remaining allowed
         const allowed = Math.max(0, MAX_GALLERY_FILES - (existingGallery.length - galleryToDelete.size));
         if (ok.length > allowed) {
