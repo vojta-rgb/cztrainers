@@ -218,6 +218,7 @@
           emailVerified: false,
 
           createdAt: now,
+          expiresAt: now + 1 * 24 * 60 * 60 * 1000,  // auto-delete if never verified (1 day)
 
           ageConfirmed: {
             value: true,

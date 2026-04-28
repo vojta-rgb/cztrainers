@@ -35,7 +35,10 @@ exports.dailyCleanup = onSchedule(
     // Step 1: Clean Cloudinary images for expired unverified-users FIRST
     await cleanupUnverifiedUsers(now);
 
-    // Step 2: Clean expired Firebase records
+    // Step 2: Clean expired unverified app-users (never verified their email)
+    await cleanupExpiredAppUsers(now);
+
+    // Step 3: Clean expired Firebase records
     await cleanupExpired("reports", now);
     await cleanupExpired("system-logs", now);
 
@@ -131,17 +134,52 @@ async function cleanupUnverifiedUsers(now) {
   // Run all Cloudinary deletes in parallel
   await Promise.allSettled(deletions);
 
-  // Delete Firebase Auth accounts for each expired unverified user
-  const uids = [];
-  snapshot.forEach(child => { uids.push(child.key); });
+  // Now delete the Firebase records
+  const updates = {};
+  snapshot.forEach(child => { updates[child.key] = null; });
+  await ref.update(updates);
 
+  console.log(`Deleted ${Object.keys(updates).length} expired unverified-user(s) from Firebase`);
+}
+
+// ── Expired app-users cleanup (unverified normal users) ──────────────────
+
+async function cleanupExpiredAppUsers(now) {
+  const ref = db.ref("app-users");
+
+  const snapshot = await ref
+    .orderByChild("expiresAt")
+    .endAt(now)
+    .once("value");
+
+  if (!snapshot.exists()) {
+    console.log("No expired app-users");
+    return;
+  }
+
+  const uids = [];
+  snapshot.forEach(child => {
+    // Double-check: only delete if emailVerified is still false
+    // (expiresAt should already be null for verified users but this is a safety net)
+    const data = child.val() || {};
+    if (!data.emailVerified) {
+      uids.push(child.key);
+      console.log(`Processing expired app-user: ${child.key}`);
+    }
+  });
+
+  if (uids.length === 0) {
+    console.log("No unverified app-users to delete");
+    return;
+  }
+
+  // Delete Firebase Auth accounts
   await Promise.allSettled(
     uids.map(async uid => {
       try {
         await admin.auth().deleteUser(uid);
         console.log(`  Auth account deleted: ${uid}`);
       } catch (e) {
-        // user-not-found means Auth account was already deleted or never created — fine
         if (e.code === "auth/user-not-found") {
           console.log(`  Auth account already gone: ${uid}`);
         } else {
@@ -151,12 +189,12 @@ async function cleanupUnverifiedUsers(now) {
     })
   );
 
-  // Now delete the Firebase Realtime Database records
+  // Delete app-users records
   const updates = {};
   uids.forEach(uid => { updates[uid] = null; });
   await ref.update(updates);
 
-  console.log(`Deleted ${uids.length} expired unverified-user(s) from Firebase`);
+  console.log(`Deleted ${uids.length} expired app-user(s)`);
 }
 
 // ── Generic expired-record cleanup ────────────────────────────────────────

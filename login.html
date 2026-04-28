@@ -208,6 +208,7 @@
       // update emailVerified only once
       if (!data.emailVerified && user.emailVerified) {
         updates.emailVerified = true;
+        updates.expiresAt = null;  // remove expiry — verified users are never auto-deleted
       }
 
       // throttle lastLoginAt (5 minutes)
